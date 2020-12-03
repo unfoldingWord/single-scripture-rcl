@@ -1,1 +1,1 @@
-# single-scripture-recl
+# single-scripture-rcl
