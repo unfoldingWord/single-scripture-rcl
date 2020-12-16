@@ -9875,6 +9875,13 @@ transform-runtime@0.0.0:
   resolved "https://registry.yarnpkg.com/transform-runtime/-/transform-runtime-0.0.0.tgz#e714d9b69211dd9537939d50e3aa5788c442b85c"
   integrity sha1-5xTZtpIR3ZU3k51Q46pXiMRCuFw=
 
+translation-helps-rcl@0.6.5:
+  version "0.6.5"
+  resolved "https://registry.yarnpkg.com/translation-helps-rcl/-/translation-helps-rcl-0.6.5.tgz#0a865c977692d0e007a951b10c8d6f001e30d958"
+  integrity sha512-MqpMD9QsCucwLwrJ0yrG9TkIoYTn2DYwavhHGBFdbLmy/2Qbb/Yy6/RHhcQvkOS+B7zN5GRW5GruvwHItJ9TjA==
+  dependencies:
+    styled-components "^5.2.1"
+
 trim-trailing-lines@^1.0.0:
   version "1.1.4"
   resolved "https://registry.yarnpkg.com/trim-trailing-lines/-/trim-trailing-lines-1.1.4.tgz#bd4abbec7cc880462f10b2c8b5ce1d8d1ec7c2c0"

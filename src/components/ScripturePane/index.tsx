@@ -1,6 +1,9 @@
 import * as React from 'react';
 import { useScripture } from '../../hooks';
 import { ScriptureReference, ServerConfig } from '../../types';
+import {
+  Container, Title, Content,
+} from './styled';
 
 interface Props {
   reference: ScriptureReference;
@@ -16,12 +19,12 @@ function ScripturePane({
     reference, resourceLink, config,
   });
   return (
-    <>
-      <div>{chapter}</div>
-      <div>{verse}</div>
-      <div>{title}</div>
-      <div>{content}</div>
-    </>
+    <Container>
+      <Title style={{ marginBottom: 12 }}>{title}</Title>
+      <Content>
+        {chapter}:{verse}&nbsp;{content}
+      </Content>
+    </Container>
   );
 }
 

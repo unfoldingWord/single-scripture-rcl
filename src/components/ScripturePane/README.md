@@ -1,4 +1,5 @@
 ```js
+import { Card } from "translation-helps-rcl";
 const reference = {
   projectId: "tit",
   chapter: 1,
@@ -10,9 +11,11 @@ const config = {
   cache: { maxAge: 1 * 1 * 1 * 60 * 1000 },
 };
 
-<ScripturePane
-  config={config}
-  resourceLink={resourceLink}
-  reference={reference}
-/>;
+<Card title="Scripture">
+  <ScripturePane
+    config={config}
+    resourceLink={resourceLink}
+    reference={reference}
+  />
+</Card>;
 ```
