@@ -1,0 +1,94 @@
+{
+  "name": "scripture-resources-rcl",
+  "description": "A React Component Library for Rendering Scripture Resources.",
+  "version": "2.1.0-rc.3+ffae9509",
+  "homepage": "https://scripture-resources-rcl.netlify.com/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/unfoldingWord-box3/scripture-resources-rcl"
+  },
+  "private": false,
+  "license": "MIT",
+  "scripts": {
+    "start": "styleguidist server",
+    "build": "styleguidist build",
+    "deploy": "git push",
+    "prepublishOnly": "rm -fr ./dist & babel ./src --out-dir ./dist -s inline",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run",
+    "lint": "eslint ./src",
+    "lint:fix": "eslint ./src --fix",
+    "nyc:report": "nyc report --reporter=json-summary --reporter=text",
+    "test": "nyc start-test 6060 cypress:run && npm run nyc:report",
+    "test:unit": "jest",
+    "create-coverage-badge": "bash scripts/create-badge-json.sh"
+  },
+  "eslintConfig": {
+    "extends": "react-app",
+    "plugins": [
+      "react-hooks"
+    ]
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ],
+  "dependencies": {
+    "deep-freeze": "^0.0.1",
+    "gitea-react-toolkit": "1.3.13",
+    "js-yaml-parser": "^1.0.0",
+    "lodash": "^4.17.15",
+    "markdown-translatable": "1.2.8",
+    "nyc": "^15.0.0-beta.3",
+    "prop-types": "^15.7.2",
+    "react-waypoint": "^9.0.2",
+    "string-punctuation-tokenizer": "2.1.2",
+    "use-deep-compare-effect": "^1.3.1",
+    "usfm-js": "^2.0.2"
+  },
+  "peerDependencies": {
+    "@material-ui/core": "^4.7.0",
+    "@material-ui/icons": "^4.5.1",
+    "@material-ui/lab": "^4.0.0-alpha.32",
+    "@material-ui/styles": "^4.4.1",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1"
+  },
+  "main": "dist/index.js",
+  "files": [
+    "dist/*"
+  ],
+  "nyc": {
+    "include": [
+      "src/components/**/**.js"
+    ],
+    "exclude": [
+      "**/mocks/**"
+    ],
+    "all": true
+  },
+  "jest": {
+    "collectCoverage": false,
+    "collectCoverageFrom": [
+      "**/core/**.{js,jsx,ts}",
+      "!**/node_modules/**",
+      "!**/vendor/**"
+    ],
+    "testMatch": [
+      "<rootDir>**/**.spec.js"
+    ],
+    "testPathIgnorePatterns": [
+      "node_modules",
+      "cypress"
+    ],
+    "transformIgnorePatterns": [
+      "mocks",
+      "node_modules"
+    ],
+    "setupFilesAfterEnv": [
+      "<rootDir>__tests__/setupTests.js"
+    ]
+  }
+}

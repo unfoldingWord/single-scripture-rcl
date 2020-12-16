@@ -4,8 +4,13 @@ const camelCase = require('lodash/camelCase');
 const {
   name, version, repository,
 } = require('./package.json');
+const parserOptions = { savePropValueAsString: true };
 
 module.exports = {
+  propsParser: require('react-docgen-typescript').withCustomConfig(
+    './tsconfig.json',
+    [parserOptions],
+  ).parse,
   title: `${upperFirst(camelCase(name))} v${version}`,
   ribbon: {
     url: repository.url,
@@ -13,24 +18,28 @@ module.exports = {
   },
   moduleAliases: { 'single-scripture-rcl': path.resolve(__dirname, 'src') },
   skipComponentsWithoutExample: true,
-  ignore: ['**/helpers**', '**/styled**', '**/__tests__/**', '**/*.test.{js,jsx,ts,tsx}', '**/*.spec.{js,jsx,ts,tsx}', '**/*.d.ts'],
+  ignore: ['**/types**', '**/helpers**', '**/styled**', '**/__tests__/**', '**/*.test.{js,jsx,ts,tsx}', '**/*.spec.{js,jsx,ts,tsx}', '**/*.d.ts'],
   serverPort: 6003,
   exampleMode: 'expand',
   usageMode: 'expand',
-  getComponentPathLine(componentPath) {
-    const componentName = componentPath.match(/(\w+)\/index.js/)[1];
-    return `import { ${componentName} } from '${name}';`;
-  },
+  // getComponentPathLine(componentPath) {
+  //   console.log('componentPath', componentPath);
+  //   const componentName = componentPath.match(/(\w+)\/index.(t|j)sx?/)[1];
+  //   console.log('componentName', componentName);
+  //   return `import { ${componentName} } from '${name}';`;
+  // },
   webpackConfig: {
     //https://github.com/facebook/create-react-app/pull/8079#issuecomment-562373869
-    devServer: { port: 6007, transportMode: 'ws' },
+    devServer: { port: 6003, transportMode: 'ws' },
     devtool: 'source-map',
+    resolve: { extensions: ['.ts', '.tsx', '.js', '.jsx'] },
     module: {
       rules: [
         {
-          test: /\.js$/,
-          exclude: /node_modules/,
-          loader: 'babel-loader',
+          enforce: 'pre', test: /\.js$/, loader: 'source-map-loader',
+        },
+        {
+          test: /\.(t|j)sx?$/, use: { loader: 'ts-loader' }, exclude: /node_modules/,
         },
         {
           test: /\.css$/,
