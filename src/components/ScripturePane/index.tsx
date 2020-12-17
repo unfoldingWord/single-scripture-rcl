@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { useScripture } from '../../hooks';
-import { ScriptureReference, ServerConfig } from '../../types';
+import {
+  ScriptureReference, ServerConfig, ScriptureResource,
+} from '../../types';
 import {
   Container, Title, Content,
 } from './styled';
@@ -9,11 +11,21 @@ interface Props {
   reference: ScriptureReference;
   resourceLink: string;
   config: ServerConfig;
+  resource: ScriptureResource;
 }
 
 function ScripturePane({
-  reference, resourceLink, config,
+  reference, resourceLink: _resourceLink, config, resource,
 }: Props) {
+  let resourceLink = _resourceLink;
+
+  if (resource) {
+    const {
+      owner, languageId, projectId, branch = 'master',
+    } = resource || {};
+    resourceLink = `${owner}/${languageId}/${projectId}/${branch}`;
+  }
+
   const { chapter, verse } = reference;
   const { content, title } = useScripture({
     reference, resourceLink, config,

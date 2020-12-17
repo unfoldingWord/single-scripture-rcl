@@ -9,3 +9,10 @@ export interface ServerConfig {
     maxAge: number;
   }
 }
+
+export interface ScriptureResource {
+  languageId: string;
+  projectId: string;
+  owner: string;
+  branch: string;
+}
