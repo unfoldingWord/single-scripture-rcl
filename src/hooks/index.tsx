@@ -1,7 +1,6 @@
 // @ts-ignore
-import { useEffect, useState } from 'react';
-import { useRsrc } from 'scripture-resources-rcl';
-import { VerseObjectUtils } from 'word-aligner';
+import * as React from 'react';
+import { useRsrc, VerseObjects } from 'scripture-resources-rcl';
 import { ServerConfig } from '../types';
 
 interface ScriptureReference {
@@ -18,22 +17,22 @@ interface Props {
 export function useScripture({
   reference, resourceLink, config,
 }: Props) {
-  const [content, setContent] = useState(null);
   const options = { usfm: true };
   const { state: { usfm, resource } } = useRsrc({
     config, reference, resourceLink, options,
   });
-  const { title } = useResourceManifest(resource);
+  const { title, version } = useResourceManifest(resource);
 
-  useEffect(() => {
-    if (usfm && usfm.verseObjects) {
-      const verseArray = VerseObjectUtils.getWordsFromVerseObjects(usfm.verseObjects);
-      const verse = verseArray.map((o) => o.text).join('');
-      setContent(verse);
-    }
-  }, [usfm]);
+  let content: any;
+  const { verseObjects } = usfm || {};
 
-  return { content, title };
+  if (verseObjects) {
+    content = <VerseObjects verseObjects={verseObjects} />;
+  }
+
+  return {
+    content, title, version,
+  };
 }
 
 export function useResourceManifest(resource){

@@ -27,12 +27,14 @@ function ScripturePane({
   }
 
   const { chapter, verse } = reference;
-  const { content, title } = useScripture({
+  const {
+    content, title, version,
+  } = useScripture({
     reference, resourceLink, config,
   });
   return (
     <Container>
-      <Title style={{ marginBottom: 12 }}>{title}</Title>
+      <Title style={{ marginBottom: 12 }}>{title} v{version}</Title>
       <Content>
         {chapter}:{verse}&nbsp;{content}
       </Content>

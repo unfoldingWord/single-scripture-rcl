@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 
 export const Container = styled.div`
+padding: 0 .5em;
 @font-face {
   font-family: "Noto Sans";
   font-weight: 300;
@@ -15,6 +16,7 @@ export const Container = styled.div`
 
 `;
 export const Title = styled.div`
+  max-width: 50%;
   font-family: Noto Sans;
   font-size: 12px;
   font-weight: bold;
@@ -29,7 +31,6 @@ export const Content = styled.span`
   font-family: Noto Sans;
   font-weight: normal;
   line-height: 20px;
-  display: flex;
 `;
 
 export const ChapterVerse = styled.span`

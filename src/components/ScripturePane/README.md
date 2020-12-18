@@ -1,5 +1,6 @@
 ```js
 import { Card } from "translation-helps-rcl";
+import { makeStyles } from "@material-ui/core/styles";
 const reference = {
   projectId: "tit",
   chapter: 1,
@@ -13,10 +14,22 @@ const config = {
 const resource = {
   owner: "unfoldingWord",
   languageId: "en",
-  projectId: "ult",
+  projectId: "ust",
 };
+const useStyles = makeStyles({
+  header: {
+    fontFamily: "Noto Sans",
+    fontSize: 12,
+  },
+  children: {
+    display: "flex",
+  },
+});
+const classes = useStyles();
 
-<Card title="Scripture">
+<Card classes={classes} title="Scripture">
+  <ScripturePane config={config} resource={resource} reference={reference} />
+  <ScripturePane config={config} resource={resource} reference={reference} />
   <ScripturePane config={config} resource={resource} reference={reference} />
 </Card>;
 ```
