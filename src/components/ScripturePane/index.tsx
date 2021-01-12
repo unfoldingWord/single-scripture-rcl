@@ -9,13 +9,13 @@ import {
 
 interface Props {
   reference: ScriptureReference;
-  resourceLink: string;
+  resourceLink: string|undefined;
   config: ServerConfig;
   resource: ScriptureResource;
 }
 
 function ScripturePane({
-  reference, resourceLink: _resourceLink, config, resource,
+  reference, resourceLink: _resourceLink, config, resource
 }: Props) {
   let resourceLink = _resourceLink;
 

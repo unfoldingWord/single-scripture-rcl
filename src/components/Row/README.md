@@ -1,6 +1,9 @@
 ```js
 import { Card } from "translation-helps-rcl";
 import { makeStyles } from "@material-ui/core/styles";
+import { ScripturePane } from "..";
+// import { Row } from ".";
+
 const reference = {
   projectId: "tit",
   chapter: 1,
@@ -27,7 +30,9 @@ const useStyles = makeStyles({
 });
 const classes = useStyles();
 
-<Card classes={classes} title="Scripture">
+<Row classes={classes}>
   <ScripturePane config={config} resource={resource} reference={reference} />
-</Card>;
+  <ScripturePane config={config} resource={resource} reference={reference} />
+  <ScripturePane config={config} resource={resource} reference={reference} />
+</Row>;
 ```

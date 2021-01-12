@@ -17,14 +17,14 @@ interface Props {
 export function useScripture({
   reference, resourceLink, config,
 }: Props) {
-  const options = { usfm: true };
-  const { state: { usfm, resource } } = useRsrc({
+  const options = { getBibleJson: true };
+  const { state: { bibleJson, resource } } = useRsrc({
     config, reference, resourceLink, options,
   });
   const { title, version } = useResourceManifest(resource);
 
   let content: any;
-  const { verseObjects } = usfm || {};
+  const { verseObjects } = bibleJson || {};
 
   if (verseObjects) {
     content = <VerseObjects verseObjects={verseObjects} />;
