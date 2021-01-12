@@ -17,6 +17,7 @@
     "@babel/cli": "^7.12.1",
     "@babel/core": "^7.12.3",
     "@babel/preset-env": "^7.12.1",
+    "@babel/preset-flow": "^7.12.1",
     "@babel/preset-react": "^7.12.1",
     "@material-ui/core": "^4.11.2",
     "@material-ui/icons": "^4.11.2",
@@ -56,7 +57,7 @@
     "word-aligner": "^1.0.0"
   },
   "name": "single-scripture-rcl",
-  "version": "0.1.0",
+  "version": "0.1.1-alpha",
   "repository": "https://github.com/unfoldingWord-box3/single-scripture-rcl.git",
   "author": "RoyalSix <jay.a.scottjr@biola.edu>",
   "license": "MIT",
