@@ -1,12 +1,13 @@
 ```js
 import { Card } from "translation-helps-rcl";
 import { makeStyles } from "@material-ui/core/styles";
+import { useScripture } from "../.."
+
 const reference = {
   projectId: "tit",
   chapter: 1,
   verse: 1,
 };
-// const resourceLink = "unfoldingWord/en/ult/master";
 const config = {
   server: "https://git.door43.org",
   cache: { maxAge: 1 * 1 * 1 * 60 * 1000 },
@@ -25,9 +26,19 @@ const useStyles = makeStyles({
     display: "flex",
   },
 });
-const classes = useStyles();
 
-<Card classes={classes} title="Scripture">
-  <ScripturePane config={config} resource={resource} reference={reference} />
-</Card>;
+function Component() {
+  const classes = useStyles();
+  const scriptureConfig = useScripture({
+    reference, resource, config,
+  });
+
+  return (
+    <Card classes={classes} title="Scripture">
+      <ScripturePane {...scriptureConfig} />
+    </Card>
+  );
+}
+
+<Component />;
 ```

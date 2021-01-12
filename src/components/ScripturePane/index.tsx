@@ -1,37 +1,19 @@
 import * as React from 'react';
-import { useScripture } from '../../hooks';
-import {
-  ScriptureReference, ServerConfig, ScriptureResource,
-} from '../../types';
+import { ScriptureReference } from '../../types';
 import {
   Container, Title, Content,
 } from './styled';
 
 interface Props {
-  reference: ScriptureReference;
-  resourceLink: string|undefined;
-  config: ServerConfig;
-  resource: ScriptureResource;
+    content: string;
+    title: string;
+    version: string;
+    reference: ScriptureReference;
 }
 
-function ScripturePane({
-  reference, resourceLink: _resourceLink, config, resource
-}: Props) {
-  let resourceLink = _resourceLink;
-
-  if (resource) {
-    const {
-      owner, languageId, projectId, branch = 'master',
-    } = resource || {};
-    resourceLink = `${owner}/${languageId}/${projectId}/${branch}`;
-  }
-
+function ScripturePane({ content, title, version, reference }: Props) {
   const { chapter, verse } = reference;
-  const {
-    content, title, version,
-  } = useScripture({
-    reference, resourceLink, config,
-  });
+
   return (
     <Container>
       <Title style={{ marginBottom: 12 }}>{title} v{version}</Title>

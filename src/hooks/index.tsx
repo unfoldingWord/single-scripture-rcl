@@ -1,22 +1,29 @@
 // @ts-ignore
 import * as React from 'react';
 import { useRsrc, VerseObjects } from 'scripture-resources-rcl';
-import { ServerConfig } from '../types';
-
-interface ScriptureReference {
-  chapter: number;
-  verse: number;
-}
+import {
+  ServerConfig, ScriptureReference, ScriptureResource,
+} from '../types';
 
 interface Props {
   reference: ScriptureReference;
   config: ServerConfig;
-  resourceLink: string;
+  resourceLink: string|undefined;
+  resource: ScriptureResource|undefined;
 }
 
 export function useScripture({
-  reference, resourceLink, config,
+  reference, resourceLink: resourceLink_, config, resource: resource_,
 }: Props) {
+  let resourceLink = resourceLink_;
+
+  if (resource_) {
+    const {
+      owner, languageId, projectId, branch = 'master',
+    } = resource_ || {};
+    resourceLink = `${owner}/${languageId}/${projectId}/${branch}`;
+  }
+
   const options = { getBibleJson: true };
   const { state: { bibleJson, resource } } = useRsrc({
     config, reference, resourceLink, options,
@@ -31,7 +38,7 @@ export function useScripture({
   }
 
   return {
-    content, title, version,
+    content, title, version, reference,
   };
 }
 
