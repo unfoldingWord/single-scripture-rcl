@@ -1,4 +1,5 @@
 export interface ScriptureReference {
+  projectId: string;
   chapter: number;
   verse: number;
 }
