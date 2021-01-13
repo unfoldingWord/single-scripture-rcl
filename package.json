@@ -1,15 +1,37 @@
 {
+  "name": "single-scripture-rcl",
+  "description": "A React Component Library for Rendering a Single Scripture Resource.",
+  "version": "0.1.2",
+  "repository": "https://github.com/unfoldingWord/single-scripture-rcl.git",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "files": [
+    "dist/*"
+  ],
   "scripts": {
     "test": "jest",
     "start": "styleguidist server",
     "build": "styleguidist build",
-    "prepublishOnly": "rm -fr ./dist & babel ./src --out-dir ./dist -s inline --extensions \".ts,.js\""
+    "prepublishOnly": "rm -fr ./dist && babel ./src --out-dir ./dist -s inline --extensions \".ts,.tsx,.js\""
+  },
+  "peerDependencies": {
+    "@material-ui/core": "4.11.0",
+    "@material-ui/icons": "^4.9.1",
+    "@material-ui/lab": "4.0.0-alpha.56",
+    "prop-types": "^15.x",
+    "react": "^17.x",
+    "react-dom": "^17.x",
+    "scripture-resources-rcl": "^3.x"
   },
   "devDependencies": {
     "@babel/cli": "^7.12.1",
     "@babel/core": "^7.12.3",
     "@babel/preset-env": "^7.12.1",
+    "@babel/preset-flow": "^7.12.1",
     "@babel/preset-react": "^7.12.1",
+    "@material-ui/core": "^4.11.2",
+    "@material-ui/icons": "^4.11.2",
+    "@material-ui/lab": "^4.0.0-alpha.57",
     "@unfoldingword/eslint-config": "1.3.0",
     "babel-loader": "^8.1.0",
     "core-js": "3.7.0",
@@ -29,32 +51,19 @@
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-styleguidist": "^11.1.5",
+    "scripture-resources-rcl": "3.0.3",
     "style-loader": "^2.0.0",
     "webpack": "^4.44.2"
   },
   "dependencies": {
-    "@material-ui/core": "^4.11.2",
-    "@material-ui/icons": "^4.11.2",
-    "@material-ui/lab": "^4.0.0-alpha.57",
     "@types/react": "^17.0.0",
     "@types/react-dom": "^17.0.0",
-    "prop-types": "^15.7.2",
     "react-docgen-typescript": "^1.20.5",
-    "scripture-resources-rcl": "file:.yalc/scripture-resources-rcl",
     "source-map-loader": "^1.1.3",
     "styled-components": "^5.2.1",
     "translation-helps-rcl": "0.6.5",
     "ts-loader": "^8.0.12",
     "typescript": "^4.1.3",
     "word-aligner": "^1.0.0"
-  },
-  "name": "single-scripture-rcl",
-  "version": "0.1.0",
-  "repository": "https://github.com/unfoldingWord-box3/single-scripture-rcl.git",
-  "author": "RoyalSix <jay.a.scottjr@biola.edu>",
-  "license": "MIT",
-  "main": "dist/index.js",
-  "files": [
-    "dist/*"
-  ]
+  }
 }

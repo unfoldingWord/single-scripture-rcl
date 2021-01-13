@@ -1,1 +1,1 @@
-export { default as ScripturePane } from './ScripturePane';
+export * from './ScripturePane';

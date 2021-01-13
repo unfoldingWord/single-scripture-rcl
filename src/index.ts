@@ -1,2 +1,2 @@
-import '../static/style.css';
 export * from './components';
+export { useScripture, useResourceManifest } from './hooks';
