@@ -1,6 +1,6 @@
 {
   "name": "single-scripture-rcl",
-  "version": "0.1.1-alpha.3",
+  "version": "0.1.1-alpha.4",
   "repository": "https://github.com/unfoldingWord-box3/single-scripture-rcl.git",
   "author": "RoyalSix <jay.a.scottjr@biola.edu>",
   "license": "MIT",
@@ -12,7 +12,7 @@
     "test": "jest",
     "start": "styleguidist server",
     "build": "styleguidist build",
-    "prepublishOnly": "rm -fr ./dist && babel ./src --out-dir ./dist -s inline --extensions \".ts,.js\""
+    "prepublishOnly": "rm -fr ./dist && babel ./src --out-dir ./dist -s inline --extensions \".ts,.tsx,.js\""
   },
   "peerDependencies": {
     "@material-ui/core": "4.11.0",
