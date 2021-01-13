@@ -1,7 +1,7 @@
 ```js
 import { Card } from "translation-helps-rcl";
 import { makeStyles } from "@material-ui/core/styles";
-import { useScripture } from "../.."
+import { ScripturePane, useScripture } from "../.."
 
 const reference = {
   projectId: "tit",

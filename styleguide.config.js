@@ -6,6 +6,27 @@ const {
 } = require('./package.json');
 const parserOptions = { savePropValueAsString: true };
 
+let sections = [
+  {
+    name: 'README',
+    content: 'README.md',
+  },
+  {
+    name: 'ScripturePane ',
+    content: 'src/components/ScripturePane/README.md',
+    components: () => {
+      const componentNames = ['Resource.context'];
+      return componentNames.map((componentName) => {
+        return path.resolve(
+          __dirname,
+          `src/components/resources`,
+          `${componentName}.js`,
+        );
+      });
+    },
+  },
+];
+
 module.exports = {
   propsParser: require('react-docgen-typescript').withCustomConfig(
     './tsconfig.json',
@@ -16,6 +37,7 @@ module.exports = {
     url: repository.url,
     text: 'View on GitHub',
   },
+  sections,
   moduleAliases: { 'single-scripture-rcl': path.resolve(__dirname, 'src') },
   skipComponentsWithoutExample: true,
   ignore: ['**/types**', '**/helpers**', '**/styled**', '**/__tests__/**', '**/*.test.{js,jsx,ts,tsx}', '**/*.spec.{js,jsx,ts,tsx}', '**/*.d.ts'],
