@@ -18,7 +18,7 @@ padding: 0 .5em;
 export const Title = styled.div`
   max-width: 50%;
   font-family: Noto Sans;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: bold;
   color: #424242;
   letter-spacing: 0ch;
@@ -26,7 +26,7 @@ export const Title = styled.div`
 `;
 
 export const Content = styled.span`
-  font-size: 14px;
+  font-size: 16px;
   letter-spacing: 0.25px;
   font-family: Noto Sans;
   font-weight: normal;
