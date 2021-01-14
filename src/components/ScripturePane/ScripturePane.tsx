@@ -9,16 +9,37 @@ interface Props {
     title: string;
     version: string;
     reference: ScriptureReference;
+    refStyle: any;
+    contentStyle: any;
 }
 
-function ScripturePane({ content, title, version, reference }: Props) {
+function ScripturePane(
+  {
+    content,
+    title,
+    version,
+    reference,
+    refStyle,
+    contentStyle,
+  }: Props) {
   const { chapter, verse } = reference;
+
+  refStyle = refStyle || {
+    fontFamily: 'Noto Sans',
+    fontSize: '90%',
+  };
+
+  contentStyle = contentStyle || {
+    fontFamily: 'Noto Sans',
+    fontSize: '100%',
+  };
 
   return (
     <Container>
       <Title style={{ marginBottom: 12 }}>{title} v{version}</Title>
       <Content>
-        {chapter}:{verse}&nbsp;{content}
+        <span style={refStyle}> {chapter}:{verse}&nbsp;</span>
+        <span style={contentStyle}>{content}</span>
       </Content>
     </Container>
   );
