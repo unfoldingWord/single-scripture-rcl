@@ -22,7 +22,7 @@ export const Title = styled.div`
   font-weight: bold;
   color: #424242;
   letter-spacing: 0ch;
-  line-height: 12px;
+  line-height: 14px;
 `;
 
 export const Content = styled.span`
