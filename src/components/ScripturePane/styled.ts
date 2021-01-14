@@ -18,7 +18,7 @@ padding: 0 .5em;
 export const Title = styled.div`
   max-width: 50%;
   font-family: Noto Sans;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: bold;
   color: #424242;
   letter-spacing: 0ch;

@@ -1,5 +1,5 @@
 ```js
-import { Card } from "translation-helps-rcl";
+import { Card, useCardState } from "translation-helps-rcl";
 import { makeStyles } from "@material-ui/core/styles";
 import { ScripturePane, useScripture } from "../.."
 
@@ -29,13 +29,44 @@ const useStyles = makeStyles({
 
 function Component() {
   const classes = useStyles();
+  const items = null;
+  const {
+    state: { item, headers, filters, fontSize, itemIndex, markdownView },
+    actions: { setFilters, setFontSize, setItemIndex, setMarkdownView },
+  } = useCardState({
+    items,
+  })
+
   const scriptureConfig = useScripture({
     reference, resource, config,
   });
 
+  const refStyle = {
+    fontFamily: "Noto Sans",
+    fontSize: `${Math.round(fontSize * 0.9)}%`,
+  }
+
+  const contentStyle = {
+    fontFamily: "Noto Sans",
+    fontSize: `${fontSize}%`,
+  }
+
   return (
-    <Card classes={classes} title="Scripture">
-      <ScripturePane {...scriptureConfig} />
+    <Card
+      items={items}
+      classes={classes}
+      headers={headers}
+      filters={filters}
+      fontSize={fontSize}
+      itemIndex={itemIndex}
+      setFilters={setFilters}
+      setFontSize={setFontSize}
+      setItemIndex={setItemIndex}
+      markdownView={markdownView}
+      setMarkdownView={setMarkdownView}
+      title="Scripture"
+    >
+      <ScripturePane refStyle={refStyle} contentStyle={contentStyle} {...scriptureConfig} />
     </Card>
   );
 }

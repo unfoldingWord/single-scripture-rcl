@@ -2842,6 +2842,11 @@ class-utils@^0.3.5:
     isobject "^3.0.0"
     static-extend "^0.1.1"
 
+classnames@^2.2.5:
+  version "2.2.6"
+  resolved "https://registry.yarnpkg.com/classnames/-/classnames-2.2.6.tgz#43935bffdd291f326dad0a205309b38d00f650ce"
+  integrity sha512-JR/iSQOSt+LQIWwrwEzJ9uk0xfN3mTVYMwt1Ir5mUcSN6pU+V4zQFFaJsclJbPuAUQH+yfWef6tm7l1quW3C8Q==
+
 clean-stack@^2.0.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/clean-stack/-/clean-stack-2.2.0.tgz#ee8472dbb129e727b31e8a10a427dee9dfe4008b"
@@ -8264,6 +8269,14 @@ react-dom@^17.0.1:
     object-assign "^4.1.1"
     scheduler "^0.20.1"
 
+react-draggable@^4.4.3:
+  version "4.4.3"
+  resolved "https://registry.yarnpkg.com/react-draggable/-/react-draggable-4.4.3.tgz#0727f2cae5813e36b0e4962bf11b2f9ef2b406f3"
+  integrity sha512-jV4TE59MBuWm7gb6Ns3Q1mxX8Azffb7oTtDtBgFkxRvhDp38YAARmRplrj0+XGkhOJB5XziArX+4HUUABtyZ0w==
+  dependencies:
+    classnames "^2.2.5"
+    prop-types "^15.6.0"
+
 react-error-overlay@^6.0.8:
   version "6.0.8"
   resolved "https://registry.yarnpkg.com/react-error-overlay/-/react-error-overlay-6.0.8.tgz#474ed11d04fc6bda3af643447d85e9127ed6b5de"
@@ -9918,11 +9931,12 @@ transform-runtime@0.0.0:
   resolved "https://registry.yarnpkg.com/transform-runtime/-/transform-runtime-0.0.0.tgz#e714d9b69211dd9537939d50e3aa5788c442b85c"
   integrity sha1-5xTZtpIR3ZU3k51Q46pXiMRCuFw=
 
-translation-helps-rcl@0.6.5:
-  version "0.6.5"
-  resolved "https://registry.yarnpkg.com/translation-helps-rcl/-/translation-helps-rcl-0.6.5.tgz#0a865c977692d0e007a951b10c8d6f001e30d958"
-  integrity sha512-MqpMD9QsCucwLwrJ0yrG9TkIoYTn2DYwavhHGBFdbLmy/2Qbb/Yy6/RHhcQvkOS+B7zN5GRW5GruvwHItJ9TjA==
+translation-helps-rcl@1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/translation-helps-rcl/-/translation-helps-rcl-1.2.0.tgz#558a4230c51b3014153aecd54886fb2591852b83"
+  integrity sha512-HTjy/NLSwlcy1J+h2eSB+ObhbfWetEFCLb4tHjeqQT6L9TDoJLPmNZ3aUYkARhl6BpTsU27dyan7XH9weakg2w==
   dependencies:
+    react-draggable "^4.4.3"
     styled-components "^5.2.1"
 
 trim-trailing-lines@^1.0.0:
