@@ -5,12 +5,20 @@ import {
 } from './styled';
 
 interface Props {
-    content: string;
-    title: string;
-    version: string;
-    reference: ScriptureReference;
-    refStyle: any;
-    contentStyle: any;
+  /** SP content **/
+  content: string;
+  /** SP title **/
+  title: string;
+  /** resource version **/
+  version: string;
+  /** current reference **/
+  reference: ScriptureReference;
+  /** optional styles to use for reference **/
+  refStyle: any;
+  /** optional styles to use for content **/
+  contentStyle: any;
+  /** language direction to use **/
+  direction: string|undefined;
 }
 
 function ScripturePane(
@@ -21,8 +29,10 @@ function ScripturePane(
     reference,
     refStyle,
     contentStyle,
+    direction,
   }: Props) {
   const { chapter, verse } = reference;
+  direction = direction || 'ltr';
 
   refStyle = refStyle || {
     fontFamily: 'Noto Sans',
@@ -35,7 +45,7 @@ function ScripturePane(
   };
 
   return (
-    <Container>
+    <Container dir={direction}>
       <Title style={{ marginBottom: 12 }}>{title} v{version}</Title>
       <Content>
         <span style={refStyle}> {chapter}:{verse}&nbsp;</span>
