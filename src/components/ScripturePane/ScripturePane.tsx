@@ -11,6 +11,7 @@ interface Props {
     reference: ScriptureReference;
     refStyle: any;
     contentStyle: any;
+    direction: string|undefined;
 }
 
 function ScripturePane(
@@ -21,8 +22,10 @@ function ScripturePane(
     reference,
     refStyle,
     contentStyle,
+    direction,
   }: Props) {
   const { chapter, verse } = reference;
+  direction = direction || 'ltr';
 
   refStyle = refStyle || {
     fontFamily: 'Noto Sans',
@@ -35,7 +38,7 @@ function ScripturePane(
   };
 
   return (
-    <Container>
+    <Container dir={direction}>
       <Title style={{ marginBottom: 12 }}>{title} v{version}</Title>
       <Content>
         <span style={refStyle}> {chapter}:{verse}&nbsp;</span>

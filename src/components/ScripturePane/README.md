@@ -4,9 +4,9 @@ import { makeStyles } from "@material-ui/core/styles";
 import { ScripturePane, useScripture } from "../.."
 
 const reference = {
-  projectId: "tit",
-  chapter: 1,
-  verse: 1,
+  projectId: "psa",
+  chapter: 119,
+  verse: 166,
 };
 const config = {
   server: "https://git.door43.org",
@@ -14,8 +14,8 @@ const config = {
 };
 const resource = {
   owner: "unfoldingWord",
-  languageId: "en",
-  projectId: "ust",
+  languageId: "hbo",
+  projectId: "uhb",
 };
 const useStyles = makeStyles({
   header: {
