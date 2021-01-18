@@ -5,13 +5,20 @@ import {
 } from './styled';
 
 interface Props {
-    content: string;
-    title: string;
-    version: string;
-    reference: ScriptureReference;
-    refStyle: any;
-    contentStyle: any;
-    direction: string|undefined;
+  /** SP content **/
+  content: string;
+  /** SP title **/
+  title: string;
+  /** resource version **/
+  version: string;
+  /** current reference **/
+  reference: ScriptureReference;
+  /** optional styles to use for reference **/
+  refStyle: any;
+  /** optional styles to use for content **/
+  contentStyle: any;
+  /** language direction to use **/
+  direction: string|undefined;
 }
 
 function ScripturePane(
