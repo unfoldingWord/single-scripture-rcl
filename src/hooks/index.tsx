@@ -6,14 +6,21 @@ import {
 } from '../types';
 
 interface Props {
+  /** reference for scripture **/
   reference: ScriptureReference;
+  /** where to get data **/
   config: ServerConfig;
+  /** optional direct path to bible resource, in format ${owner}/${languageId}/${projectId}/${branch} **/
   resourceLink: string|undefined;
+  /** optional resource object to use to build resourceLink **/
   resource: ScriptureResource|undefined;
+  /** if true then do not display lexicon popover on hover **/
+  disableWordPopover: boolean|undefined;
 }
 
 export function useScripture({
-  reference, resourceLink: resourceLink_, config, resource: resource_,
+  reference, resourceLink: resourceLink_, config,
+  resource: resource_, disableWordPopover,
 }: Props) {
   let resourceLink = resourceLink_;
 
@@ -34,7 +41,7 @@ export function useScripture({
   const { verseObjects } = bibleJson || {};
 
   if (verseObjects) {
-    content = <VerseObjects verseObjects={verseObjects} />;
+    content = <VerseObjects verseObjects={verseObjects} disableWordPopover={disableWordPopover} />;
   }
 
   return {
