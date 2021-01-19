@@ -5,29 +5,59 @@ import { ScripturePane, useScripture } from "../.."
 
 // for testing NT book
 
-// const reference = {
-//   projectId: "tit",
-//   chapter: 1,
-//   verse: 1,
-// };
-// const resource = {
-//   owner: "unfoldingWord",
-//   languageId: "en",
-//   projectId: "ust",
-// };
-// const direction = 'ltr';
+const EnglishExample = {
+  reference: {
+    projectId: "tit",
+    chapter: 1,
+    verse: 5,
+  },
+  resource: {
+    owner: "unfoldingWord",
+    languageId: "en",
+    projectId: "ust",
+  },
+  direction: 'ltr',
+  disableWordPopover: true,
+}
 
-const reference = {
-  projectId: "psa",
-  chapter: 119,
-  verse: 166,
-};
-const resource = {
-  owner: "unfoldingWord",
-  languageId: "hbo",
-  projectId: "uhb",
-};
-const direction = 'rtl';
+const HebrewExample = {
+  reference: {
+    projectId: "psa",
+    chapter: 119,
+    verse: 166,
+  },
+  resource: {
+    owner: "unfoldingWord",
+    languageId: "hbo",
+    projectId: "uhb",
+  },
+  direction: 'rtl',
+  disableWordPopover: false,
+}
+
+const GreekExample = {
+  reference: {
+    projectId: "tit",
+    chapter: 1,
+    verse: 5,
+  },
+  resource: {
+    owner: "unfoldingWord",
+    languageId: "el-x-koine",
+    projectId: "ugnt",
+  },
+  direction: 'ltr',
+  disableWordPopover: false,
+}
+
+///////////////////////////////////////////
+// enable one of the following bible config lines to see various examples
+
+const scripture = HebrewExample;
+// const scripture = GreekExample;
+// const scripture = EnglishExample;
+
+///////////////////////////////////////////
 
 const config = {
   server: "https://git.door43.org",
@@ -54,7 +84,7 @@ function Component() {
   })
 
   const scriptureConfig = useScripture({
-    reference, resource, config,
+    ...scripture, config
   });
 
   const refStyle = {
@@ -82,7 +112,7 @@ function Component() {
       setMarkdownView={setMarkdownView}
       title="Scripture"
     >
-      <ScripturePane refStyle={refStyle} contentStyle={contentStyle} {...scriptureConfig} direction={direction} />
+      <ScripturePane refStyle={refStyle} contentStyle={contentStyle} {...scriptureConfig} direction={scripture.direction} />
     </Card>
   );
 }
