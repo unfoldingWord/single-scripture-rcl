@@ -106,4 +106,5 @@ dist
 # IntelliJ config
 .idea
 
-/.yalc/
+.yalc/
+yalc.lock
