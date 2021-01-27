@@ -45,7 +45,7 @@ export function useScripture({
   }
 
   return {
-    content, title, version, reference,
+    content, title, version, reference, resourceLink,
   };
 }
 
