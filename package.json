@@ -55,7 +55,7 @@
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-styleguidist": "^11.1.5",
-    "scripture-resources-rcl": "3.0.4",
+    "scripture-resources-rcl": "^3.1.0-rc1",
     "style-loader": "^2.0.0",
     "translation-helps-rcl": "1.4.0",
     "webpack": "^4.44.2"

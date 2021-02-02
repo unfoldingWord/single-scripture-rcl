@@ -1,11 +1,20 @@
 // @ts-ignore
 import * as React from 'react';
-import { useRsrc, VerseObjects } from 'scripture-resources-rcl';
+import {
+  core,
+  useRsrc,
+  VerseObjects,
+  SelectionsContextProvider,
+} from 'scripture-resources-rcl';
 import {
   ServerConfig, ScriptureReference, ScriptureResource,
 } from '../types';
 
 interface Props {
+  /** original quote **/
+  quote: string|undefined;
+  /** original quote's occurrence number **/
+  occurrence: number|undefined;
   /** reference for scripture **/
   reference: ScriptureReference;
   /** where to get data **/
@@ -19,9 +28,16 @@ interface Props {
 }
 
 export function useScripture({
-  reference, resourceLink: resourceLink_, config,
-  resource: resource_, disableWordPopover,
+  quote,
+  config,
+  reference,
+  occurrence,
+  disableWordPopover,
+  resource: resource_,
+  resourceLink: resourceLink_,
 }: Props) {
+  const [selections, setSelections] = React.useState([]);
+
   let resourceLink = resourceLink_;
 
   if (resource_) {
@@ -38,14 +54,25 @@ export function useScripture({
   const { title, version } = useResourceManifest(resource);
 
   let content: any;
-  const { verseObjects } = bibleJson || {};
+  let { verseObjects } = bibleJson || {};
+  verseObjects = core.occurrenceInjectVerseObjects(verseObjects);
 
   if (verseObjects) {
-    content = <VerseObjects verseObjects={verseObjects} disableWordPopover={disableWordPopover} />;
+    content = (
+      <SelectionsContextProvider
+        quote={quote}
+        occurrence={occurrence}
+        selections={selections}
+        verseObjects={verseObjects}
+        onSelections={setSelections}
+      >
+        <VerseObjects verseObjects={verseObjects} disableWordPopover={disableWordPopover} />
+      </SelectionsContextProvider>
+    );
   }
 
   return {
-    content, title, version, reference, resourceLink,
+    content, title, version, reference, resourceLink, verseObjects
   };
 }
 

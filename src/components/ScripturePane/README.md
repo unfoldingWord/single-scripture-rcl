@@ -1,7 +1,7 @@
 ```js
 import { Card, useCardState } from "translation-helps-rcl";
 import { makeStyles } from "@material-ui/core/styles";
-import { ScripturePane, useScripture } from "../.."
+import { ScripturePane, useScripture } from "../..";
 
 // for testing NT book
 
@@ -14,11 +14,11 @@ const EnglishExample = {
   resource: {
     owner: "unfoldingWord",
     languageId: "en",
-    projectId: "ust",
+    projectId: "ult",
   },
-  direction: 'ltr',
+  direction: "ltr",
   disableWordPopover: true,
-}
+};
 
 const HebrewExample = {
   reference: {
@@ -31,9 +31,9 @@ const HebrewExample = {
     languageId: "hbo",
     projectId: "uhb",
   },
-  direction: 'rtl',
+  direction: "rtl",
   disableWordPopover: false,
-}
+};
 
 const GreekExample = {
   reference: {
@@ -46,15 +46,15 @@ const GreekExample = {
     languageId: "el-x-koine",
     projectId: "ugnt",
   },
-  direction: 'ltr',
+  direction: "ltr",
   disableWordPopover: false,
-}
+};
 
 ///////////////////////////////////////////
 // enable one of the following bible config lines to see various examples
 
-const scripture = HebrewExample;
-// const scripture = GreekExample;
+// const scripture = HebrewExample;
+const scripture = GreekExample;
 // const scripture = EnglishExample;
 
 ///////////////////////////////////////////
@@ -81,21 +81,24 @@ function Component() {
     actions: { setFilters, setFontSize, setItemIndex, setMarkdownView },
   } = useCardState({
     items,
-  })
+  });
 
   const scriptureConfig = useScripture({
-    ...scripture, config
+    ...scripture,
+    config,
+    quote: "χάριν",
+    occurrence: 1,
   });
 
   const refStyle = {
     fontFamily: "Noto Sans",
     fontSize: `${Math.round(fontSize * 0.9)}%`,
-  }
+  };
 
   const contentStyle = {
     fontFamily: "Noto Sans",
     fontSize: `${fontSize}%`,
-  }
+  };
 
   return (
     <Card
@@ -112,7 +115,12 @@ function Component() {
       setMarkdownView={setMarkdownView}
       title="Scripture"
     >
-      <ScripturePane refStyle={refStyle} contentStyle={contentStyle} {...scriptureConfig} direction={scripture.direction} />
+      <ScripturePane
+        refStyle={refStyle}
+        {...scriptureConfig}
+        contentStyle={contentStyle}
+        direction={scripture.direction}
+      />
     </Card>
   );
 }
