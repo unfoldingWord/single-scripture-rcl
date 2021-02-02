@@ -72,7 +72,7 @@ export function useScripture({
   }
 
   return {
-    content, title, version, reference, resourceLink, verseObjects
+    content, title, version, reference, resourceLink,
   };
 }
 
