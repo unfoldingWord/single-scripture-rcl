@@ -36,7 +36,6 @@ function ScripturePane({
   verseObjects,
   disableWordPopover,
 }: Props) {
-  console.log({verseObjects})
   const { chapter, verse } = reference;
   direction = direction || 'ltr';
 

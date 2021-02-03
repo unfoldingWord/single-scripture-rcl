@@ -46,11 +46,11 @@ export function useScripture({
 
   let { verseObjects } = bibleJson || {};
   const { languageId } = resource_ || {};
+
   if (languageId === 'el-x-koine' || languageId === 'hbo') {
     verseObjects = core.occurrenceInjectVerseObjects(verseObjects);
   }
 
-console.log({ verseObjects })
 
   return {
     title,
