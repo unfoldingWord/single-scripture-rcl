@@ -3,8 +3,6 @@ import * as React from 'react';
 import {
   core,
   useRsrc,
-  VerseObjects,
-  SelectionsContextProvider,
 } from 'scripture-resources-rcl';
 import {
   ServerConfig, ScriptureReference, ScriptureResource,
@@ -23,21 +21,14 @@ interface Props {
   resourceLink: string|undefined;
   /** optional resource object to use to build resourceLink **/
   resource: ScriptureResource|undefined;
-  /** if true then do not display lexicon popover on hover **/
-  disableWordPopover: boolean|undefined;
 }
 
 export function useScripture({
-  quote,
   config,
   reference,
-  occurrence,
-  disableWordPopover,
   resource: resource_,
   resourceLink: resourceLink_,
 }: Props) {
-  const [selections, setSelections] = React.useState([]);
-
   let resourceLink = resourceLink_;
 
   if (resource_) {
@@ -53,26 +44,20 @@ export function useScripture({
   });
   const { title, version } = useResourceManifest(resource);
 
-  let content: any;
   let { verseObjects } = bibleJson || {};
-  verseObjects = core.occurrenceInjectVerseObjects(verseObjects);
-
-  if (verseObjects) {
-    content = (
-      <SelectionsContextProvider
-        quote={quote}
-        occurrence={occurrence}
-        selections={selections}
-        verseObjects={verseObjects}
-        onSelections={setSelections}
-      >
-        <VerseObjects verseObjects={verseObjects} disableWordPopover={disableWordPopover} />
-      </SelectionsContextProvider>
-    );
+  const { languageId } = resource_ || {};
+  if (languageId === 'el-x-koine' || languageId === 'hbo') {
+    verseObjects = core.occurrenceInjectVerseObjects(verseObjects);
   }
 
+console.log({ verseObjects })
+
   return {
-    content, title, version, reference, resourceLink,
+    title,
+    version,
+    reference,
+    resourceLink,
+    verseObjects: verseObjects || [],
   };
 }
 

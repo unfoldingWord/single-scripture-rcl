@@ -1,9 +1,24 @@
 ```js
+import { useState } from "react";
 import { Card, useCardState } from "translation-helps-rcl";
 import { makeStyles } from "@material-ui/core/styles";
 import { ScripturePane, useScripture } from "../..";
-
+import { core, SelectionsContextProvider } from "scripture-resources-rcl";
 // for testing NT book
+
+const EnglishUSTExample = {
+  reference: {
+    projectId: "tit",
+    chapter: 1,
+    verse: 5,
+  },
+  resource: {
+    owner: "unfoldingWord",
+    languageId: "en",
+    projectId: "ust",
+  },
+  direction: "ltr",
+};
 
 const EnglishExample = {
   reference: {
@@ -17,7 +32,6 @@ const EnglishExample = {
     projectId: "ult",
   },
   direction: "ltr",
-  disableWordPopover: true,
 };
 
 const HebrewExample = {
@@ -32,7 +46,6 @@ const HebrewExample = {
     projectId: "uhb",
   },
   direction: "rtl",
-  disableWordPopover: false,
 };
 
 const GreekExample = {
@@ -47,15 +60,15 @@ const GreekExample = {
     projectId: "ugnt",
   },
   direction: "ltr",
-  disableWordPopover: false,
 };
 
 ///////////////////////////////////////////
-// enable one of the following bible config lines to see various examples
+// Enable one of the following bible config lines to see various examples
 
-// const scripture = HebrewExample;
-const scripture = GreekExample;
-// const scripture = EnglishExample;
+// const hebrewScripture = HebrewExample;
+const greekScripture = GreekExample;
+const englishScripture = EnglishExample;
+const englishUstScripture = EnglishUSTExample;
 
 ///////////////////////////////////////////
 
@@ -74,6 +87,7 @@ const useStyles = makeStyles({
 });
 
 function Component() {
+  const [selections, setSelections] = useState([]);
   const classes = useStyles();
   const items = null;
   const {
@@ -83,11 +97,14 @@ function Component() {
     items,
   });
 
-  const scriptureConfig = useScripture({
-    ...scripture,
+  const greekScriptureConfig = useScripture({
+    ...greekScripture,
     config,
-    quote: "χάριν",
-    occurrence: 1,
+  });
+
+  const englishScriptureConfig = useScripture({
+    ...englishScripture,
+    config,
   });
 
   const refStyle = {
@@ -101,27 +118,61 @@ function Component() {
   };
 
   return (
-    <Card
-      items={items}
-      classes={classes}
-      headers={headers}
-      filters={filters}
-      fontSize={fontSize}
-      itemIndex={itemIndex}
-      setFilters={setFilters}
-      setFontSize={setFontSize}
-      setItemIndex={setItemIndex}
-      markdownView={markdownView}
-      setMarkdownView={setMarkdownView}
-      title="Scripture"
-    >
-      <ScripturePane
-        refStyle={refStyle}
-        {...scriptureConfig}
-        contentStyle={contentStyle}
-        direction={scripture.direction}
-      />
-    </Card>
+    <div style={{ display: "flex" }}>
+      <SelectionsContextProvider
+        quote={"χάριν"}
+        occurrence={1}
+        selections={selections}
+        verseObjects={greekScriptureConfig.verseObjects}
+        onSelections={setSelections}
+      >
+        <Card
+          title="Scripture"
+          items={items}
+          classes={classes}
+          headers={headers}
+          filters={filters}
+          fontSize={fontSize}
+          itemIndex={itemIndex}
+          setFilters={setFilters}
+          setFontSize={setFontSize}
+          setItemIndex={setItemIndex}
+          markdownView={markdownView}
+          setMarkdownView={setMarkdownView}
+          hideMarkdownToggle
+        >
+          <ScripturePane
+            refStyle={refStyle}
+            {...greekScriptureConfig}
+            contentStyle={contentStyle}
+            direction={greekScripture.direction}
+          />
+        </Card>
+        <Card
+          title="Scripture"
+          items={items}
+          classes={classes}
+          headers={headers}
+          filters={filters}
+          fontSize={fontSize}
+          itemIndex={itemIndex}
+          setFilters={setFilters}
+          setFontSize={setFontSize}
+          setItemIndex={setItemIndex}
+          markdownView={markdownView}
+          setMarkdownView={setMarkdownView}
+          hideMarkdownToggle
+        >
+          <ScripturePane
+            disableWordPopover
+            refStyle={refStyle}
+            {...englishScriptureConfig}
+            contentStyle={contentStyle}
+            direction={englishScripture.direction}
+          />
+        </Card>
+      </SelectionsContextProvider>
+    </div>
   );
 }
 
