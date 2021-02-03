@@ -25,6 +25,34 @@ let sections = [
       });
     },
   },
+  {
+    name: 'ScriptureSelector ',
+    content: 'src/components/ScriptureSelector/README.md',
+    components: () => {
+      const componentNames = ['Resource.context'];
+      return componentNames.map((componentName) => {
+        return path.resolve(
+          __dirname,
+          `src/components/resources`,
+          `${componentName}.js`,
+        );
+      });
+    },
+  },
+  {
+    name: 'ComboBox ',
+    content: 'src/components/ComboBox/README.md',
+    components: () => {
+      const componentNames = ['Resource.context'];
+      return componentNames.map((componentName) => {
+        return path.resolve(
+          __dirname,
+          `src/components/resources`,
+          `${componentName}.js`,
+        );
+      });
+    },
+  },
 ];
 
 module.exports = {

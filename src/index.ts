@@ -1,2 +1,8 @@
 export * from './components';
-export { useScripture, useResourceManifest } from './hooks';
+export {
+  useComboBox,
+  useScripture,
+  useScriptureSelector,
+  useResourceManifest,
+} from './hooks';
+
