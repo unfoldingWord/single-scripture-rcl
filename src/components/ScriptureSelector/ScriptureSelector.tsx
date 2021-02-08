@@ -22,7 +22,6 @@ export function ScriptureSelector({
       handleHomeEndKeys
       id="settings-combo-box"
       style={ style || { marginTop: '16px', width: '500px' }}
-      freeSolo={!!allowUserInput}
       { ...status }
       { ...actions }
     />

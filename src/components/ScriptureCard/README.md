@@ -22,7 +22,7 @@ const EnglishExample = {
     languageId: "en",
     resourceId: TARGET_LITERAL
   },
-  direction: 'ltr',
+  getLanguage: () => ({ direction: 'ltr'}),
   disableWordPopover: true,
 }
 
@@ -38,7 +38,7 @@ const HebrewExample = {
     languageId: "hbo",
     resourceId: ORIGINAL_SOURCE
   },
-  direction: 'rtl',
+  getLanguage: () => ({ direction: 'rtl'}),
   disableWordPopover: false,
 }
 
@@ -54,7 +54,7 @@ const GreekExample = {
     languageId: "el-x-koine",
     resourceId: ORIGINAL_SOURCE
   },
-  direction: 'ltr',
+  getLanguage: () => ({ direction: 'ltr'}),
   disableWordPopover: false,
 }
 
@@ -133,7 +133,7 @@ function Component() {
       languageId,
       resourceId,
     },
-    direction,
+    getLanguage,
     disableWordPopover,
   } = scripture
 
@@ -147,7 +147,7 @@ function Component() {
       owner={owner}
       branch={config.branch}
       languageId={languageId}
-      direction={direction}
+      getLanguage={getLanguage}
       resourceId={resourceId}
       bookId={bookId}
       disableWordPopover={true}

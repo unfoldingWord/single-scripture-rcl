@@ -13,7 +13,7 @@ export default function ScriptureCard(Props) {
   const {
     title,
     classes,
-    direction,
+    getLanguage,
   } = Props
 
   const { scriptureConfig, setScripture } = useScriptureSettings(Props)
@@ -35,6 +35,10 @@ export default function ScriptureCard(Props) {
 
     return <ScriptureSelector {...scriptureSelectionConfig} style={style} />
   }
+
+  // @ts-ignore
+  const language = getLanguage({ languageId: scriptureConfig?.resource?.languageId })
+  const direction = (language?.direction) || 'ltr'
 
   const items = null
   const {
@@ -100,8 +104,8 @@ ScriptureCard.propTypes = {
   branch: PropTypes.string.isRequired,
   /** resource language to use */
   languageId: PropTypes.string.isRequired,
-  /** direction of resource language */
-  direction: PropTypes.string.isRequired,
+  /** get language details */
+  getLanguage: PropTypes.func.isRequired,
   /** bookID to use */
   bookId: PropTypes.string.isRequired,
   /** resourceId to use (e.g. ugnt) */

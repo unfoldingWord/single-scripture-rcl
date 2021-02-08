@@ -75,6 +75,7 @@ export function useScriptureSelector({
       getOptionLabel: status.getOptionLabel,
       renderOption,
       renderInput: status.renderInput,
+      freeSolo: status.freeSolo,
     },
     actions: { onChange: actions.onChange },
   }
