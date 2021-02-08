@@ -28,6 +28,10 @@ export function useScriptureResources(bookId, scriptureSettings, chapter, verse,
 
   // restore any default settings
   scriptureResource.resourceLink = scriptureSettings.resourceLink
+
+  if (!scriptureResource['resource']) { // keep resource if not returned
+    scriptureResource['resource'] = scriptureConfig_.resource
+  }
   return scriptureResource
 }
 
