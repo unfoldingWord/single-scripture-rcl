@@ -1,8 +1,8 @@
-import * as React from 'react'
-import { ScriptureReference } from '../../types'
+import * as React from 'react';
+import { ScriptureReference } from '../../types';
 import {
   Container, Title, Content,
-} from './styled'
+} from './styled';
 
 interface Props {
   /** SP content **/
@@ -31,18 +31,18 @@ function ScripturePane(
     contentStyle,
     direction,
   }: Props) {
-  const { chapter, verse } = reference
-  direction = direction || 'ltr'
+  const { chapter, verse } = reference;
+  direction = direction || 'ltr';
 
   refStyle = refStyle || {
     fontFamily: 'Noto Sans',
     fontSize: '90%',
-  }
+  };
 
   contentStyle = contentStyle || {
     fontFamily: 'Noto Sans',
     fontSize: '100%',
-  }
+  };
 
   return (
     <Container dir={direction}>
@@ -52,7 +52,7 @@ function ScripturePane(
         <span style={contentStyle}>{content}</span>
       </Content>
     </Container>
-  )
+  );
 }
 
-export default ScripturePane
+export default ScripturePane;
