@@ -1,6 +1,3 @@
-// @ts-ignore
-import * as React from 'react';
-
 export function useResourceManifest(resource){
   if (resource && resource.manifest){
     const {
@@ -9,11 +6,13 @@ export function useResourceManifest(resource){
           title, version, rights,
         },
       },
-    } = resource;
+    } = resource
     return {
       title, version, rights,
-    };
+    }
   } else {
-    return {};
+    return {}
   }
 }
+
+export default useResourceManifest

@@ -5,13 +5,8 @@ import * as React from 'react'
 import HighlightOffIcon from '@material-ui/icons/HighlightOff'
 import IconButton from '@material-ui/core/IconButton'
 import Tooltip from '@material-ui/core/Tooltip'
+import { delay } from '../utils/delay'
 import { useComboBox } from './useComboBox'
-
-export function delay(ms) {
-  return new Promise((resolve) =>
-    setTimeout(resolve, ms),
-  )
-}
 
 export function useScriptureSelector({
   label, options, current, allowUserInput, onChange, deleteItem,
