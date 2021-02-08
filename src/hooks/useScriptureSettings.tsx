@@ -39,7 +39,8 @@ export function useScriptureSettings(props) {
       try {
         url = new URL(item.url)
       } catch {
-        console.error('illegal url', item.url)
+        console.log('illegal url', item.url)
+        removeUrl(item.url)
         return
       }
     }
