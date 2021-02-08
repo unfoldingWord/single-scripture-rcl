@@ -22,9 +22,8 @@ export function ComboBox({
       handleHomeEndKeys
       id="settings-combo-box"
       style={ style || { marginTop: '16px', width: '500px' }}
-      freeSolo={!!allowUserInput}
+      onChange={actions.onChange}
       { ...status }
-      { ...actions }
     />
   )
 }

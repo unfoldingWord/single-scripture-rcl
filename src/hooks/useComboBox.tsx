@@ -73,7 +73,7 @@ export function useComboBox({
       getOptionLabel,
       renderOption,
       renderInput,
-      allowUserInput,
+      freeSolo: !!allowUserInput,
     },
     actions: {
       onChange: handleChange,

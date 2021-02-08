@@ -10,7 +10,7 @@ export function updateTitle(resourceLink, title) { // update title for resourceL
 
   if (entry) {
     if (entry.title !== title) {
-      entry.title = title // update the title
+      history[index]['title'] = title // update the title
       setLocalStorageValue(KEY, history) // persist settings
     }
   }
