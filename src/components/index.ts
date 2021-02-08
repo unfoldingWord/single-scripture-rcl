@@ -1,3 +1,4 @@
-export * from './ComboBox';
-export * from './ScripturePane';
-export * from './ScriptureSelector';
+export * from './ComboBox'
+export * from './ScriptureCard'
+export * from './ScripturePane'
+export * from './ScriptureSelector'
