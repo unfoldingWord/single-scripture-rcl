@@ -11,10 +11,10 @@ import { useComboBox } from './useComboBox'
 export function useScriptureSelector({
   label, options, current, allowUserInput, onChange, deleteItem,
 }) {
-  let { status, actions } = useComboBox({
+  let { state, actions } = useComboBox({
     label, options, current, allowUserInput, onChange,
   })
-  const [currentOptions, setOptions] = React.useState(status.options)
+  const [currentOptions, setOptions] = React.useState(state.options)
 
   function findTitle(title) {
     const index = currentOptions.findIndex(item => (item.title === title))
@@ -22,7 +22,7 @@ export function useScriptureSelector({
   }
 
   function handleDelete(option) {
-    const currentTitle = status.value.title
+    const currentTitle = state.value.title
     const removeTitle = option.title
     deleteItem(removeTitle)
     const index = findTitle(removeTitle)
@@ -68,14 +68,14 @@ export function useScriptureSelector({
   }
 
   return {
-    status: {
-      value: status.value,
+    state: {
+      value: state.value,
       options: currentOptions,
-      filterOptions: status.filterOptions,
-      getOptionLabel: status.getOptionLabel,
+      filterOptions: state.filterOptions,
+      getOptionLabel: state.getOptionLabel,
       renderOption,
-      renderInput: status.renderInput,
-      freeSolo: status.freeSolo,
+      renderInput: state.renderInput,
+      freeSolo: state.freeSolo,
     },
     actions: { onChange: actions.onChange },
   }

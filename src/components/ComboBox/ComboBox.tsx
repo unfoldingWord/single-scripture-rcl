@@ -11,7 +11,7 @@ import { useComboBox } from '../../hooks'
 export function ComboBox({
   label, options, current, allowUserInput, onChange, style,
 }) {
-  const { status, actions } = useComboBox({
+  const { state, actions } = useComboBox({
     label, options, current, allowUserInput, onChange,
   })
 
@@ -23,7 +23,7 @@ export function ComboBox({
       id="settings-combo-box"
       style={ style || { marginTop: '16px', width: '500px' }}
       onChange={actions.onChange}
-      { ...status }
+      { ...state }
     />
   )
 }

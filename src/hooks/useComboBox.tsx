@@ -66,7 +66,7 @@ export function useComboBox({
   )
 
   return {
-    status: {
+    state: {
       value,
       options,
       filterOptions,
