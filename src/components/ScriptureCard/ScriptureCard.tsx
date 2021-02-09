@@ -100,6 +100,8 @@ ScriptureCard.propTypes = {
   server: PropTypes.string.isRequired,
   /** repo owner such as unfoldingWord */
   owner: PropTypes.string.isRequired,
+  /** repo owner for original languages such as unfoldingWord */
+  originalLanguageOwner: PropTypes.string.isRequired,
   /** repo branch such as master */
   branch: PropTypes.string.isRequired,
   /** resource language to use */

@@ -1,13 +1,20 @@
 import { core } from 'scripture-resources-rcl'
+import * as isEqual from 'deep-equal'
 import {
   addItemToHistory,
+  removeItem,
   removeUrl,
 } from '../utils/ScriptureVersionHistory'
 import { useResourceManifest } from '..'
-import { getDefaultSettings, getScriptureObject } from '../utils/ScriptureSettings'
+import {
+  getResourceLink,
+  getScriptureObject,
+  getScriptureResourceSettings,
+} from '../utils/ScriptureSettings'
 import useScriptureResources from './useScriptureResources'
 
-const KEY_BASE = 'scripturePaneConfig_'
+const KEY_SETTINGS_BASE = 'scripturePaneConfig_'
+const KEY_TARGET_BASE = 'scripturePaneTarget_'
 
 export function useScriptureSettings(props) {
   const {
@@ -15,18 +22,37 @@ export function useScriptureSettings(props) {
     chapter,
     verse,
     bookId,
+    owner,
+    server,
+    languageId,
     resourceId,
     disableWordPopover,
     useLocalStorage,
     isNT,
   } = props
 
-  const key = KEY_BASE + cardNum
-  const scriptureResource = getScriptureObject(props) // scripture resource based on default settings
-  let [scriptureSettings, setScriptureSettings] = useLocalStorage(key, scriptureResource)
-
-  addItemToHistory(scriptureSettings) // make sure current item persisted in local storage
   const isNewTestament = isNT(bookId)
+  const scriptureDefaultSettings = getScriptureObject(props)
+  addItemToHistory(scriptureDefaultSettings) // make sure default setting persisted in history
+  let [scriptureSettings, setScriptureSettings] = useLocalStorage(KEY_SETTINGS_BASE + cardNum, scriptureDefaultSettings)
+  const currentTarget = {
+    server,
+    owner,
+    languageId,
+  }
+  const [target, setTarget] = useLocalStorage(KEY_TARGET_BASE + cardNum, currentTarget)
+
+  if (!isEqual(currentTarget, target)) { // when target changes, switch back to defaults
+    const oldDefaultSettings = { ...scriptureDefaultSettings, ...target }
+    oldDefaultSettings.resourceLink = getResourceLink(oldDefaultSettings)
+    removeItem(oldDefaultSettings) // remove old default settings from history
+
+    setScriptureSettings(scriptureDefaultSettings)
+    setTarget(currentTarget)
+  } else {
+    addItemToHistory(scriptureSettings) // make sure current setting persisted in history
+  }
+
   const scriptureConfig = useScriptureResources(bookId, scriptureSettings, chapter, verse, isNewTestament)
 
   const scriptureConfig_ = { ...scriptureConfig }
@@ -59,7 +85,7 @@ export function useScriptureSettings(props) {
       let url_ = item.url
 
       if (!url) { // if not a new resource
-        scriptureSettings = getDefaultSettings(resourceId, bookId, isNewTestament)
+        scriptureSettings = getScriptureResourceSettings(resourceId, bookId, isNewTestament) // convert any default settings strings
         url_ = scriptureSettings.resourceLink
       }
 

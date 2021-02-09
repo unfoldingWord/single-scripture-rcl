@@ -19,6 +19,7 @@ const EnglishExample = {
   isNT: () => true,
   resource: {
     owner: "unfoldingWord",
+    originalLanguageOwner: "unfoldingWord",
     languageId: "en",
     resourceId: TARGET_LITERAL
   },
@@ -35,6 +36,7 @@ const HebrewExample = {
   isNT: () => false,
   resource: {
     owner: "unfoldingWord",
+    originalLanguageOwner: "unfoldingWord",
     languageId: "hbo",
     resourceId: ORIGINAL_SOURCE
   },
@@ -51,6 +53,7 @@ const GreekExample = {
   isNT: () => true,
   resource: {
     owner: "unfoldingWord",
+    originalLanguageOwner: "unfoldingWord",
     languageId: "el-x-koine",
     resourceId: ORIGINAL_SOURCE
   },
@@ -130,6 +133,7 @@ function Component() {
     isNT,
     resource: {
       owner,
+      originalLanguageOwner,
       languageId,
       resourceId,
     },
@@ -145,6 +149,7 @@ function Component() {
       verse={verse}
       server={config.server}
       owner={owner}
+      originalLanguageOwner={originalLanguageOwner}
       branch={config.branch}
       languageId={languageId}
       getLanguage={getLanguage}

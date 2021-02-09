@@ -25,6 +25,7 @@ export function getScriptureObject(scripture_) {
     title,
     server,
     owner,
+    originalLanguageOwner,
     branch,
     languageId,
     resourceId,
@@ -36,6 +37,7 @@ export function getScriptureObject(scripture_) {
     title,
     server,
     owner,
+    originalLanguageOwner,
     branch,
     languageId,
     resourceId,
@@ -49,16 +51,21 @@ export function getScriptureObject(scripture_) {
   return scripture
 }
 
-export function getDefaultSettings(bookId, scriptureSettings_, isNewTestament) {
+export function getScriptureResourceSettings(bookId, scriptureSettings_, isNewTestament) {
   const scriptureSettings = { ...scriptureSettings_ }
   scriptureSettings.disableWordPopover = DISABLE_WORD_POPOVER
 
   if (scriptureSettings_.resourceId === ORIGINAL_SOURCE) {
-    // select original language Bible based on which testament the book is
+    // select original language Bible based on which testament the book belongs
     scriptureSettings.languageId = isNewTestament ? NT_ORIG_LANG : OT_ORIG_LANG
     scriptureSettings.resourceId = isNewTestament
       ? NT_ORIG_LANG_BIBLE
       : OT_ORIG_LANG_BIBLE
+
+    if (scriptureSettings.originalLanguageOwner) {
+      scriptureSettings.owner = scriptureSettings.originalLanguageOwner
+    }
+
     scriptureSettings.resourceLink = getResourceLink(scriptureSettings)
     scriptureSettings.disableWordPopover = false
   } else if (scriptureSettings_.resourceId === TARGET_LITERAL) {

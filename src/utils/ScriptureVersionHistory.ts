@@ -26,11 +26,8 @@ export function findItemIndexByKey(history, key, match) {
   return index
 }
 
-function getItemByIndex(index, history = null) {
-  if (!history) {
-    history = getLatest()
-  }
-
+function getItemByIndex(index, history=null) {
+  history = history || getLatest()
   return (index >= 0) ? history[index] : null
 }
 
@@ -40,8 +37,8 @@ export function getItemByTitle(title) {
   return getItemByIndex(index, history)
 }
 
-export function removeItemByIndex(index) {
-  let history = getLatest()
+export function removeItemByIndex(index, history=null) {
+  history = history || getLatest()
 
   if ((index >= 0) && (index < history.length)) {
     history.splice(index, 1) // remove old item - we will add it back again to the front
@@ -57,10 +54,17 @@ export function removeUrl(url) {
   }
 }
 
-export function findItem(matchItem, history) {
-  if (!history) {
-    history = getLatest()
+export function removeItem(matchItem, history=null) {
+  history = history || getLatest()
+  const index = findItem(matchItem, history)
+
+  if (index >= 0) {
+    removeItemByIndex(index, history)
   }
+}
+
+export function findItem(matchItem, history=null) {
+  history = history || getLatest()
 
   const index = history.findIndex((item) => (
     (item.server === matchItem.server) &&
@@ -71,17 +75,22 @@ export function findItem(matchItem, history) {
 export function addItemToHistory(newItem) { // add new item to front of the array and only keep up to maxItems
   let history = getLatest()
   let newIndex = -1
+  let changed = false
   const index = findItem(newItem, history)
 
   if (index < 0) {
     history.unshift(newItem)
     newIndex = 0
+    changed = true
   }
 
   if (history.length > maxItems) {
     history = history.slice(0, maxItems)
+    changed = true
   }
 
-  setLocalStorageValue(KEY, history)
+  if (changed) {
+    setLocalStorageValue(KEY, history)
+  }
   return newIndex
 }
