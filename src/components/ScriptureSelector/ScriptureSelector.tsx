@@ -11,7 +11,7 @@ import { useScriptureSelector } from '../../hooks'
 export function ScriptureSelector({
   label, options, current, allowUserInput, onChange, style, deleteItem,
 }) {
-  const { status, actions } = useScriptureSelector({
+  const { state, actions } = useScriptureSelector({
     label, options, current, allowUserInput, onChange, deleteItem,
   })
 
@@ -22,7 +22,7 @@ export function ScriptureSelector({
       handleHomeEndKeys
       id="settings-combo-box"
       style={ style || { marginTop: '16px', width: '500px' }}
-      { ...status }
+      { ...state }
       { ...actions }
     />
   )
