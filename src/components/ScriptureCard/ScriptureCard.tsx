@@ -5,13 +5,13 @@ import { ScripturePane, ScriptureSelector } from '..'
 import { updateTitle } from '../../utils/ScriptureVersionHistory'
 import { useScriptureSettings } from '../../hooks/useScriptureSettings'
 import { getScriptureVersionSettings } from '../../utils/ScriptureSettings'
+import { Title } from '../ScripturePane/styled'
 
 const label = 'Version'
 const style = { marginTop: '16px', width: '500px' }
 
 export default function ScriptureCard(Props) {
   const {
-    title,
     classes,
     getLanguage,
   } = Props
@@ -50,6 +50,12 @@ export default function ScriptureCard(Props) {
     },
   } = useCardState({ items })
 
+  const labelStyle = {
+    fontFamily: 'Noto Sans',
+    fontSize: `16px`,
+    maxWidth: '100%',
+  }
+
   const refStyle = {
     fontFamily: 'Noto Sans',
     fontSize: `${Math.round(fontSize * 0.9)}%`,
@@ -60,9 +66,12 @@ export default function ScriptureCard(Props) {
     fontSize: `${fontSize}%`,
   }
 
+  const scriptureLabel =
+    <Title style={labelStyle}>{scriptureConfig.title} v{scriptureConfig.version}</Title>
+
   return (
     <Card
-      title={title}
+      title={scriptureLabel}
       items={items}
       classes={classes}
       headers={headers}
