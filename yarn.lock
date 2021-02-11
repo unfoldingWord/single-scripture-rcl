@@ -9224,7 +9224,7 @@ schema-utils@^3.0.0:
     ajv "^6.12.5"
     ajv-keywords "^3.5.2"
 
-scripture-resources-rcl@3.0.4:
+scripture-resources-rcl@^3.0.4:
   version "3.0.4"
   resolved "https://registry.yarnpkg.com/scripture-resources-rcl/-/scripture-resources-rcl-3.0.4.tgz#c2497d61a3f461267759bb892e25dde275b9c0ff"
   integrity sha512-cYPcWHI7mCvoiIEBJYE1dUBO2DOqaO3S3gggxEY4f0A4DrM7CikSvfIt7DUV9qxGE3QFNS4jpTZy3mY2rHNX4A==

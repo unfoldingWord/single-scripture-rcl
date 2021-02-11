@@ -33,7 +33,7 @@ export function useScripture({
   }
 
   const options = { getBibleJson: true };
-  const { state: { bibleJson, resource } } = useRsrc({
+  const { state: { bibleJson, matchedVerse, resource } } = useRsrc({
     config, reference, resourceLink, options,
   });
   const { title, version } = useResourceManifest(resource);
@@ -46,6 +46,6 @@ export function useScripture({
   }
 
   return {
-    content, title, version, reference, resourceLink,
+    content, title, version, reference, resourceLink, matchedVerse,
   };
 }
