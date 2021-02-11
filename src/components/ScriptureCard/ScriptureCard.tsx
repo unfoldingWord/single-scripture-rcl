@@ -40,6 +40,10 @@ export default function ScriptureCard(Props) {
   const language = getLanguage({ languageId: scriptureConfig?.resource?.languageId })
   const direction = (language?.direction) || 'ltr'
 
+  if (scriptureConfig.matchedVerse) { // support verse ranges
+    scriptureConfig.reference.verse = scriptureConfig.matchedVerse
+  }
+
   const items = null
   const {
     state: {
