@@ -1,9 +1,9 @@
-import * as React from 'react';
-import { VerseObjects } from 'scripture-resources-rcl';
-import { ScriptureReference, VerseObjectsType } from '../../types';
+import * as React from 'react'
+import { VerseObjects } from 'scripture-resources-rcl'
+import { ScriptureReference, VerseObjectsType } from '../../types'
 import {
   Container, Title, Content,
-} from './styled';
+} from './styled'
 
 interface Props {
   /** SP content **/
@@ -33,21 +33,21 @@ function ScripturePane({
   refStyle,
   direction,
   contentStyle,
-  verseObjects,
+  verseObjects,// Replaces content
   disableWordPopover,
-}: Props) {
-  const { chapter, verse } = reference;
-  direction = direction || 'ltr';
+} : Props) {
+  const { chapter, verse } = reference
+  direction = direction || 'ltr'
 
   refStyle = refStyle || {
     fontFamily: 'Noto Sans',
     fontSize: '90%',
-  };
+  }
 
   contentStyle = contentStyle || {
     fontFamily: 'Noto Sans',
     fontSize: '100%',
-  };
+  }
 
   return (
     <Container dir={direction}>
@@ -59,7 +59,7 @@ function ScripturePane({
         </span>
       </Content>
     </Container>
-  );
+  )
 }
 
-export default ScripturePane;
+export default ScripturePane
