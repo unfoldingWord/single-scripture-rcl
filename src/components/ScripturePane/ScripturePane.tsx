@@ -46,7 +46,6 @@ function ScripturePane(
 
   return (
     <Container dir={direction}>
-      <Title style={{ marginBottom: 12 }}>{title} v{version}</Title>
       <Content>
         <span style={refStyle}> {chapter}:{verse}&nbsp;</span>
         <span style={contentStyle}>{content}</span>
