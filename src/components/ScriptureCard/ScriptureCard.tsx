@@ -39,6 +39,11 @@ export default function ScriptureCard(Props) {
   // @ts-ignore
   const language = getLanguage({ languageId: scriptureConfig?.resource?.languageId })
   const direction = (language?.direction) || 'ltr'
+  const reference = { ...scriptureConfig.reference }
+
+  if (scriptureConfig.matchedVerse) { // support verse ranges
+    reference.verse = scriptureConfig.matchedVerse
+  }
 
   const items = null
   const {
@@ -81,6 +86,7 @@ export default function ScriptureCard(Props) {
         refStyle={refStyle}
         contentStyle={contentStyle}
         {...scriptureConfig}
+        reference={reference}
         direction={direction}
       />
     </Card>
