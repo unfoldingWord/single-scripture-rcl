@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled from 'styled-components'
 
 export const Container = styled.div`
 padding: 0 .5em;
@@ -14,8 +14,11 @@ padding: 0 .5em;
   src: url("../../../static/NotoSans-Bold.ttf");
 }
 
-`;
+`
 export const Title = styled.div`
+font-family: Noto Sans;
+  font-size: 16px;
+  max-width: 100%;
   max-width: 50%;
   font-family: Noto Sans;
   font-size: 16px;
@@ -23,7 +26,7 @@ export const Title = styled.div`
   color: #424242;
   letter-spacing: 0ch;
   line-height: 14px;
-`;
+`
 
 export const Content = styled.span`
   font-size: 16px;
@@ -31,8 +34,8 @@ export const Content = styled.span`
   font-family: Noto Sans;
   font-weight: normal;
   line-height: 20px;
-`;
+`
 
 export const ChapterVerse = styled.span`
   font-size: 12px;
-`;
+`

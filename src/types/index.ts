@@ -17,3 +17,19 @@ export interface ScriptureResource {
   owner: string;
   branch: string;
 }
+
+export interface VerseObjectType {
+  lemma: string;
+  morph: string;
+  occurrence: number|string;
+  occurrences: number|string;
+  strong: string;
+  tag: string;
+  text: string;
+  tw: string;
+  type: string;
+}
+
+export interface VerseObjectsType {
+  [index: number]: VerseObjectType;
+}

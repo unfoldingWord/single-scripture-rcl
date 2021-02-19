@@ -10,23 +10,57 @@ import { Title } from '../ScripturePane/styled'
 const label = 'Version'
 const style = { marginTop: '16px', width: '500px' }
 
-export default function ScriptureCard(Props) {
-  const {
-    classes,
-    getLanguage,
-  } = Props
-
-  const { scriptureConfig, setScripture } = useScriptureSettings(Props)
+export default function ScriptureCard({
+  isNT,
+  title,
+  server,
+  branch,
+  cardNum,
+  classes,
+  resource: {
+    owner,
+    languageId,
+    resourceId,
+    originalLanguageOwner,
+  },
+  getLanguage,
+  reference: {
+    verse,
+    chapter,
+    projectId: bookId,
+  },
+  resourceLink,
+  useLocalStorage,
+  disableWordPopover,
+}) {
+  const { scriptureConfig, setScripture } = useScriptureSettings({
+    isNT,
+    title,
+    verse,
+    owner,
+    bookId,
+    branch,
+    server,
+    cardNum,
+    chapter,
+    languageId,
+    resourceId,
+    resourceLink,
+    useLocalStorage,
+    disableWordPopover,
+    originalLanguageOwner,
+  })
 
   if (scriptureConfig.title) {
     const title = `${scriptureConfig.title} v${scriptureConfig.version}`
     updateTitle(scriptureConfig.resourceLink, title)
   }
 
-  /** dynamically creates the scripture selection dropdown to be inserted into card settings */
+  /** Dynamically creates the scripture selection dropdown to be inserted into card settings */
   function getScriptureSelector() {
+    // TODO: What are the next two lines useful for? Bruce McLean?
     const scriptureConfig_ = { ...scriptureConfig }
-    scriptureConfig_.content = !!scriptureConfig.content
+    scriptureConfig_.verseObjects = !!scriptureConfig.verseObjects
     const scriptureSelectionConfig = getScriptureVersionSettings({
       label,
       resourceLink: scriptureConfig.resourceLink,
@@ -55,12 +89,6 @@ export default function ScriptureCard(Props) {
     },
   } = useCardState({ items })
 
-  const labelStyle = {
-    fontFamily: 'Noto Sans',
-    fontSize: `16px`,
-    maxWidth: '100%',
-  }
-
   const refStyle = {
     fontFamily: 'Noto Sans',
     fontSize: `${Math.round(fontSize * 0.9)}%`,
@@ -72,7 +100,7 @@ export default function ScriptureCard(Props) {
   }
 
   const scriptureLabel =
-    <Title style={labelStyle}>{scriptureConfig.title} v{scriptureConfig.version}</Title>
+    <Title>{scriptureConfig.title} v{scriptureConfig.version}</Title>
 
   return (
     <Card
@@ -88,47 +116,59 @@ export default function ScriptureCard(Props) {
       setItemIndex={setItemIndex}
       markdownView={markdownView}
       setMarkdownView={setMarkdownView}
-      hideMarkdownToggle
       getCustomComponent={getScriptureSelector}
+      hideMarkdownToggle
     >
       <ScripturePane
         refStyle={refStyle}
-        contentStyle={contentStyle}
         {...scriptureConfig}
         reference={reference}
         direction={direction}
+        contentStyle={contentStyle}
+        disableWordPopover={disableWordPopover}
       />
     </Card>
   )
 }
 
 ScriptureCard.propTypes = {
-  /** scripture card number (0 to 2 for example) */
-  cardNum: PropTypes.number.isRequired,
+  /** Its new testament */
+  isNT: PropTypes.func,
   /** title for scripture card */
   title: PropTypes.string.isRequired,
-  /** current chapter number */
-  chapter: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
-  /** current verse number */
-  verse: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
-  /** server (e.g. 'https://git.door43.org') */
-  server: PropTypes.string.isRequired,
-  /** repo owner such as unfoldingWord */
-  owner: PropTypes.string.isRequired,
-  /** repo owner for original languages such as unfoldingWord */
-  originalLanguageOwner: PropTypes.string.isRequired,
-  /** repo branch such as master */
-  branch: PropTypes.string.isRequired,
-  /** resource language to use */
-  languageId: PropTypes.string.isRequired,
   /** get language details */
   getLanguage: PropTypes.func.isRequired,
-  /** bookID to use */
-  bookId: PropTypes.string.isRequired,
-  /** resourceId to use (e.g. ugnt) */
-  resourceId: PropTypes.string.isRequired,
+  /** scripture card number (0 to 2 for example) */
+  cardNum: PropTypes.number.isRequired,
+  /** resource object */
+  resource: PropTypes.shape({
+    /** resource language to use */
+    languageId: PropTypes.string.isRequired,
+    /** repo owner such as unfoldingWord */
+    owner: PropTypes.string.isRequired,
+    /** resourceId to use (e.g. ugnt) */
+    resourceId: PropTypes.string.isRequired,
+    /** repo owner for original languages such as unfoldingWord */
+    originalLanguageOwner: PropTypes.string.isRequired,
+  }),
+  reference: PropTypes.shape({
+    /** projectId (bookID) to use */
+    projectId: PropTypes.string.isRequired,
+    /** current chapter number */
+    chapter: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
+    /** current verse number */
+    verse: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
+  }),
+  /** server (e.g. 'https://git.door43.org') */
+  server: PropTypes.string.isRequired,
+  /** repo branch such as master */
+  branch: PropTypes.string.isRequired,
   /** if true then word data hover is shown */
   disableWordPopover: PropTypes.bool,
-  /** optional resource object */
-  resource: PropTypes.object,
+  /** CSS classes */
+  classes: PropTypes.object,
+  /** useLocalStorage hook */
+  useLocalStorage: PropTypes.func,
+  /** resourceLink */
+  resourceLink: PropTypes.any,
 }

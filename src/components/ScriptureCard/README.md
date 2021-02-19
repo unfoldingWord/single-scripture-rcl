@@ -1,5 +1,6 @@
 ```js
 import { useState } from 'react'
+import { core, SelectionsContextProvider } from "scripture-resources-rcl";
 import { Card, useCardState } from "translation-helps-rcl";
 import { makeStyles } from "@material-ui/core/styles";
 import {
@@ -7,6 +8,7 @@ import {
   ORIGINAL_SOURCE,
   TARGET_LITERAL
 } from "../.."
+import { useScripture } from '../../hooks'
 
 // for testing NT book
 
@@ -24,7 +26,6 @@ const EnglishExample = {
     resourceId: TARGET_LITERAL
   },
   getLanguage: () => ({ direction: 'ltr'}),
-  disableWordPopover: true,
 }
 
 const HebrewExample = {
@@ -41,7 +42,6 @@ const HebrewExample = {
     resourceId: ORIGINAL_SOURCE
   },
   getLanguage: () => ({ direction: 'rtl'}),
-  disableWordPopover: false,
 }
 
 const GreekExample = {
@@ -58,15 +58,32 @@ const GreekExample = {
     resourceId: ORIGINAL_SOURCE
   },
   getLanguage: () => ({ direction: 'ltr'}),
-  disableWordPopover: false,
 }
 
-///////////////////////////////////////////
-// enable one of the following bible config lines to see various examples
+const EnglishUSTExample = {
+  reference: {
+    projectId: "tit",
+    chapter: 1,
+    verse: 5,
+  },
+  isNT: () => true,
+  resource: {
+    languageId: "en",
+    projectId: "ust",
+    resourceId: "ust",
+    owner: "unfoldingWord",
+    originalLanguageOwner: "unfoldingWord",
+  },
+  getLanguage: () => ({ direction: 'ltr'}),
+};
 
-// const scripture = HebrewExample;
-const scripture = GreekExample;
-// const scripture = EnglishExample;
+///////////////////////////////////////////
+// Enable one of the following bible config lines to see various examples
+
+const greekScripture = GreekExample;
+const hebrewScripture = HebrewExample;
+const englishScripture = EnglishExample;
+const englishUstScripture = EnglishUSTExample;
 
 ///////////////////////////////////////////
 
@@ -123,43 +140,60 @@ function useLocalStorage(key, initialValue) {
 }
 
 function Component() {
+  const [selections, setSelections] = useState([]);
   const classes = useStyles();
-  const {
-    reference: {
-      projectId: bookId,
-      chapter,
-      verse,
-    },
-    isNT,
-    resource: {
-      owner,
-      originalLanguageOwner,
-      languageId,
-      resourceId,
-    },
-    getLanguage,
-    disableWordPopover,
-  } = scripture
+
+  const greekScriptureConfig = useScripture({
+    ...greekScripture,
+     resource: {
+       ...greekScripture.resource,
+       resourceId: 'ugnt',
+       projectId: 'ugnt',
+     },
+    config,
+  });
 
   return (
-    <ScriptureCard
-      cardNum={0}
-      title='Scripture'
-      chapter={chapter}
-      verse={verse}
-      server={config.server}
-      owner={owner}
-      originalLanguageOwner={originalLanguageOwner}
-      branch={config.branch}
-      languageId={languageId}
-      getLanguage={getLanguage}
-      resourceId={resourceId}
-      bookId={bookId}
-      disableWordPopover={true}
-      classes={classes}
-      useLocalStorage={useLocalStorage}
-      isNT={scripture.isNT}
-    />
+    <div style={{ display: "flex" }}>
+      <SelectionsContextProvider
+        quote={"χάριν"}
+        occurrence={1}
+        selections={selections}
+        verseObjects={greekScriptureConfig.verseObjects || []}
+        onSelections={setSelections}
+      >
+        <ScriptureCard
+          cardNum={0}
+          title='Scripture'
+          classes={classes}
+          server={config.server}
+          branch={config.branch}
+          disableWordPopover={true}
+          useLocalStorage={useLocalStorage}
+          {...greekScripture}
+        />
+        <ScriptureCard
+          cardNum={1}
+          title='Scripture'
+          classes={classes}
+          server={config.server}
+          branch={config.branch}
+          disableWordPopover={true}
+          useLocalStorage={useLocalStorage}
+          {...englishScripture}
+        />
+        <ScriptureCard
+          cardNum={2}
+          title='Scripture'
+          classes={classes}
+          server={config.server}
+          branch={config.branch}
+          disableWordPopover={true}
+          useLocalStorage={useLocalStorage}
+          {...englishUstScripture}
+        />
+      </SelectionsContextProvider>
+    </div>
   );
 }
 
