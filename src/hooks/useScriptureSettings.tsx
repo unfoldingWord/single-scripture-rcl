@@ -66,9 +66,6 @@ export function useScriptureSettings({
   }
 
   const scriptureConfig = useScriptureResources(bookId, scriptureSettings, chapter, verse, isNewTestament)
-  // TODO: What are the next two lines useful for? Bruce McLean?
-  const scriptureConfig_ = { ...scriptureConfig }
-  scriptureConfig_.verseObjects = !!scriptureConfig.verseObjects
 
   const setScripture = (item) => {
     let url

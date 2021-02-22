@@ -60,9 +60,6 @@ export default function ScriptureCard({
 
   /** Dynamically creates the scripture selection dropdown to be inserted into card settings */
   function getScriptureSelector() {
-    // TODO: What are the next two lines useful for? Bruce McLean?
-    const scriptureConfig_ = { ...scriptureConfig }
-    scriptureConfig_.verseObjects = !!scriptureConfig.verseObjects
     const scriptureSelectionConfig = getScriptureVersionSettings({
       label,
       resourceLink: scriptureConfig.resourceLink,

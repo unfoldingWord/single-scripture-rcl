@@ -77,15 +77,10 @@ const EnglishUSTExample = {
   getLanguage: () => ({ direction: 'ltr'}),
 };
 
-///////////////////////////////////////////
-// Enable one of the following bible config lines to see various examples
-
 const greekScripture = GreekExample;
 const hebrewScripture = HebrewExample;
 const englishScripture = EnglishExample;
 const englishUstScripture = EnglishUSTExample;
-
-///////////////////////////////////////////
 
 const config = {
   server: "https://git.door43.org",
@@ -168,7 +163,6 @@ function Component() {
           classes={classes}
           server={config.server}
           branch={config.branch}
-          disableWordPopover={true}
           useLocalStorage={useLocalStorage}
           {...greekScripture}
         />
