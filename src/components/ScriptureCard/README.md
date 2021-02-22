@@ -1,6 +1,6 @@
 ```js
 import { useState } from 'react'
-import { core, SelectionsContextProvider } from "scripture-resources-rcl";
+import { SelectionsContextProvider } from "scripture-resources-rcl";
 import { Card, useCardState } from "translation-helps-rcl";
 import { makeStyles } from "@material-ui/core/styles";
 import {
