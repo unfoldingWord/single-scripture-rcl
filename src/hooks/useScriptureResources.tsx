@@ -16,6 +16,7 @@ export function useScriptureResources(bookId, scriptureSettings, chapter, verse,
       owner: scriptureSettings_.owner,
       branch: scriptureSettings_.branch,
     },
+    resourceLink: scriptureSettings_.resourceLink,
     config: {
       server: scriptureSettings_.server,
       cache: { maxAge: 60 * 1000 },
@@ -25,13 +26,13 @@ export function useScriptureResources(bookId, scriptureSettings, chapter, verse,
 
   // @ts-ignore
   const scriptureResource = useScripture(scriptureConfig_)
-
   // restore any default settings
   scriptureResource.resourceLink = scriptureSettings.resourceLink
 
   if (!scriptureResource['resource']) { // keep resource if not returned
     scriptureResource['resource'] = scriptureConfig_.resource
   }
+
   return scriptureResource
 }
 

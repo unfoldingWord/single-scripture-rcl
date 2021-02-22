@@ -1,9 +1,13 @@
 // @ts-ignore
-import * as React from 'react';
-import { useRsrc, VerseObjects } from 'scripture-resources-rcl';
 import {
-  ServerConfig, ScriptureReference, ScriptureResource,
-} from '../types';
+  core,
+  useRsrc,
+} from 'scripture-resources-rcl'
+import {
+  ServerConfig,
+  ScriptureResource,
+  ScriptureReference,
+} from '../types'
 import { useResourceManifest } from './useResourceManifest'
 
 interface Props {
@@ -15,37 +19,47 @@ interface Props {
   resourceLink: string|undefined;
   /** optional resource object to use to build resourceLink **/
   resource: ScriptureResource|undefined;
-  /** if true then do not display lexicon popover on hover **/
-  disableWordPopover: boolean|undefined;
 }
 
 export function useScripture({
-  reference, resourceLink: resourceLink_, config,
-  resource: resource_, disableWordPopover,
-}: Props) {
-  let resourceLink = resourceLink_;
+  config,
+  reference,
+  resource: resource_,
+  resourceLink: resourceLink_,
+} : Props) {
+  let resourceLink = resourceLink_
 
   if (resource_) {
     const {
       owner, languageId, projectId, branch = 'master',
-    } = resource_ || {};
-    resourceLink = `${owner}/${languageId}/${projectId}/${branch}`;
+    } = resource_ || {}
+    resourceLink = `${owner}/${languageId}/${projectId}/${branch}`
   }
 
-  const options = { getBibleJson: true };
-  const { state: { bibleJson, matchedVerse, resource } } = useRsrc({
+  const options = { getBibleJson: true }
+
+  const {
+    state: {
+      bibleJson, matchedVerse, resource,
+    },
+  } = useRsrc({
     config, reference, resourceLink, options,
-  });
-  const { title, version } = useResourceManifest(resource);
+  })
 
-  let content: any;
-  const { verseObjects } = bibleJson || {};
+  const { title, version } = useResourceManifest(resource)
+  let { verseObjects } = bibleJson || {}
+  const { languageId } = resource_ || {}
 
-  if (verseObjects) {
-    content = <VerseObjects verseObjects={verseObjects} disableWordPopover={disableWordPopover} />;
+  if (languageId === 'el-x-koine' || languageId === 'hbo') {
+    verseObjects = core.occurrenceInjectVerseObjects(verseObjects)
   }
 
   return {
-    content, title, version, reference, resourceLink, matchedVerse,
-  };
+    title,
+    version,
+    reference,
+    resourceLink,
+    matchedVerse,
+    verseObjects,
+  }
 }

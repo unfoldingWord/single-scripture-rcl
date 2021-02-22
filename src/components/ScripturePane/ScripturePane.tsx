@@ -1,12 +1,9 @@
 import * as React from 'react'
-import { ScriptureReference } from '../../types'
-import {
-  Container, Title, Content,
-} from './styled'
+import { VerseObjects } from 'scripture-resources-rcl'
+import { ScriptureReference, VerseObjectsType } from '../../types'
+import { Container, Content } from './styled'
 
 interface Props {
-  /** SP content **/
-  content: string;
   /** SP title **/
   title: string;
   /** resource version **/
@@ -19,18 +16,22 @@ interface Props {
   contentStyle: any;
   /** language direction to use **/
   direction: string|undefined;
+  /** verseObjects **/
+  verseObjects: VerseObjectsType|undefined;
+  /** if true then do not display lexicon popover on hover **/
+  disableWordPopover: boolean|undefined;
 }
 
-function ScripturePane(
-  {
-    content,
-    title,
-    version,
-    reference,
-    refStyle,
-    contentStyle,
-    direction,
-  }: Props) {
+function ScripturePane({
+  title,
+  version,
+  reference,
+  refStyle,
+  direction,
+  contentStyle,
+  verseObjects,
+  disableWordPopover,
+} : Props) {
   const { chapter, verse } = reference
   direction = direction || 'ltr'
 
@@ -48,10 +49,14 @@ function ScripturePane(
     <Container dir={direction}>
       <Content>
         <span style={refStyle}> {chapter}:{verse}&nbsp;</span>
-        <span style={contentStyle}>{content}</span>
+        <span style={contentStyle}>
+          <VerseObjects verseObjects={verseObjects} disableWordPopover={disableWordPopover} />
+        </span>
       </Content>
     </Container>
   )
 }
+
+ScripturePane.defaultProps = { verseObjects: [] }
 
 export default ScripturePane

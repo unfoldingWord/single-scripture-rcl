@@ -20,19 +20,17 @@ export function getResourceLink(scripture) {
   return `${scripture.owner}/${scripture.languageId}/${scripture.resourceId}/${scripture.branch}`
 }
 
-export function getScriptureObject(scripture_) {
-  const {
-    title,
-    server,
-    owner,
-    originalLanguageOwner,
-    branch,
-    languageId,
-    resourceId,
-    disableWordPopover,
-    resourceLink,
-  } = scripture_
-
+export function getScriptureObject({
+  title,
+  server,
+  owner,
+  branch,
+  languageId,
+  resourceId,
+  resourceLink,
+  disableWordPopover,
+  originalLanguageOwner,
+}) {
   const scripture = {
     title,
     server,
@@ -45,8 +43,13 @@ export function getScriptureObject(scripture_) {
     resourceLink,
   }
 
-  if (!scripture_.resourceLink) {
-    scripture.resourceLink = getResourceLink(scripture_)
+  if (!resourceLink) {
+    scripture.resourceLink = getResourceLink({
+      owner,
+      branch,
+      languageId,
+      resourceId,
+    })
   }
   return scripture
 }

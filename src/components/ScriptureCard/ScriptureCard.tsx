@@ -11,26 +11,55 @@ const KEY_FONT_SIZE_BASE = 'scripturePaneFontSize_'
 const label = 'Version'
 const style = { marginTop: '16px', width: '500px' }
 
-export default function ScriptureCard(Props) {
-  const {
-    classes,
-    getLanguage,
-    useLocalStorage,
-    cardNum,
-  } = Props
-
+export default function ScriptureCard({
+  isNT,
+  title,
+  server,
+  branch,
+  cardNum,
+  classes,
+  resource: {
+    owner,
+    languageId,
+    resourceId,
+    originalLanguageOwner,
+  },
+  getLanguage,
+  reference: {
+    verse,
+    chapter,
+    projectId: bookId,
+  },
+  resourceLink,
+  useLocalStorage,
+  disableWordPopover,
+}) {
   const [fontSize, setFontSize] = useLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
-  const { scriptureConfig, setScripture } = useScriptureSettings(Props)
+  const { scriptureConfig, setScripture } = useScriptureSettings({
+    isNT,
+    title,
+    verse,
+    owner,
+    bookId,
+    branch,
+    server,
+    cardNum,
+    chapter,
+    languageId,
+    resourceId,
+    resourceLink,
+    useLocalStorage,
+    disableWordPopover,
+    originalLanguageOwner,
+  })
 
   if (scriptureConfig.title) {
     const title = `${scriptureConfig.title} v${scriptureConfig.version}`
     updateTitle(scriptureConfig.resourceLink, title)
   }
 
-  /** dynamically creates the scripture selection dropdown to be inserted into card settings */
+  /** Dynamically creates the scripture selection dropdown to be inserted into card settings */
   function getScriptureSelector() {
-    const scriptureConfig_ = { ...scriptureConfig }
-    scriptureConfig_.content = !!scriptureConfig.content
     const scriptureSelectionConfig = getScriptureVersionSettings({
       label,
       resourceLink: scriptureConfig.resourceLink,
@@ -41,12 +70,12 @@ export default function ScriptureCard(Props) {
   }
 
   // @ts-ignore
-  const languageId = scriptureConfig?.resource?.languageId
-  const language = getLanguage({ languageId })
+  const languageId_ = scriptureConfig?.resource?.languageId
+  const language = getLanguage({ languageId: languageId_ })
   const direction = (language?.direction) || 'ltr'
   const reference = { ...scriptureConfig.reference }
 
-  const isHebrew = (languageId === 'hbo')
+  const isHebrew = (languageId_ === 'hbo')
   const fontFactor = isHebrew ? 1.4 : 1 // we automatically scale up font size for Hebrew
   const scaledFontSize = fontSize * fontFactor
 
@@ -64,12 +93,6 @@ export default function ScriptureCard(Props) {
     },
   } = useCardState({ items })
 
-  const labelStyle = {
-    fontFamily: 'Noto Sans',
-    fontSize: `16px`,
-    maxWidth: '100%',
-  }
-
   const refStyle = {
     fontFamily: 'Noto Sans',
     fontSize: `${Math.round(scaledFontSize * 0.9)}%`,
@@ -81,7 +104,7 @@ export default function ScriptureCard(Props) {
   }
 
   const scriptureLabel =
-    <Title style={labelStyle}>{scriptureConfig.title} v{scriptureConfig.version}</Title>
+    <Title>{scriptureConfig.title} v{scriptureConfig.version}</Title>
 
   return (
     <Card
@@ -97,51 +120,59 @@ export default function ScriptureCard(Props) {
       setItemIndex={setItemIndex}
       markdownView={markdownView}
       setMarkdownView={setMarkdownView}
-      hideMarkdownToggle
       getCustomComponent={getScriptureSelector}
+      hideMarkdownToggle
     >
       <ScripturePane
         refStyle={refStyle}
-        contentStyle={contentStyle}
         {...scriptureConfig}
         reference={reference}
         direction={direction}
+        contentStyle={contentStyle}
+        disableWordPopover={disableWordPopover}
       />
     </Card>
   )
 }
 
 ScriptureCard.propTypes = {
-  /** scripture card number (0 to 2 for example) */
-  cardNum: PropTypes.number.isRequired,
+  /** method to determine if NT or OT */
+  isNT: PropTypes.func.isRequired,
   /** title for scripture card */
   title: PropTypes.string.isRequired,
-  /** current chapter number */
-  chapter: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
-  /** current verse number */
-  verse: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
-  /** server (e.g. 'https://git.door43.org') */
-  server: PropTypes.string.isRequired,
-  /** repo owner such as unfoldingWord */
-  owner: PropTypes.string.isRequired,
-  /** repo owner for original languages such as unfoldingWord */
-  originalLanguageOwner: PropTypes.string.isRequired,
-  /** repo branch such as master */
-  branch: PropTypes.string.isRequired,
-  /** resource language to use */
-  languageId: PropTypes.string.isRequired,
   /** get language details */
   getLanguage: PropTypes.func.isRequired,
-  /** bookID to use */
-  bookId: PropTypes.string.isRequired,
-  /** resourceId to use (e.g. ugnt) */
-  resourceId: PropTypes.string.isRequired,
+  /** scripture card number (0 to 2 for example) */
+  cardNum: PropTypes.number.isRequired,
+  /** resource object */
+  resource: PropTypes.shape({
+    /** resource language to use */
+    languageId: PropTypes.string.isRequired,
+    /** repo owner such as unfoldingWord */
+    owner: PropTypes.string.isRequired,
+    /** resourceId to use (e.g. ugnt) */
+    resourceId: PropTypes.string.isRequired,
+    /** repo owner for original languages such as unfoldingWord */
+    originalLanguageOwner: PropTypes.string.isRequired,
+  }),
+  reference: PropTypes.shape({
+    /** projectId (bookID) to use */
+    projectId: PropTypes.string.isRequired,
+    /** current chapter number */
+    chapter: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
+    /** current verse number */
+    verse: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
+  }),
+  /** server (e.g. 'https://git.door43.org') */
+  server: PropTypes.string.isRequired,
+  /** repo branch such as master */
+  branch: PropTypes.string.isRequired,
   /** if true then word data hover is shown */
   disableWordPopover: PropTypes.bool,
-  /** optional resource object */
-  resource: PropTypes.object,
-  /** method for testing bookId to determine if NT or OT */
-  isNT: PropTypes.func.isRequired,
+  /** CSS classes */
+  classes: PropTypes.object,
+  /** resourceLink */
+  resourceLink: PropTypes.any,
   /** method for using local storage */
   useLocalStorage: PropTypes.func.isRequired,
 }

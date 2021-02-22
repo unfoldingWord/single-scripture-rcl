@@ -16,23 +16,35 @@ import useScriptureResources from './useScriptureResources'
 const KEY_SETTINGS_BASE = 'scripturePaneConfig_'
 const KEY_TARGET_BASE = 'scripturePaneTarget_'
 
-export function useScriptureSettings(props) {
-  const {
-    cardNum,
-    chapter,
-    verse,
-    bookId,
-    owner,
+export function useScriptureSettings({
+  isNT,
+  title,
+  cardNum,
+  chapter,
+  verse,
+  bookId,
+  owner,
+  server,
+  branch,
+  languageId,
+  resourceId,
+  resourceLink,
+  useLocalStorage,
+  disableWordPopover,
+  originalLanguageOwner,
+}) {
+  const isNewTestament = isNT(bookId)
+  const scriptureDefaultSettings = getScriptureObject({
+    title,
     server,
+    owner,
+    branch,
     languageId,
     resourceId,
+    resourceLink,
     disableWordPopover,
-    useLocalStorage,
-    isNT,
-  } = props
-
-  const isNewTestament = isNT(bookId)
-  const scriptureDefaultSettings = getScriptureObject(props)
+    originalLanguageOwner,
+  })
   addItemToHistory(scriptureDefaultSettings) // make sure default setting persisted in history
   let [scriptureSettings, setScriptureSettings] = useLocalStorage(KEY_SETTINGS_BASE + cardNum, scriptureDefaultSettings)
   const currentTarget = {
@@ -54,9 +66,6 @@ export function useScriptureSettings(props) {
   }
 
   const scriptureConfig = useScriptureResources(bookId, scriptureSettings, chapter, verse, isNewTestament)
-
-  const scriptureConfig_ = { ...scriptureConfig }
-  scriptureConfig_.content = !!scriptureConfig.content
 
   const setScripture = (item) => {
     let url
@@ -117,6 +126,7 @@ export function useScriptureSettings(props) {
               resourceId: resource.resourceId,
               resourceLink: resource.resourceLink,
               disableWordPopover,
+              originalLanguageOwner,
             })
             newScripture['userAdded'] = true
             addItemToHistory(newScripture) // persist in local storage
