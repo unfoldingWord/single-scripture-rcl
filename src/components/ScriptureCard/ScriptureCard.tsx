@@ -7,6 +7,7 @@ import { useScriptureSettings } from '../../hooks/useScriptureSettings'
 import { getScriptureVersionSettings } from '../../utils/ScriptureSettings'
 import { Title } from '../ScripturePane/styled'
 
+const KEY_FONT_SIZE_BASE = 'scripturePaneFontSize_'
 const label = 'Version'
 const style = { marginTop: '16px', width: '500px' }
 
@@ -14,8 +15,11 @@ export default function ScriptureCard(Props) {
   const {
     classes,
     getLanguage,
+    useLocalStorage,
+    cardNum,
   } = Props
 
+  const [fontSize, setFontSize] = useLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
   const { scriptureConfig, setScripture } = useScriptureSettings(Props)
 
   if (scriptureConfig.title) {
@@ -37,9 +41,14 @@ export default function ScriptureCard(Props) {
   }
 
   // @ts-ignore
-  const language = getLanguage({ languageId: scriptureConfig?.resource?.languageId })
+  const languageId = scriptureConfig?.resource?.languageId
+  const language = getLanguage({ languageId })
   const direction = (language?.direction) || 'ltr'
   const reference = { ...scriptureConfig.reference }
+
+  const isHebrew = (languageId === 'hbo')
+  const fontFactor = isHebrew ? 1.4 : 1 // we automatically scale up font size for Hebrew
+  const scaledFontSize = fontSize * fontFactor
 
   if (scriptureConfig.matchedVerse) { // support verse ranges
     reference.verse = scriptureConfig.matchedVerse
@@ -48,10 +57,10 @@ export default function ScriptureCard(Props) {
   const items = null
   const {
     state: {
-      headers, filters, fontSize, itemIndex, markdownView,
+      headers, filters, itemIndex, markdownView,
     },
     actions: {
-      setFilters, setFontSize, setItemIndex, setMarkdownView,
+      setFilters, setItemIndex, setMarkdownView,
     },
   } = useCardState({ items })
 
@@ -63,12 +72,12 @@ export default function ScriptureCard(Props) {
 
   const refStyle = {
     fontFamily: 'Noto Sans',
-    fontSize: `${Math.round(fontSize * 0.9)}%`,
+    fontSize: `${Math.round(scaledFontSize * 0.9)}%`,
   }
 
   const contentStyle = {
     fontFamily: 'Noto Sans',
-    fontSize: `${fontSize}%`,
+    fontSize: `${scaledFontSize}%`,
   }
 
   const scriptureLabel =
@@ -131,4 +140,8 @@ ScriptureCard.propTypes = {
   disableWordPopover: PropTypes.bool,
   /** optional resource object */
   resource: PropTypes.object,
+  /** method for testing bookId to determine if NT or OT */
+  isNT: PropTypes.func.isRequired,
+  /** method for using local storage */
+  useLocalStorage: PropTypes.func.isRequired,
 }
