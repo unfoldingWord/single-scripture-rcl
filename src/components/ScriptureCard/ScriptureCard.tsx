@@ -47,12 +47,8 @@ export default function ScriptureCard(Props) {
   const reference = { ...scriptureConfig.reference }
 
   const isHebrew = (languageId === 'hbo')
-  const fontFactor = isHebrew ? 1.4 : 1 // we automatically bump up font size for Hebrew
-
+  const fontFactor = isHebrew ? 1.4 : 1 // we automatically scale up font size for Hebrew
   const scaledFontSize = fontSize * fontFactor
-  console.log(`fontSize=${scaledFontSize}`)
-  console.log(`fontSize_=${fontSize}`)
-  console.log(`languageId=${languageId}`)
 
   if (scriptureConfig.matchedVerse) { // support verse ranges
     reference.verse = scriptureConfig.matchedVerse
