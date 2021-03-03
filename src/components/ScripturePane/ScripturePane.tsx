@@ -20,6 +20,10 @@ interface Props {
   verseObjects: VerseObjectsType|undefined;
   /** if true then do not display lexicon popover on hover **/
   disableWordPopover: boolean|undefined;
+  /** if defined then there was an error fetching resource */
+  error: object|undefined;
+  /** if defined then there was an error fetching resource */
+  resourceLink: string|undefined;
 }
 
 function ScripturePane({
@@ -31,6 +35,8 @@ function ScripturePane({
   contentStyle,
   verseObjects,
   disableWordPopover,
+  error,
+  resourceLink,
 } : Props) {
   const { chapter, verse } = reference
   direction = direction || 'ltr'
@@ -45,12 +51,34 @@ function ScripturePane({
     fontSize: '100%',
   }
 
+  console.log(`getting ${resourceLink}:`)
+  let errorMsg
+
+  if (error) {
+    console.log(`Resource Error: ${JSON.stringify(error)}`)
+
+    if (!error['foundManifest']) {
+      errorMsg = `Project manifest not found`
+    } else if (error['invalidManifest']) {
+      errorMsg = `Project manifest not valid`
+    } else if (!error['foundContent']) {
+      errorMsg = `Book not found in Project`
+    } else if (!error['loadedScripture']) {
+      errorMsg = `Scripture Verse not Translated`
+    }
+  } else {
+    console.log(`Valid Resource`)
+  }
+
+
   return (
     <Container dir={direction}>
       <Content>
         <span style={refStyle}> {chapter}:{verse}&nbsp;</span>
         <span style={contentStyle}>
-          <VerseObjects verseObjects={verseObjects} disableWordPopover={disableWordPopover} />
+          { errorMsg ||
+            <VerseObjects verseObjects={verseObjects} disableWordPopover={disableWordPopover} />
+          }
         </span>
       </Content>
     </Container>

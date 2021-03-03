@@ -103,7 +103,12 @@ export default function ScriptureCard({
     fontSize: `${scaledFontSize}%`,
   }
 
-  const scriptureTitle = `${scriptureConfig.title} v${scriptureConfig.version}`
+  let scriptureTitle = ''
+
+  if (scriptureConfig.title && scriptureConfig.version) {
+    scriptureTitle = `${scriptureConfig.title} v${scriptureConfig.version}`
+  }
+
   const scriptureLabel = <Title>{scriptureTitle}</Title>
 
   return (
