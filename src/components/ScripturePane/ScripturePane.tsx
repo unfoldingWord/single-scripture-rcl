@@ -57,13 +57,13 @@ function ScripturePane({
   if (error) {
     console.log(`Resource Error: ${JSON.stringify(error)}`)
 
-    if (!error['foundManifest']) {
+    if (error['manifestNotFound']) {
       errorMsg = `Project manifest not found`
     } else if (error['invalidManifest']) {
       errorMsg = `Project manifest not valid`
-    } else if (!error['foundContent']) {
+    } else if (error['contentNotFound']) {
       errorMsg = `Book not found in Project`
-    } else if (!error['loadedScripture']) {
+    } else if (error['scriptureNotLoaded']) {
       errorMsg = `Scripture Verse not Translated`
     }
   } else {
