@@ -112,7 +112,13 @@ function Component() {
       setMarkdownView={setMarkdownView}
       title="Scripture"
     >
-      <ScripturePane refStyle={refStyle} contentStyle={contentStyle} {...scriptureConfig} direction={scripture.direction} />
+      <ScripturePane
+        refStyle={refStyle}
+        contentStyle={contentStyle}
+        {...scriptureConfig}
+        direction={scripture.direction}
+        config={config}
+      />
     </Card>
   );
 }

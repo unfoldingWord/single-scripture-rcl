@@ -117,3 +117,31 @@ export function getScriptureVersionSettings({
   return scriptureSelectorConfig
 }
 
+/**
+ * decode error message into string.  Currently only English
+ * @param error - object that contains possible errors that are detected
+ * @param config - contains the server being used
+ * @param resourceLink - path to repo on server
+ * @return empty string if no error, else returns user error message
+ */
+export function getErrorMessage(error: object, config: object, resourceLink: string) {
+  let errorMsg = ''
+
+  if (error) {
+    console.log(`Resource Error: ${JSON.stringify(error)}`)
+    // @ts-ignore
+    const resourceLink_ = `${config?.server || ''}/${resourceLink}`
+
+    if (error['manifestNotFound']) {
+      errorMsg = 'This project manifest failed to load.  Please confirm that the correct manifest.yaml file exists in the project at:\n' + resourceLink_
+    } else if (error['invalidManifest']) {
+      errorMsg = 'The manifest for this project is invalid.  Project is at:\n' + resourceLink_
+    } else if (error['contentNotFound']) {
+      errorMsg = 'This book can not be found in the project.  Project is at:\n' + resourceLink_
+    } else if (error['scriptureNotLoaded']) {
+      errorMsg = 'There is no associated content for this verse.  Project is at:\n' + resourceLink_
+    }
+  }
+  return errorMsg
+}
+

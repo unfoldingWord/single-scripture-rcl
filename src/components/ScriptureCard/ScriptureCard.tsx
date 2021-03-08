@@ -53,9 +53,13 @@ export default function ScriptureCard({
     originalLanguageOwner,
   })
 
-  if (scriptureConfig.title) {
-    const title = `${scriptureConfig.title} v${scriptureConfig.version}`
-    updateTitle(scriptureConfig.resourceLink, title)
+  let scriptureTitle
+
+  if (scriptureConfig.title && scriptureConfig.version) {
+    scriptureTitle = `${scriptureConfig.title} v${scriptureConfig.version}`
+    updateTitle(scriptureConfig.resourceLink, scriptureTitle)
+  } else {
+    scriptureTitle = `Title missing from project manifest`
   }
 
   /** Dynamically creates the scripture selection dropdown to be inserted into card settings */
@@ -103,12 +107,6 @@ export default function ScriptureCard({
     fontSize: `${scaledFontSize}%`,
   }
 
-  let scriptureTitle = ''
-
-  if (scriptureConfig.title && scriptureConfig.version) {
-    scriptureTitle = `${scriptureConfig.title} v${scriptureConfig.version}`
-  }
-
   const scriptureLabel = <Title>{scriptureTitle}</Title>
 
   return (
@@ -132,6 +130,7 @@ export default function ScriptureCard({
       <ScripturePane
         refStyle={refStyle}
         {...scriptureConfig}
+        config={scriptureConfig['config']}
         reference={reference}
         direction={direction}
         contentStyle={contentStyle}

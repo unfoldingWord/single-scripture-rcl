@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { VerseObjects } from 'scripture-resources-rcl'
 import { ScriptureReference, VerseObjectsType } from '../../types'
+import { getErrorMessage } from '../../utils'
 import { Container, Content } from './styled'
 
 interface Props {
@@ -24,6 +25,8 @@ interface Props {
   error: object|undefined;
   /** if defined then there was an error fetching resource */
   resourceLink: string|undefined;
+  /** server configuration */
+  config: object|undefined;
 }
 
 function ScripturePane({
@@ -37,7 +40,9 @@ function ScripturePane({
   disableWordPopover,
   error,
   resourceLink,
+  config,
 } : Props) {
+  const errorMsg = getErrorMessage(error, config, resourceLink)
   const { chapter, verse } = reference
   direction = direction || 'ltr'
 
@@ -51,32 +56,14 @@ function ScripturePane({
     fontSize: '100%',
   }
 
-  console.log(`getting ${resourceLink}:`)
-  let errorMsg
-
-  if (error) {
-    console.log(`Resource Error: ${JSON.stringify(error)}`)
-
-    if (error['manifestNotFound']) {
-      errorMsg = `Project manifest not found`
-    } else if (error['invalidManifest']) {
-      errorMsg = `Project manifest not valid`
-    } else if (error['contentNotFound']) {
-      errorMsg = `Book not found in Project`
-    } else if (error['scriptureNotLoaded']) {
-      errorMsg = `Scripture Verse not Translated`
-    }
-  } else {
-    console.log(`Valid Resource`)
-  }
-
-
   return (
-    <Container dir={direction}>
+    <Container style={{ direction, width: '100%' }}>
       <Content>
         <span style={refStyle}> {chapter}:{verse}&nbsp;</span>
         <span style={contentStyle}>
-          { errorMsg ||
+          { errorMsg ?
+            <div style={{ direction: 'ltr', whiteSpace: 'pre-wrap' }}>{errorMsg}</div>
+            :
             <VerseObjects verseObjects={verseObjects} disableWordPopover={disableWordPopover} />
           }
         </span>
