@@ -5,11 +5,12 @@
 
 import * as React from 'react'
 import Autocomplete from '@material-ui/lab/Autocomplete'
+import { TextField } from '@material-ui/core'
 import * as PropTypes from 'prop-types'
 import { useScriptureSelector } from '../../hooks'
 
 export function ScriptureSelector({
-  label, options, current, allowUserInput, onChange, style, deleteItem,
+  label, options, current, allowUserInput, onChange, style, deleteItem, errorMessage,
 }) {
   const { state, actions } = useScriptureSelector({
     label, options, current, allowUserInput, onChange, deleteItem,
@@ -24,6 +25,15 @@ export function ScriptureSelector({
       style={ style || { marginTop: '16px', width: '500px' }}
       { ...state }
       { ...actions }
+      renderInput={(params) => (
+        <TextField
+          error={!!errorMessage}
+          helperText={errorMessage}
+          {...params}
+          label={label}
+          variant="outlined"
+        />
+      )}
     />
   )
 }
@@ -44,6 +54,8 @@ ScriptureSelector.propTypes = {
   style: PropTypes.object,
   /** callback function when a scripture resource is to be removed from memory */
   deleteItem: PropTypes.func,
+  /** display error message */
+  errorMessage: PropTypes.string,
 }
 
 export default ScriptureSelector

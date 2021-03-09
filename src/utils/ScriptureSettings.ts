@@ -5,11 +5,15 @@ import {
   removeItemByIndex,
 } from './ScriptureVersionHistory'
 import {
+  BOOK_NOT_FOUND_ERROR,
+  MANIFEST_INVALID_ERROR,
+  MANIFEST_NOT_FOUND_ERROR,
   NT_ORIG_LANG,
   NT_ORIG_LANG_BIBLE,
   ORIGINAL_SOURCE,
   OT_ORIG_LANG,
   OT_ORIG_LANG_BIBLE,
+  SCRIPTURE_NOT_FOUND_ERROR,
   TARGET_LITERAL,
   TARGET_SIMPLIFIED,
 } from './common'
@@ -117,31 +121,79 @@ export function getScriptureVersionSettings({
   return scriptureSelectorConfig
 }
 
+export function getRepoUrl(resourceLink: string, server: string): string {
+  let repoUrl
+
+  try {
+    const [owner, languageId, resourceId] = resourceLink.split('/')
+    repoUrl = `${owner}/${languageId}_${resourceId}`
+  } catch (e) {
+    // resourceLink was invalid
+  }
+
+  // @ts-ignore
+  return `${server || ''}/${repoUrl}`
+}
+
+export function getErrorMessageForResourceLink(resourceLink: string, server: string, errorCode: string): string {
+  const repoUrl = getRepoUrl(resourceLink, server)
+  const errorMsg = errorCode + repoUrl
+  return errorMsg
+}
+
+export function validateDcsUrl(url) {
+  let validRepoPath = false
+  let validUrl = false
+
+  try {
+    const parts = url.split('/')
+    const [protocol, , host, user, repo] = parts
+    validUrl = (protocol === 'https:')
+    const hostParts = host ? host.split('.') : []
+
+    if (hostParts.length >= 2) {
+      for (let part of hostParts) {
+        if (!part) {
+          validUrl = false
+          break
+        }
+      }
+    } else {
+      validUrl = false
+    }
+
+    if ( protocol && host && user && repo ) {
+      const [languageId, projectId] = repo.split('_')
+      validRepoPath = languageId && projectId
+    }
+  } catch {
+    console.log('Invalid DCS URL: ' + url)
+  }
+  return { validUrl, validRepoPath }
+}
 /**
  * decode error message into string.  Currently only English
  * @param error - object that contains possible errors that are detected
- * @param config - contains the server being used
+ * @param server - contains the server being used
  * @param resourceLink - path to repo on server
  * @return empty string if no error, else returns user error message
  */
-export function getErrorMessage(error: object, config: object, resourceLink: string) {
-  let errorMsg = ''
+export function getErrorMessage(error: object, server: string, resourceLink: string) {
+  let errorCode = ''
 
   if (error) {
     console.log(`Resource Error: ${JSON.stringify(error)}`)
-    // @ts-ignore
-    const resourceLink_ = `${config?.server || ''}/${resourceLink}`
 
     if (error['manifestNotFound']) {
-      errorMsg = 'This project manifest failed to load.  Please confirm that the correct manifest.yaml file exists in the project at:\n' + resourceLink_
+      errorCode = MANIFEST_NOT_FOUND_ERROR
     } else if (error['invalidManifest']) {
-      errorMsg = 'The manifest for this project is invalid.  Project is at:\n' + resourceLink_
+      errorCode = MANIFEST_INVALID_ERROR
     } else if (error['contentNotFound']) {
-      errorMsg = 'This book can not be found in the project.  Project is at:\n' + resourceLink_
+      errorCode = BOOK_NOT_FOUND_ERROR
     } else if (error['scriptureNotLoaded']) {
-      errorMsg = 'There is no associated content for this verse.  Project is at:\n' + resourceLink_
+      errorCode = SCRIPTURE_NOT_FOUND_ERROR
     }
   }
-  return errorMsg
+  return errorCode ? getErrorMessageForResourceLink(resourceLink, server, errorCode) : ''
 }
 

@@ -25,8 +25,8 @@ interface Props {
   error: object|undefined;
   /** if defined then there was an error fetching resource */
   resourceLink: string|undefined;
-  /** server configuration */
-  config: object|undefined;
+  /** server */
+  server: string|undefined;
 }
 
 function ScripturePane({
@@ -40,9 +40,9 @@ function ScripturePane({
   disableWordPopover,
   error,
   resourceLink,
-  config,
+  server,
 } : Props) {
-  const errorMsg = getErrorMessage(error, config, resourceLink)
+  const errorMsg = getErrorMessage(error, server, resourceLink)
   const { chapter, verse } = reference
   direction = direction || 'ltr'
 
@@ -62,7 +62,12 @@ function ScripturePane({
         <span style={refStyle}> {chapter}:{verse}&nbsp;</span>
         <span style={contentStyle}>
           { errorMsg ?
-            <div style={{ direction: 'ltr', whiteSpace: 'pre-wrap' }}>{errorMsg}</div>
+            <div style={{
+              direction: 'ltr',
+              whiteSpace: 'pre-wrap',
+              lineHeight: 'normal',
+            }}
+            >{errorMsg}</div>
             :
             <VerseObjects verseObjects={verseObjects} disableWordPopover={disableWordPopover} />
           }

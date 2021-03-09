@@ -117,7 +117,7 @@ function Component() {
         contentStyle={contentStyle}
         {...scriptureConfig}
         direction={scripture.direction}
-        config={config}
+        server={config.server}
       />
     </Card>
   );

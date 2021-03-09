@@ -5,7 +5,14 @@ import {
   removeItem,
   removeUrl,
 } from '../utils/ScriptureVersionHistory'
-import { useResourceManifest } from '..'
+import {
+  INVALID_REPO_URL_ERROR,
+  INVALID_URL,
+  MANIFEST_INVALID_SHORT_ERROR,
+  REPO_NOT_FOUND_ERROR,
+  useResourceManifest,
+  validateDcsUrl,
+} from '..'
 import {
   getResourceLink,
   getScriptureObject,
@@ -32,6 +39,7 @@ export function useScriptureSettings({
   useLocalStorage,
   disableWordPopover,
   originalLanguageOwner,
+  setUrlError,
 }) {
   const isNewTestament = isNT(bookId)
   const scriptureDefaultSettings = getScriptureObject({
@@ -71,16 +79,20 @@ export function useScriptureSettings({
     let url
 
     if (item?.url) {
+      setUrlError(null) // clear previous warnings
+
       try {
         url = new URL(item.url)
       } catch {
         console.log('illegal url', item.url)
         removeUrl(item.url)
+        setUrlError(INVALID_URL)
         return
       }
     }
 
     if (url) {
+      setUrlError(null) // clear previous warnings
       let server_
       let hostname = url.hostname
 
@@ -111,6 +123,8 @@ export function useScriptureSettings({
           cache: { maxAge: 60 * 1000 },
         },
       }).then(resource => {
+        let error
+
         if (resource) {
           // eslint-disable-next-line react-hooks/rules-of-hooks
           const { title, version } = useResourceManifest(resource)
@@ -132,14 +146,29 @@ export function useScriptureSettings({
             addItemToHistory(newScripture) // persist in local storage
             setScriptureSettings(newScripture)
           } else {
-            console.error('error passing manifest', item.url)
+            console.error('error parsing manifest', item.url)
+            error = MANIFEST_INVALID_SHORT_ERROR
           }
         } else {
           console.error('not found', item.url)
         }
         removeUrl(item.url)
+
+        if (!error) { // if specific error not yet found, validate the URL
+          const { validUrl, validRepoPath } = validateDcsUrl(item.url)
+
+          if (!validUrl) {
+            error = INVALID_URL
+          } else if (validRepoPath) {
+            error = REPO_NOT_FOUND_ERROR
+          } else {
+            error = INVALID_REPO_URL_ERROR
+          }
+        }
+        setUrlError(error)
       })
     } else { // selected a previous setting
+      setUrlError(null) // clear previous warnings
       console.log(`setScripture(${cardNum}) - setScriptureSettings to: ${JSON.stringify(item)}`)
       setScriptureSettings(item)
     }

@@ -34,6 +34,7 @@ export default function ScriptureCard({
   useLocalStorage,
   disableWordPopover,
 }) {
+  const [urlError, setUrlError] = React.useState(null)
   const [fontSize, setFontSize] = useLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
   const { scriptureConfig, setScripture } = useScriptureSettings({
     isNT,
@@ -51,6 +52,7 @@ export default function ScriptureCard({
     useLocalStorage,
     disableWordPopover,
     originalLanguageOwner,
+    setUrlError,
   })
 
   let scriptureTitle
@@ -70,7 +72,7 @@ export default function ScriptureCard({
       setScripture,
     })
 
-    return <ScriptureSelector {...scriptureSelectionConfig} style={style} />
+    return <ScriptureSelector {...scriptureSelectionConfig} style={style} errorMessage={urlError} />
   }
 
   // @ts-ignore
@@ -130,7 +132,7 @@ export default function ScriptureCard({
       <ScripturePane
         refStyle={refStyle}
         {...scriptureConfig}
-        config={scriptureConfig['config']}
+        server={server}
         reference={reference}
         direction={direction}
         contentStyle={contentStyle}
