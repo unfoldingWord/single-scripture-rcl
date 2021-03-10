@@ -123,7 +123,7 @@ export function useScriptureSettings({
           cache: { maxAge: 60 * 1000 },
         },
       }).then(resource => {
-        let error
+        let error = REPO_NOT_FOUND_ERROR
 
         if (resource) {
           // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -145,6 +145,7 @@ export function useScriptureSettings({
             newScripture['userAdded'] = true
             addItemToHistory(newScripture) // persist in local storage
             setScriptureSettings(newScripture)
+            error = null // no error
           } else {
             console.error('error parsing manifest', item.url)
             error = MANIFEST_INVALID_SHORT_ERROR
@@ -154,7 +155,7 @@ export function useScriptureSettings({
         }
         removeUrl(item.url)
 
-        if (!error) { // if specific error not yet found, validate the URL
+        if (error === REPO_NOT_FOUND_ERROR) { // if generic error, validate the URL
           const { validUrl, validRepoPath } = validateDcsUrl(item.url)
 
           if (!validUrl) {
