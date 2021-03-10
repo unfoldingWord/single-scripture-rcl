@@ -75,6 +75,11 @@ export default function ScriptureCard({
     return <ScriptureSelector {...scriptureSelectionConfig} style={style} errorMessage={urlError} />
   }
 
+  function onMenuClose() {
+    // console.log(`onMenuClose()`)
+    setUrlError(null) // clear any error messages
+  }
+
   // @ts-ignore
   const languageId_ = scriptureConfig?.resource?.languageId
   const language = getLanguage({ languageId: languageId_ })
@@ -128,6 +133,7 @@ export default function ScriptureCard({
       setMarkdownView={setMarkdownView}
       getCustomComponent={getScriptureSelector}
       hideMarkdownToggle
+      onMenuClose={onMenuClose}
     >
       <ScripturePane
         refStyle={refStyle}
