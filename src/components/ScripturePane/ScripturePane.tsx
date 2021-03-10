@@ -23,7 +23,7 @@ interface Props {
   disableWordPopover: boolean|undefined;
   /** if defined then there was an error fetching resource */
   error: object|undefined;
-  /** if defined then there was an error fetching resource */
+  /** resource that was loaded */
   resourceLink: string|undefined;
   /** server */
   server: string|undefined;
