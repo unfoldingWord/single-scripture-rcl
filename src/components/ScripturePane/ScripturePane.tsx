@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { VerseObjects } from 'scripture-resources-rcl'
 import { ScriptureReference, VerseObjectsType } from '../../types'
+import { getErrorMessage } from '../../utils'
 import { Container, Content } from './styled'
 
 interface Props {
@@ -20,6 +21,12 @@ interface Props {
   verseObjects: VerseObjectsType|undefined;
   /** if true then do not display lexicon popover on hover **/
   disableWordPopover: boolean|undefined;
+  /** if defined then there was an error fetching resource */
+  error: object|undefined;
+  /** resource that was loaded */
+  resourceLink: string|undefined;
+  /** server */
+  server: string|undefined;
 }
 
 function ScripturePane({
@@ -31,7 +38,11 @@ function ScripturePane({
   contentStyle,
   verseObjects,
   disableWordPopover,
+  error,
+  resourceLink,
+  server,
 } : Props) {
+  const errorMsg = getErrorMessage(error, server, resourceLink)
   const { chapter, verse } = reference
   direction = direction || 'ltr'
 
@@ -46,11 +57,20 @@ function ScripturePane({
   }
 
   return (
-    <Container dir={direction}>
+    <Container style={{ direction, width: '100%' }}>
       <Content>
         <span style={refStyle}> {chapter}:{verse}&nbsp;</span>
         <span style={contentStyle}>
-          <VerseObjects verseObjects={verseObjects} disableWordPopover={disableWordPopover} />
+          { errorMsg ?
+            <div style={{
+              direction: 'ltr',
+              whiteSpace: 'pre-wrap',
+              lineHeight: 'normal',
+            }}
+            >{errorMsg}</div>
+            :
+            <VerseObjects verseObjects={verseObjects} disableWordPopover={disableWordPopover} />
+          }
         </span>
       </Content>
     </Container>

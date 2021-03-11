@@ -34,6 +34,7 @@ export default function ScriptureCard({
   useLocalStorage,
   disableWordPopover,
 }) {
+  const [urlError, setUrlError] = React.useState(null)
   const [fontSize, setFontSize] = useLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
   const { scriptureConfig, setScripture } = useScriptureSettings({
     isNT,
@@ -51,11 +52,16 @@ export default function ScriptureCard({
     useLocalStorage,
     disableWordPopover,
     originalLanguageOwner,
+    setUrlError,
   })
 
-  if (scriptureConfig.title) {
-    const title = `${scriptureConfig.title} v${scriptureConfig.version}`
-    updateTitle(scriptureConfig.resourceLink, title)
+  let scriptureTitle
+
+  if (scriptureConfig.title && scriptureConfig.version) {
+    scriptureTitle = `${scriptureConfig.title} v${scriptureConfig.version}`
+    updateTitle(scriptureConfig.resourceLink, scriptureTitle)
+  } else {
+    scriptureTitle = `Title missing from project manifest`
   }
 
   /** Dynamically creates the scripture selection dropdown to be inserted into card settings */
@@ -66,7 +72,12 @@ export default function ScriptureCard({
       setScripture,
     })
 
-    return <ScriptureSelector {...scriptureSelectionConfig} style={style} />
+    return <ScriptureSelector {...scriptureSelectionConfig} style={style} errorMessage={urlError} />
+  }
+
+  function onMenuClose() {
+    // console.log(`onMenuClose()`)
+    setUrlError(null) // clear any error messages
   }
 
   // @ts-ignore
@@ -103,7 +114,6 @@ export default function ScriptureCard({
     fontSize: `${scaledFontSize}%`,
   }
 
-  const scriptureTitle = `${scriptureConfig.title} v${scriptureConfig.version}`
   const scriptureLabel = <Title>{scriptureTitle}</Title>
 
   return (
@@ -123,10 +133,12 @@ export default function ScriptureCard({
       setMarkdownView={setMarkdownView}
       getCustomComponent={getScriptureSelector}
       hideMarkdownToggle
+      onMenuClose={onMenuClose}
     >
       <ScripturePane
         refStyle={refStyle}
         {...scriptureConfig}
+        server={server}
         reference={reference}
         direction={direction}
         contentStyle={contentStyle}

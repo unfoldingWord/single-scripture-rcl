@@ -40,18 +40,33 @@ export function useScripture({
 
   const {
     state: {
-      bibleJson, matchedVerse, resource,
+      bibleJson, matchedVerse, resource, content,
     },
   } = useRsrc({
     config, reference, resourceLink, options,
   })
 
+  let error
+  const contentNotFoundError = !content
+  const scriptureNotLoadedError = !bibleJson
+  const manifestNotFoundError = !resource?.manifest
   const { title, version } = useResourceManifest(resource)
   let { verseObjects } = bibleJson || {}
   const { languageId } = resource_ || {}
+  const invalidManifestError = !title || !version || !languageId
 
   if (languageId === 'el-x-koine' || languageId === 'hbo') {
     verseObjects = core.occurrenceInjectVerseObjects(verseObjects)
+  }
+
+  if (scriptureNotLoadedError || manifestNotFoundError
+    || invalidManifestError || contentNotFoundError) {
+    error = {
+      scriptureNotLoaded: scriptureNotLoadedError,
+      manifestNotFound: manifestNotFoundError,
+      invalidManifest: invalidManifestError,
+      contentNotFound: contentNotFoundError,
+    }
   }
 
   return {
@@ -61,5 +76,6 @@ export function useScripture({
     resourceLink,
     matchedVerse,
     verseObjects,
+    error,
   }
 }

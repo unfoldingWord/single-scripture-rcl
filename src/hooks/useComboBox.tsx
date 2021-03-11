@@ -17,12 +17,16 @@ export function useComboBox({
     let newSelection = newValue
 
     if (typeof newValue === 'string') {
-      setValue({ title: newValue })
+      newSelection = newValue.trim()
+      setValue({ title: newSelection })
     } else if (newValue && newValue.inputValue) {
       // Create a new value from the user input
-      setValue({ title: newValue.inputValue })
-      newSelection = newValue.inputValue
+      newSelection = newValue.inputValue.trim()
+      setValue({ title: newSelection })
     } else {
+      if (newValue?.title) {
+        newValue.title = newValue.title.trim()
+      }
       setValue(newValue)
       newSelection = newValue?.title
     }
@@ -38,7 +42,7 @@ export function useComboBox({
     if (params.inputValue !== '') {
       filtered.push({
         inputValue: params.inputValue,
-        title: `Add "${params.inputValue}"`,
+        title: `Add "${params.inputValue.trim()}"`,
       })
     }
 
