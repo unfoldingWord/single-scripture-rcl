@@ -6,6 +6,7 @@ import {
 } from './ScriptureVersionHistory'
 import {
   BOOK_NOT_FOUND_ERROR,
+  LOADING_RESOURCE,
   MANIFEST_INVALID_ERROR,
   MANIFEST_NOT_FOUND_ERROR,
   NT_ORIG_LANG,
@@ -121,11 +122,28 @@ export function getScriptureVersionSettings({
   return scriptureSelectorConfig
 }
 
-export function getRepoUrl(resourceLink: string, server: string): string {
+export function getRepoUrl(resourceLink: string, server: string, isNT: boolean): string {
   let repoUrl
 
   try {
-    const [owner, languageId, resourceId] = resourceLink.split('/')
+    let [owner, languageId, resourceId] = resourceLink.split('/')
+
+    switch (resourceId) {
+    case ORIGINAL_SOURCE:
+      languageId = isNT ? NT_ORIG_LANG : OT_ORIG_LANG
+      resourceId = isNT
+        ? NT_ORIG_LANG_BIBLE
+        : OT_ORIG_LANG_BIBLE
+      break
+
+    case TARGET_LITERAL:
+      resourceId = (languageId === 'en') ? 'ult' : 'glt'
+      break
+
+    case TARGET_SIMPLIFIED:
+      resourceId = (languageId === 'en') ? 'ust' : 'gst'
+      break
+    }
     repoUrl = `${owner}/${languageId}_${resourceId}`
   } catch (e) {
     // resourceLink was invalid
@@ -135,8 +153,13 @@ export function getRepoUrl(resourceLink: string, server: string): string {
   return `${server || ''}/${repoUrl}`
 }
 
-export function getErrorMessageForResourceLink(resourceLink: string, server: string, errorCode: string): string {
-  const repoUrl = getRepoUrl(resourceLink, server)
+export function getErrorMessageForResourceLink(
+  resourceLink: string,
+  server: string,
+  errorCode: string,
+  isNT: boolean): string
+{
+  const repoUrl = getRepoUrl(resourceLink, server, isNT)
   const errorMsg = errorCode + repoUrl
   return errorMsg
 }
@@ -172,28 +195,34 @@ export function validateDcsUrl(url) {
   return { validUrl, validRepoPath }
 }
 /**
- * decode error message into string.  Currently only English
- * @param error - object that contains possible errors that are detected
+ * decode resource status into string.  Currently only English
+ * @param resourceStatus - object that contains state and errors that are detected
  * @param server - contains the server being used
  * @param resourceLink - path to repo on server
+ * @param isNT - true if NT book
  * @return empty string if no error, else returns user error message
  */
-export function getErrorMessage(error: object, server: string, resourceLink: string) {
-  let errorCode = ''
+export function getResourceMessage(resourceStatus: object, server: string, resourceLink: string, isNT: boolean) {
+  let messageKey = ''
 
-  if (error) {
-    console.log(`Resource Error: ${JSON.stringify(error)}`)
+  if (resourceStatus['loading']) {
+    messageKey = LOADING_RESOURCE
+  } else {
+    if (resourceStatus['manifestNotFoundError']) {
+      messageKey = MANIFEST_NOT_FOUND_ERROR
+    } else if (resourceStatus['invalidManifestError']) {
+      messageKey = MANIFEST_INVALID_ERROR
+    } else if (resourceStatus['contentNotFoundError']) {
+      messageKey = BOOK_NOT_FOUND_ERROR
+    } else if (resourceStatus['scriptureNotLoadedError']) {
+      messageKey = SCRIPTURE_NOT_FOUND_ERROR
+    }
 
-    if (error['manifestNotFound']) {
-      errorCode = MANIFEST_NOT_FOUND_ERROR
-    } else if (error['invalidManifest']) {
-      errorCode = MANIFEST_INVALID_ERROR
-    } else if (error['contentNotFound']) {
-      errorCode = BOOK_NOT_FOUND_ERROR
-    } else if (error['scriptureNotLoaded']) {
-      errorCode = SCRIPTURE_NOT_FOUND_ERROR
+    if (messageKey) {
+      console.log(`Resource Error: ${JSON.stringify(resourceStatus)}`)
+      messageKey = getErrorMessageForResourceLink(resourceLink, server, messageKey, isNT)
     }
   }
-  return errorCode ? getErrorMessageForResourceLink(resourceLink, server, errorCode) : ''
+  return messageKey
 }
 

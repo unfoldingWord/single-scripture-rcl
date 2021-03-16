@@ -1,14 +1,10 @@
 import * as React from 'react'
 import { VerseObjects } from 'scripture-resources-rcl'
 import { ScriptureReference, VerseObjectsType } from '../../types'
-import { getErrorMessage } from '../../utils'
+import { getResourceMessage } from '../../utils'
 import { Container, Content } from './styled'
 
 interface Props {
-  /** SP title **/
-  title: string;
-  /** resource version **/
-  version: string;
   /** current reference **/
   reference: ScriptureReference;
   /** optional styles to use for reference **/
@@ -21,28 +17,29 @@ interface Props {
   verseObjects: VerseObjectsType|undefined;
   /** if true then do not display lexicon popover on hover **/
   disableWordPopover: boolean|undefined;
-  /** if defined then there was an error fetching resource */
-  error: object|undefined;
+  /** object that contains resource loading status or fetching errors */
+  resourceStatus: object|undefined;
   /** resource that was loaded */
   resourceLink: string|undefined;
   /** server */
   server: string|undefined;
+  /** true if browsing NT */
+  isNT: boolean;
 }
 
 function ScripturePane({
-  title,
-  version,
   reference,
   refStyle,
   direction,
   contentStyle,
   verseObjects,
   disableWordPopover,
-  error,
+  resourceStatus,
   resourceLink,
   server,
+  isNT,
 } : Props) {
-  const errorMsg = getErrorMessage(error, server, resourceLink)
+  const resourceMsg = getResourceMessage(resourceStatus, server, resourceLink, isNT)
   const { chapter, verse } = reference
   direction = direction || 'ltr'
 
@@ -61,13 +58,13 @@ function ScripturePane({
       <Content>
         <span style={refStyle}> {chapter}:{verse}&nbsp;</span>
         <span style={contentStyle}>
-          { errorMsg ?
+          { resourceMsg ?
             <div style={{
               direction: 'ltr',
               whiteSpace: 'pre-wrap',
               lineHeight: 'normal',
             }}
-            >{errorMsg}</div>
+            >{resourceMsg}</div>
             :
             <VerseObjects verseObjects={verseObjects} disableWordPopover={disableWordPopover} />
           }
