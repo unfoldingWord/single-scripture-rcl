@@ -24,7 +24,7 @@ const KEY_SETTINGS_BASE = 'scripturePaneConfig_'
 const KEY_TARGET_BASE = 'scripturePaneTarget_'
 
 export function useScriptureSettings({
-  isNewTestament,
+  isNT,
   title,
   cardNum,
   chapter,
@@ -41,6 +41,7 @@ export function useScriptureSettings({
   originalLanguageOwner,
   setUrlError,
 }) {
+  const isNewTestament = isNT(bookId)
   const scriptureDefaultSettings = getScriptureObject({
     title,
     server,

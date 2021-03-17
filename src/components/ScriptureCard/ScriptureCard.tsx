@@ -36,9 +36,8 @@ export default function ScriptureCard({
 }) {
   const [urlError, setUrlError] = React.useState(null)
   const [fontSize, setFontSize] = useLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
-  const isNewTestament = isNT(bookId)
   const { scriptureConfig, setScripture } = useScriptureSettings({
-    isNewTestament,
+    isNT,
     title,
     verse,
     owner,
@@ -139,7 +138,7 @@ export default function ScriptureCard({
       <ScripturePane
         refStyle={refStyle}
         {...scriptureConfig}
-        isNT={isNewTestament}
+        isNT={isNT(bookId)}
         server={server}
         reference={reference}
         direction={direction}

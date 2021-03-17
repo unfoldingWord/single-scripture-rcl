@@ -27,6 +27,21 @@ interface Props {
   isNT: boolean;
 }
 
+const MessageStyle = {
+  direction: 'ltr',
+  whiteSpace: 'pre-wrap',
+  lineHeight: 'normal',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  height: '100%',
+  width: '100%',
+  fontSize: '16px',
+  fontFamily: 'Noto Sans',
+  fontWeight: 'bold',
+}
+
+
 function ScripturePane({
   reference,
   refStyle,
@@ -54,22 +69,20 @@ function ScripturePane({
   }
 
   return (
-    <Container style={{ direction, width: '100%' }}>
-      <Content>
-        <span style={refStyle}> {chapter}:{verse}&nbsp;</span>
-        <span style={contentStyle}>
-          { resourceMsg ?
-            <div style={{
-              direction: 'ltr',
-              whiteSpace: 'pre-wrap',
-              lineHeight: 'normal',
-            }}
-            >{resourceMsg}</div>
-            :
+    <Container style={{ direction, width: '100%', height: '100%' }}>
+      {resourceMsg ?
+        // @ts-ignore
+        <div style={MessageStyle}>
+          <div style={{ fontSize: contentStyle.fontSize }}> {resourceMsg} </div>
+        </div>
+        :
+        <Content>
+          <span style={refStyle}> {chapter}:{verse}&nbsp;</span>
+          <span style={contentStyle}>
             <VerseObjects verseObjects={verseObjects} disableWordPopover={disableWordPopover} />
-          }
-        </span>
-      </Content>
+          </span>
+        </Content>
+      }
     </Container>
   )
 }
