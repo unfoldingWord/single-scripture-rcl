@@ -143,6 +143,7 @@ export default function ScriptureCard({
         reference={reference}
         direction={direction}
         contentStyle={contentStyle}
+        fontSize={fontSize}
         disableWordPopover={disableWordPopover}
       />
     </Card>

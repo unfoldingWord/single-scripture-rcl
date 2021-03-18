@@ -25,6 +25,8 @@ interface Props {
   server: string|undefined;
   /** true if browsing NT */
   isNT: boolean;
+  /** font size for messages */
+  fontSize: number;
 }
 
 const MessageStyle = {
@@ -53,6 +55,7 @@ function ScripturePane({
   resourceLink,
   server,
   isNT,
+  fontSize,
 } : Props) {
   const resourceMsg = getResourceMessage(resourceStatus, server, resourceLink, isNT)
   const { chapter, verse } = reference
@@ -73,7 +76,7 @@ function ScripturePane({
       {resourceMsg ?
         // @ts-ignore
         <div style={MessageStyle}>
-          <div style={{ fontSize: contentStyle.fontSize }}> {resourceMsg} </div>
+          <div style={{ fontSize: `${fontSize}%` }}> {resourceMsg} </div>
         </div>
         :
         <Content>
