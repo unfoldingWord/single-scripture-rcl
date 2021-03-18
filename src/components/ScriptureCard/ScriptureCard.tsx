@@ -138,10 +138,12 @@ export default function ScriptureCard({
       <ScripturePane
         refStyle={refStyle}
         {...scriptureConfig}
+        isNT={isNT(bookId)}
         server={server}
         reference={reference}
         direction={direction}
         contentStyle={contentStyle}
+        fontSize={fontSize}
         disableWordPopover={disableWordPopover}
       />
     </Card>

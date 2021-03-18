@@ -1,14 +1,10 @@
 import * as React from 'react'
 import { VerseObjects } from 'scripture-resources-rcl'
 import { ScriptureReference, VerseObjectsType } from '../../types'
-import { getErrorMessage } from '../../utils'
+import { getResourceMessage } from '../../utils'
 import { Container, Content } from './styled'
 
 interface Props {
-  /** SP title **/
-  title: string;
-  /** resource version **/
-  version: string;
   /** current reference **/
   reference: ScriptureReference;
   /** optional styles to use for reference **/
@@ -21,28 +17,47 @@ interface Props {
   verseObjects: VerseObjectsType|undefined;
   /** if true then do not display lexicon popover on hover **/
   disableWordPopover: boolean|undefined;
-  /** if defined then there was an error fetching resource */
-  error: object|undefined;
+  /** object that contains resource loading status or fetching errors */
+  resourceStatus: object|undefined;
   /** resource that was loaded */
   resourceLink: string|undefined;
   /** server */
   server: string|undefined;
+  /** true if browsing NT */
+  isNT: boolean;
+  /** font size for messages */
+  fontSize: number;
 }
 
+const MessageStyle = {
+  direction: 'ltr',
+  whiteSpace: 'pre-wrap',
+  lineHeight: 'normal',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  height: '100%',
+  width: '100%',
+  fontSize: '16px',
+  fontFamily: 'Noto Sans',
+  fontWeight: 'bold',
+}
+
+
 function ScripturePane({
-  title,
-  version,
   reference,
   refStyle,
   direction,
   contentStyle,
   verseObjects,
   disableWordPopover,
-  error,
+  resourceStatus,
   resourceLink,
   server,
+  isNT,
+  fontSize,
 } : Props) {
-  const errorMsg = getErrorMessage(error, server, resourceLink)
+  const resourceMsg = getResourceMessage(resourceStatus, server, resourceLink, isNT)
   const { chapter, verse } = reference
   direction = direction || 'ltr'
 
@@ -57,22 +72,20 @@ function ScripturePane({
   }
 
   return (
-    <Container style={{ direction, width: '100%' }}>
-      <Content>
-        <span style={refStyle}> {chapter}:{verse}&nbsp;</span>
-        <span style={contentStyle}>
-          { errorMsg ?
-            <div style={{
-              direction: 'ltr',
-              whiteSpace: 'pre-wrap',
-              lineHeight: 'normal',
-            }}
-            >{errorMsg}</div>
-            :
+    <Container style={{ direction, width: '100%', height: '100%' }}>
+      {resourceMsg ?
+        // @ts-ignore
+        <div style={MessageStyle}>
+          <div style={{ fontSize: `${fontSize}%` }}> {resourceMsg} </div>
+        </div>
+        :
+        <Content>
+          <span style={refStyle}> {chapter}:{verse}&nbsp;</span>
+          <span style={contentStyle}>
             <VerseObjects verseObjects={verseObjects} disableWordPopover={disableWordPopover} />
-          }
-        </span>
-      </Content>
+          </span>
+        </Content>
+      }
     </Container>
   )
 }
