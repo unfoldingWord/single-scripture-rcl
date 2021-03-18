@@ -3,6 +3,10 @@ import { getLocalStorageValue, setLocalStorageValue } from './LocalStorage'
 const maxItems = 7
 const KEY = 'scriptureVersionHistory'
 
+export function saveHistory(history) {
+  setLocalStorageValue(KEY, history) // persist settings
+}
+
 export function updateTitle(resourceLink, title) { // update title for resourceLink
   const history = getLatest()
   const index = findItemIndexByKey(history, 'resourceLink', resourceLink)

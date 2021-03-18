@@ -2,14 +2,20 @@ import { core } from 'scripture-resources-rcl'
 import * as isEqual from 'deep-equal'
 import {
   addItemToHistory,
+  getLatest,
   removeItem,
   removeUrl,
+  saveHistory,
 } from '../utils/ScriptureVersionHistory'
 import {
   INVALID_REPO_URL_ERROR,
   INVALID_URL,
   MANIFEST_INVALID_SHORT_ERROR,
+  NT_ORIG_LANG_BIBLE,
+  ORIGINAL_SOURCE,
+  OT_ORIG_LANG_BIBLE,
   REPO_NOT_FOUND_ERROR,
+  setLocalStorageValue,
   useResourceManifest,
   validateDcsUrl,
 } from '..'
@@ -22,6 +28,43 @@ import useScriptureResources from './useScriptureResources'
 
 const KEY_SETTINGS_BASE = 'scripturePaneConfig_'
 const KEY_TARGET_BASE = 'scripturePaneTarget_'
+
+function fixScriptureSettings(scriptureSettings, languageId, cardNum, owner) {
+  // clean up hard-coded original sources
+  if ((scriptureSettings.resourceId === NT_ORIG_LANG_BIBLE) || (scriptureSettings.resourceId === OT_ORIG_LANG_BIBLE)) {
+    const newScriptureSettings = { ...scriptureSettings }
+    newScriptureSettings.languageId = languageId
+    newScriptureSettings.resourceId = ORIGINAL_SOURCE
+    newScriptureSettings.owner = owner
+    newScriptureSettings.resourceLink = getResourceLink(newScriptureSettings)
+    setLocalStorageValue(KEY_SETTINGS_BASE + cardNum, newScriptureSettings)
+    addItemToHistory(newScriptureSettings)
+  }
+
+  // clean history of original sources
+  let history = getLatest() || []
+  let first = -1
+  let modified = false
+
+  for (let i = 0; i < history.length; i++) { // search for original source duplicates in history
+    const item = history[i]
+    const resourceId = item.resourceId
+
+    if ((resourceId === NT_ORIG_LANG_BIBLE) || (resourceId === OT_ORIG_LANG_BIBLE) || (resourceId === ORIGINAL_SOURCE)) {
+      if (first < 0) {
+        first = i
+      } else { // found duplicate
+        history.splice(i, 1) // remove duplicate item
+        modified = true
+        i--
+      }
+    }
+  }
+
+  if (modified) {
+    saveHistory(history)
+  }
+}
 
 export function useScriptureSettings({
   isNT,
@@ -61,6 +104,7 @@ export function useScriptureSettings({
     languageId,
   }
   const [target, setTarget] = useLocalStorage(KEY_TARGET_BASE + cardNum, currentTarget)
+  fixScriptureSettings(scriptureSettings, languageId, cardNum, owner)
 
   if (!isEqual(currentTarget, target)) { // when target changes, switch back to defaults
     const oldDefaultSettings = { ...scriptureDefaultSettings, ...target }
