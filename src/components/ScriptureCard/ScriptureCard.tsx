@@ -118,6 +118,7 @@ export default function ScriptureCard({
 
   return (
     <Card
+      id={`scripture_card_${cardNum}`}
       title={scriptureLabel}
       settingsTitle={scriptureTitle + ' Settings'}
       items={items}
