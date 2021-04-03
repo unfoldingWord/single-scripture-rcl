@@ -8,6 +8,16 @@ import Tooltip from '@material-ui/core/Tooltip'
 import { delay } from '../utils/delay'
 import { useComboBox } from './useComboBox'
 
+/**
+ * business logic for combobox
+ * @param label - text to display in input box
+ * @param options - array of options to show in dropdown
+ * @param current - array index into options of current selection
+ * @param allowUserInput - if true then user can type in any text
+ * @param onChange - callback function for when user makes a selection
+ * @param deleteItem - callback function for when user delectes a scripture
+ * @param initialPrompt - if true selects displaying label initially in input box, otherwise it will show current selection
+ */
 export function useScriptureSelector({
   label,
   options,

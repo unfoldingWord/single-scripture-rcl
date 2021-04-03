@@ -7,6 +7,15 @@ import { createFilterOptions } from '@material-ui/lab/Autocomplete'
 
 const filter = createFilterOptions()
 
+/**
+ * business logic for combobox
+ * @param label - text to display in input box
+ * @param options - array of options to show in dropdown
+ * @param current - array index into options of current selection
+ * @param allowUserInput - if true then user can type in any text
+ * @param onChange - callback function for when user makes a selection
+ * @param initialPrompt - if true selects displaying label initially in input box, otherwise it will show current selection
+ */
 export function useComboBox({
   label,
   options,
