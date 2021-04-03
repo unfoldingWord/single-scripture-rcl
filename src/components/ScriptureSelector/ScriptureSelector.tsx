@@ -16,6 +16,8 @@ export function ScriptureSelector({
     label, options, current, allowUserInput, onChange, deleteItem,
   })
 
+  const userPrompt = 'Choose version or enter Door43 URL'
+
   return (
     <Autocomplete
       selectOnFocus
@@ -30,7 +32,7 @@ export function ScriptureSelector({
           error={!!errorMessage}
           helperText={errorMessage}
           {...params}
-          label={label}
+          label={userPrompt}
           variant="outlined"
         />
       )}
