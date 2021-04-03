@@ -8,10 +8,15 @@ import { createFilterOptions } from '@material-ui/lab/Autocomplete'
 const filter = createFilterOptions()
 
 export function useComboBox({
-  label, options, current, allowUserInput, onChange,
+  label,
+  options,
+  current,
+  allowUserInput,
+  onChange,
+  initialPrompt,
 }) {
   const currentOption = ((current >= 0) && (current < options.length)) ? options[current] : ''
-  const [value, setValue] = React.useState(currentOption)
+  const [value, setValue] = React.useState(initialPrompt ? null : currentOption)
 
   const handleChange = (event, newValue) => {
     let newSelection = newValue

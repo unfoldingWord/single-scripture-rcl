@@ -9,10 +9,21 @@ import { delay } from '../utils/delay'
 import { useComboBox } from './useComboBox'
 
 export function useScriptureSelector({
-  label, options, current, allowUserInput, onChange, deleteItem,
+  label,
+  options,
+  current,
+  allowUserInput,
+  onChange,
+  deleteItem,
+  initialPrompt,
 }) {
   let { state, actions } = useComboBox({
-    label, options, current, allowUserInput, onChange,
+    label,
+    options,
+    current,
+    allowUserInput,
+    onChange,
+    initialPrompt,
   })
   const [currentOptions, setOptions] = React.useState(state.options)
 
