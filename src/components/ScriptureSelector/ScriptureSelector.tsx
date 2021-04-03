@@ -15,7 +15,7 @@ export function ScriptureSelector({
   const initialPrompt = 'Choose version or enter Door43 URL'
 
   const { state, actions } = useScriptureSelector({
-    label,
+    label: initialPrompt,
     options,
     current,
     allowUserInput,
