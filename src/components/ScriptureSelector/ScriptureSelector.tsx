@@ -12,8 +12,16 @@ import { useScriptureSelector } from '../../hooks'
 export function ScriptureSelector({
   label, options, current, allowUserInput, onChange, style, deleteItem, errorMessage,
 }) {
+  const initialPrompt = 'Choose version or enter Door43 URL'
+
   const { state, actions } = useScriptureSelector({
-    label, options, current, allowUserInput, onChange, deleteItem,
+    label: initialPrompt,
+    options,
+    current,
+    allowUserInput,
+    onChange,
+    deleteItem,
+    initialPrompt,
   })
 
   return (
@@ -30,7 +38,7 @@ export function ScriptureSelector({
           error={!!errorMessage}
           helperText={errorMessage}
           {...params}
-          label={label}
+          label={initialPrompt}
           variant="outlined"
         />
       )}

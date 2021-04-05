@@ -9,10 +9,20 @@ import * as PropTypes from 'prop-types'
 import { useComboBox } from '../../hooks'
 
 export function ComboBox({
-  label, options, current, allowUserInput, onChange, style,
+  label,
+  options,
+  current,
+  allowUserInput,
+  onChange,
+  style,
 }) {
   const { state, actions } = useComboBox({
-    label, options, current, allowUserInput, onChange,
+    label,
+    options,
+    current,
+    allowUserInput,
+    onChange,
+    initialPrompt: null,
   })
 
   return (
