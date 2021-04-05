@@ -8,16 +8,23 @@ import Tooltip from '@material-ui/core/Tooltip'
 import { delay } from '../utils/delay'
 import { useComboBox } from './useComboBox'
 
-/**
- * business logic for combobox
- * @param label - text to display in input box
- * @param options - array of options to show in dropdown
- * @param current - array index into options of current selection
- * @param allowUserInput - if true then user can type in any text
- * @param onChange - callback function for when user makes a selection
- * @param deleteItem - callback function for when user delectes a scripture
- * @param initialPrompt - if true selects displaying label initially in input box, otherwise it will show current selection
- */
+interface Props {
+  /** text to display in input box */
+  label: string,
+  /** array of options to show in dropdown */
+  options: any[],
+  /** array index into options of current selection */
+  current: number,
+  /** if true then user can type in any text */
+  allowUserInput: boolean,
+  /** callback function for when user makes a selection */
+  onChange: Function,
+  /** callback function for when user makes deletes a scripture from options */
+  deleteItem: Function,
+  /** if truthy the label is initially shown in input box, otherwise current selection shown */
+  initialPrompt: any | null,
+}
+
 export function useScriptureSelector({
   label,
   options,
@@ -26,7 +33,7 @@ export function useScriptureSelector({
   onChange,
   deleteItem,
   initialPrompt,
-}) {
+}: Props) {
   let { state, actions } = useComboBox({
     label,
     options,
