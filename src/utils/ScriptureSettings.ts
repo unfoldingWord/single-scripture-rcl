@@ -59,6 +59,15 @@ export function getScriptureObject({
   return scripture
 }
 
+/**
+ * return true if resource is an original language bible
+ * @param resourceId
+ */
+export function isOriginalBible(resourceId) {
+  const isOrig = ((resourceId === NT_ORIG_LANG_BIBLE) || (resourceId === OT_ORIG_LANG_BIBLE) || (resourceId === ORIGINAL_SOURCE))
+  return isOrig
+}
+
 export function getScriptureResourceSettings(bookId, scriptureSettings_, isNewTestament) {
   const scriptureSettings = { ...scriptureSettings_ }
   scriptureSettings.disableWordPopover = DISABLE_WORD_POPOVER

@@ -172,7 +172,6 @@ function Component() {
           classes={classes}
           server={config.server}
           branch={config.branch}
-          disableWordPopover={true}
           useLocalStorage={useLocalStorage}
           {...englishScripture}
         />
@@ -182,7 +181,6 @@ function Component() {
           classes={classes}
           server={config.server}
           branch={config.branch}
-          disableWordPopover={true}
           useLocalStorage={useLocalStorage}
           {...englishUstScripture}
         />

@@ -4,7 +4,7 @@ import { Card, useCardState } from 'translation-helps-rcl'
 import { ScripturePane, ScriptureSelector } from '..'
 import { updateTitle } from '../../utils/ScriptureVersionHistory'
 import { useScriptureSettings } from '../../hooks/useScriptureSettings'
-import { getScriptureVersionSettings } from '../../utils/ScriptureSettings'
+import { getScriptureVersionSettings, isOriginalBible } from '../../utils/ScriptureSettings'
 import { Title } from '../ScripturePane/styled'
 
 const KEY_FONT_SIZE_BASE = 'scripturePaneFontSize_'
@@ -115,6 +115,11 @@ export default function ScriptureCard({
   }
 
   const scriptureLabel = <Title>{scriptureTitle}</Title>
+  let disableWordPopover_ = disableWordPopover
+
+  if (disableWordPopover === undefined) { // if not specified, then determine if original language resource
+    disableWordPopover_ = !isOriginalBible(scriptureConfig['resource']?.projectId)
+  }
 
   return (
     <Card
@@ -145,7 +150,7 @@ export default function ScriptureCard({
         direction={direction}
         contentStyle={contentStyle}
         fontSize={fontSize}
-        disableWordPopover={disableWordPopover}
+        disableWordPopover={disableWordPopover_}
       />
     </Card>
   )
