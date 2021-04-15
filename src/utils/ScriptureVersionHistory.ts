@@ -1,100 +1,107 @@
-import { getLocalStorageValue, setLocalStorageValue } from './LocalStorage'
-
 const maxItems = 7
-const KEY = 'scriptureVersionHistory'
+export const KEY_SCRIPTURE_VER_HISTORY = 'scriptureVersionHistory'
 
-export function saveHistory(history) {
-  setLocalStorageValue(KEY, history) // persist settings
-}
+export class ScriptureVersionHistory {
+  constructor(saveVersionHist, readVersionHist) {
+    this.saveVersionHist = saveVersionHist
+    this.readVersionHist = readVersionHist
+  }
 
-export function updateTitle(resourceLink, title) { // update title for resourceLink
-  const history = getLatest()
-  const index = findItemIndexByKey(history, 'resourceLink', resourceLink)
-  const entry = getItemByIndex(index)
+  saveHistory(history) {
+    this.saveVersionHist(history) // persist settings
+  }
 
-  if (entry) {
-    if (entry.title !== title) {
-      history[index]['title'] = title // update the title
-      setLocalStorageValue(KEY, history) // persist settings
+  updateTitle(resourceLink, title) { // update title for resourceLink
+    const history = this.getLatest()
+    const index = this.findItemIndexByKey(history, 'resourceLink', resourceLink)
+    const entry = this.getItemByIndex(index)
+
+    if (entry) {
+      if (entry.title !== title) {
+        history[index]['title'] = title // update the title
+        this.saveVersionHist(history) // persist settings
+      }
     }
   }
-}
 
-export function getLatest():any[] {
-  const value = getLocalStorageValue(KEY)
-  return value || []
-}
+  getLatest():any[] {
+    const value = this.readVersionHist()
+    return value || []
+  }
 
-export function findItemIndexByKey(history, key, match) {
-  const index = history.findIndex((item) => (item[key] === match) )
-  return index
-}
+  findItemIndexByKey(history, key, match) {
+    const index = history.findIndex((item) => (item[key] === match) )
+    return index
+  }
 
-function getItemByIndex(index, history=null) {
-  history = history || getLatest()
-  return (index >= 0) ? history[index] : null
-}
+  getItemByIndex(index, history=null) {
+    history = history || this.getLatest()
+    return (index >= 0) ? history[index] : null
+  }
 
-export function getItemByTitle(title) {
-  const history = getLatest()
-  const index = findItemIndexByKey(history, 'title', title)
-  return getItemByIndex(index, history)
-}
+  getItemByTitle(title) {
+    const history = this.getLatest()
+    const index = this.findItemIndexByKey(history, 'title', title)
+    return this.getItemByIndex(index, history)
+  }
 
-export function removeItemByIndex(index, history=null) {
-  history = history || getLatest()
+  removeItemByIndex(index, history=null) {
+    history = history || this.getLatest()
 
-  if ((index >= 0) && (index < history.length)) {
-    history.splice(index, 1) // remove old item - we will add it back again to the front
-    setLocalStorageValue(KEY, history)
+    if ((index >= 0) && (index < history.length)) {
+      history.splice(index, 1) // remove old item - we will add it back again to the front
+      this.saveVersionHist(history)
+    }
+  }
+
+  removeUrl(url) {
+    const index = this.findItemIndexByKey(this.getLatest(), 'url', url)
+
+    if (index >= 0) {
+      this.removeItemByIndex(index)
+    }
+  }
+
+  removeItem(matchItem, history=null) {
+    history = history || this.getLatest()
+    const index = this.findItem(matchItem, history)
+
+    if (index >= 0) {
+      this.removeItemByIndex(index, history)
+    }
+  }
+
+  findItem(matchItem, history=null) {
+    history = history || this.getLatest()
+
+    const index = history.findIndex((item) => (
+      (item.server === matchItem.server) &&
+      (item.resourceLink === matchItem.resourceLink)))
+    return index
+  }
+
+  addItemToHistory(newItem) { // add new item to front of the array and only keep up to maxItems
+    let history = this.getLatest()
+    let newIndex = -1
+    let changed = false
+    const index = this.findItem(newItem, history)
+
+    if (index < 0) {
+      history.unshift(newItem)
+      newIndex = 0
+      changed = true
+    }
+
+    if (history.length > maxItems) {
+      history = history.slice(0, maxItems)
+      changed = true
+    }
+
+    if (changed) {
+      this.saveVersionHist(history)
+    }
+    return newIndex
   }
 }
 
-export function removeUrl(url) {
-  const index = findItemIndexByKey(getLatest(), 'url', url)
 
-  if (index >= 0) {
-    removeItemByIndex(index)
-  }
-}
-
-export function removeItem(matchItem, history=null) {
-  history = history || getLatest()
-  const index = findItem(matchItem, history)
-
-  if (index >= 0) {
-    removeItemByIndex(index, history)
-  }
-}
-
-export function findItem(matchItem, history=null) {
-  history = history || getLatest()
-
-  const index = history.findIndex((item) => (
-    (item.server === matchItem.server) &&
-    (item.resourceLink === matchItem.resourceLink)))
-  return index
-}
-
-export function addItemToHistory(newItem) { // add new item to front of the array and only keep up to maxItems
-  let history = getLatest()
-  let newIndex = -1
-  let changed = false
-  const index = findItem(newItem, history)
-
-  if (index < 0) {
-    history.unshift(newItem)
-    newIndex = 0
-    changed = true
-  }
-
-  if (history.length > maxItems) {
-    history = history.slice(0, maxItems)
-    changed = true
-  }
-
-  if (changed) {
-    setLocalStorageValue(KEY, history)
-  }
-  return newIndex
-}
