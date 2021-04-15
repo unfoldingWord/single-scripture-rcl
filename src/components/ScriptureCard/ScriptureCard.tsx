@@ -30,11 +30,12 @@ export default function ScriptureCard({
     projectId: bookId,
   },
   resourceLink,
-  useLocalStorageUser,
+  useUserLocalStorage,
+  userLocalStorage,
   disableWordPopover,
 }) {
   const [urlError, setUrlError] = React.useState(null)
-  const [fontSize, setFontSize] = useLocalStorageUser(KEY_FONT_SIZE_BASE + cardNum, 100)
+  const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
   const {
     scriptureConfig,
     setScripture,
@@ -52,7 +53,8 @@ export default function ScriptureCard({
     languageId,
     resourceId,
     resourceLink,
-    useLocalStorageUser,
+    useUserLocalStorage,
+    userLocalStorage,
     disableWordPopover,
     originalLanguageOwner,
     setUrlError,
@@ -198,6 +200,8 @@ ScriptureCard.propTypes = {
   classes: PropTypes.object,
   /** resourceLink */
   resourceLink: PropTypes.any,
-  /** method for using local storage specific for user */
-  useLocalStorageUser: PropTypes.func.isRequired,
+  /** use method for using local storage specific for user */
+  useUserLocalStorage: PropTypes.func.isRequired,
+  /** object for stateless access of local storage for user */
+  userLocalStorage: PropTypes.object.isRequired,
 }

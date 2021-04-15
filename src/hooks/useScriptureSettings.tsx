@@ -1,9 +1,7 @@
+import { useMemo } from 'react'
 import { core } from 'scripture-resources-rcl'
 import * as isEqual from 'deep-equal'
-import {
-  KEY_SCRIPTURE_VER_HISTORY,
-  ScriptureVersionHistory,
-} from '../utils/ScriptureVersionHistory'
+import { ScriptureVersionHistory } from '../utils/ScriptureVersionHistory'
 import {
   INVALID_REPO_URL_ERROR,
   INVALID_URL,
@@ -76,7 +74,8 @@ export function useScriptureSettings({
   languageId,
   resourceId,
   resourceLink,
-  useLocalStorageUser,
+  useUserLocalStorage,
+  userLocalStorage,
   disableWordPopover,
   originalLanguageOwner,
   setUrlError,
@@ -93,16 +92,20 @@ export function useScriptureSettings({
     disableWordPopover,
     originalLanguageOwner,
   })
-  const [, saveVersionHist, readVersionHist] = useLocalStorageUser(KEY_SCRIPTURE_VER_HISTORY, [], false)
-  const scriptureVersionHist = new ScriptureVersionHistory(saveVersionHist, readVersionHist)
+
+  const scriptureVersionHist = useMemo(
+    () => (new ScriptureVersionHistory(userLocalStorage)),
+    [userLocalStorage.userName],
+  )
+
   scriptureVersionHist.addItemToHistory(scriptureDefaultSettings) // make sure default setting persisted in history
-  let [scriptureSettings, setScriptureSettings] = useLocalStorageUser(KEY_SETTINGS_BASE + cardNum, scriptureDefaultSettings)
+  let [scriptureSettings, setScriptureSettings] = useUserLocalStorage(KEY_SETTINGS_BASE + cardNum, scriptureDefaultSettings)
   const currentTarget = {
     server,
     owner,
     languageId,
   }
-  const [target, setTarget] = useLocalStorageUser(KEY_TARGET_BASE + cardNum, currentTarget)
+  const [target, setTarget] = useUserLocalStorage(KEY_TARGET_BASE + cardNum, currentTarget)
   fixScriptureSettings(scriptureVersionHist, scriptureSettings, languageId, cardNum, owner)
 
   if (!isEqual(currentTarget, target)) { // when target changes, switch back to defaults
