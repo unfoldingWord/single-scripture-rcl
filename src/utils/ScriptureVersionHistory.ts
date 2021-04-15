@@ -2,6 +2,8 @@ const maxItems = 7
 export const KEY = 'scriptureVersionHistory'
 
 export class ScriptureVersionHistory {
+  userLocalStorage: any;
+
   constructor(userLocalStorage) {
     this.userLocalStorage = userLocalStorage
   }
