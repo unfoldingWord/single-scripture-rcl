@@ -2,7 +2,6 @@ import * as React from 'react'
 import * as PropTypes from 'prop-types'
 import { Card, useCardState } from 'translation-helps-rcl'
 import { ScripturePane, ScriptureSelector } from '..'
-import { updateTitle } from '../../utils/ScriptureVersionHistory'
 import { useScriptureSettings } from '../../hooks/useScriptureSettings'
 import { getScriptureVersionSettings, isOriginalBible } from '../../utils/ScriptureSettings'
 import { Title } from '../ScripturePane/styled'
@@ -31,12 +30,17 @@ export default function ScriptureCard({
     projectId: bookId,
   },
   resourceLink,
-  useLocalStorage,
+  useUserLocalStorage,
+  userLocalStorage,
   disableWordPopover,
 }) {
   const [urlError, setUrlError] = React.useState(null)
-  const [fontSize, setFontSize] = useLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
-  const { scriptureConfig, setScripture } = useScriptureSettings({
+  const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
+  const {
+    scriptureConfig,
+    setScripture,
+    scriptureVersionHist,
+  } = useScriptureSettings({
     isNT,
     title,
     verse,
@@ -49,7 +53,8 @@ export default function ScriptureCard({
     languageId,
     resourceId,
     resourceLink,
-    useLocalStorage,
+    useUserLocalStorage,
+    userLocalStorage,
     disableWordPopover,
     originalLanguageOwner,
     setUrlError,
@@ -59,7 +64,7 @@ export default function ScriptureCard({
 
   if (scriptureConfig.title && scriptureConfig.version) {
     scriptureTitle = `${scriptureConfig.title} v${scriptureConfig.version}`
-    updateTitle(scriptureConfig.resourceLink, scriptureTitle)
+    scriptureVersionHist.updateTitle(scriptureConfig.resourceLink, scriptureTitle)
   } else {
     scriptureTitle = `Title missing from project manifest`
   }
@@ -70,6 +75,7 @@ export default function ScriptureCard({
       label,
       resourceLink: scriptureConfig.resourceLink,
       setScripture,
+      scriptureVersionHist,
     })
 
     return <ScriptureSelector {...scriptureSelectionConfig} style={style} errorMessage={urlError} />
@@ -194,6 +200,8 @@ ScriptureCard.propTypes = {
   classes: PropTypes.object,
   /** resourceLink */
   resourceLink: PropTypes.any,
-  /** method for using local storage */
-  useLocalStorage: PropTypes.func.isRequired,
+  /** use method for using local storage specific for user */
+  useUserLocalStorage: PropTypes.func.isRequired,
+  /** object for stateless access of local storage for user */
+  userLocalStorage: PropTypes.object.isRequired,
 }

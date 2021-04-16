@@ -1,10 +1,4 @@
 import {
-  addItemToHistory,
-  findItemIndexByKey, getItemByTitle,
-  getLatest,
-  removeItemByIndex,
-} from './ScriptureVersionHistory'
-import {
   BOOK_NOT_FOUND_ERROR,
   LOADING_RESOURCE,
   MANIFEST_INVALID_ERROR,
@@ -97,10 +91,13 @@ export function getScriptureResourceSettings(bookId, scriptureSettings_, isNewTe
 }
 
 export function getScriptureVersionSettings({
-  label, resourceLink, setScripture,
+  label,
+  resourceLink,
+  setScripture,
+  scriptureVersionHist,
 }) {
-  const history = getLatest()
-  let index = findItemIndexByKey(history, 'resourceLink', resourceLink)
+  const history = scriptureVersionHist.getLatest()
+  let index = scriptureVersionHist.findItemIndexByKey(history, 'resourceLink', resourceLink)
 
   const scriptureSelectorConfig = {
     label, // label for combobox
@@ -113,19 +110,19 @@ export function getScriptureVersionSettings({
           url: title,
           title,
         }
-        addItemToHistory(newItem)
+        scriptureVersionHist.addItemToHistory(newItem)
       }
 
-      const item = getItemByTitle(title)
+      const item = scriptureVersionHist.getItemByTitle(title)
 
       if (item) {
         setScripture(item)
       }
     },
     deleteItem: title => {
-      const history = getLatest()
-      const deleteIndex = findItemIndexByKey(history, 'title', title)
-      removeItemByIndex(deleteIndex)
+      const history = scriptureVersionHist.getLatest()
+      const deleteIndex = scriptureVersionHist.findItemIndexByKey(history, 'title', title)
+      scriptureVersionHist.removeItemByIndex(deleteIndex)
     },
   }
 
