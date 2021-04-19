@@ -13,5 +13,6 @@ export const SCRIPTURE_NOT_FOUND_ERROR = 'There is no associated content for thi
 export const INVALID_URL = 'Invalid URL!'
 export const INVALID_REPO_URL_ERROR = 'Invalid Project URL!'
 export const REPO_NOT_FOUND_ERROR = 'Project not Found!'
+export const REPO_NOT_SCRIPTURE_ERROR = 'This link does not point to a scripture resource.'
 export const MANIFEST_INVALID_SHORT_ERROR = 'The manifest for this project is invalid!'
 export const LOADING_RESOURCE = 'Loading Resource...'

@@ -15,8 +15,9 @@ import {
   ORIGINAL_SOURCE,
   OT_ORIG_LANG_BIBLE,
   REPO_NOT_FOUND_ERROR,
+  REPO_NOT_SCRIPTURE_ERROR,
   setLocalStorageValue,
-  useResourceManifest,
+  parseResourceManifest,
   validateDcsUrl,
 } from '..'
 import {
@@ -64,6 +65,12 @@ function fixScriptureSettings(scriptureSettings, languageId, cardNum, owner) {
   if (modified) {
     saveHistory(history)
   }
+}
+
+function isScriptureResource(subject) {
+  const BibleResources = [ 'Bible', 'Aligned Bible', 'Greek New Testament', 'Hebrew Old Testament' ]
+  const isScripture = BibleResources.includes(subject)
+  return isScripture
 }
 
 export function useScriptureSettings({
@@ -171,9 +178,17 @@ export function useScriptureSettings({
 
         if (resource) {
           // eslint-disable-next-line react-hooks/rules-of-hooks
-          const { title, version } = useResourceManifest(resource)
+          const {
+            title,
+            version,
+            subject,
+          } = parseResourceManifest(resource)
+          const isScripture = isScriptureResource(subject)
 
-          if (title && version) {
+          if (!isScripture) {
+            console.warn(`useScriptureSettings.setScripture - URL is not a scripture resource: ${url_}`)
+            error = REPO_NOT_SCRIPTURE_ERROR
+          } else if (title && version) {
             // we succeeded in getting resource - use it
             const newScripture = getScriptureObject({
               title,

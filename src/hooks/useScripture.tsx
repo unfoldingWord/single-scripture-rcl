@@ -8,7 +8,7 @@ import {
   ScriptureResource,
   ScriptureReference,
 } from '../types'
-import { useResourceManifest } from './useResourceManifest'
+import { parseResourceManifest } from './parseResourceManifest'
 
 interface Props {
   /** reference for scripture **/
@@ -46,7 +46,7 @@ export function useScripture({
     config, reference, resourceLink, options,
   })
 
-  const { title, version } = useResourceManifest(resource)
+  const { title, version } = parseResourceManifest(resource)
   let { verseObjects } = bibleJson || {}
   const { languageId } = resource_ || {}
   const resourceStatus = {
