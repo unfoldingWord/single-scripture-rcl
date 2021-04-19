@@ -1,7 +1,7 @@
-import { useMemo } from 'react'
+import { useEffect } from 'react'
 import { core } from 'scripture-resources-rcl'
 import * as isEqual from 'deep-equal'
-import { ScriptureVersionHistory } from '../utils/ScriptureVersionHistory'
+import { KEY_SCRIPTURE_VER_HISTORY, ScriptureVersionHistory } from '../utils/ScriptureVersionHistory'
 import {
   INVALID_REPO_URL_ERROR,
   INVALID_URL,
@@ -75,7 +75,6 @@ export function useScriptureSettings({
   resourceId,
   resourceLink,
   useUserLocalStorage,
-  userLocalStorage,
   disableWordPopover,
   originalLanguageOwner,
   setUrlError,
@@ -92,13 +91,9 @@ export function useScriptureSettings({
     disableWordPopover,
     originalLanguageOwner,
   })
+  const [versionHistory, saveVersionHist, refreshVersionHist] = useUserLocalStorage(KEY_SCRIPTURE_VER_HISTORY, [])
+  const scriptureVersionHist = new ScriptureVersionHistory(versionHistory, saveVersionHist, refreshVersionHist)
 
-  const scriptureVersionHist = useMemo(
-    () => (new ScriptureVersionHistory(userLocalStorage)),
-    [userLocalStorage.userName],
-  )
-
-  scriptureVersionHist.addItemToHistory(scriptureDefaultSettings) // make sure default setting persisted in history
   let [scriptureSettings, setScriptureSettings] = useUserLocalStorage(KEY_SETTINGS_BASE + cardNum, scriptureDefaultSettings)
   const currentTarget = {
     server,
@@ -106,18 +101,24 @@ export function useScriptureSettings({
     languageId,
   }
   const [target, setTarget] = useUserLocalStorage(KEY_TARGET_BASE + cardNum, currentTarget)
-  fixScriptureSettings(scriptureVersionHist, scriptureSettings, languageId, cardNum, owner)
 
-  if (!isEqual(currentTarget, target)) { // when target changes, switch back to defaults
-    const oldDefaultSettings = { ...scriptureDefaultSettings, ...target }
-    oldDefaultSettings.resourceLink = getResourceLink(oldDefaultSettings)
-    scriptureVersionHist.removeItem(oldDefaultSettings) // remove old default settings from history
+  useEffect(() => {
+    if (languageId && owner) { // make sure we have languageId and owner selected first
+      fixScriptureSettings(scriptureVersionHist, scriptureSettings, languageId, cardNum, owner)
 
-    setScriptureSettings(scriptureDefaultSettings)
-    setTarget(currentTarget)
-  } else {
-    scriptureVersionHist.addItemToHistory(scriptureSettings) // make sure current setting persisted in history
-  }
+      if (!isEqual(currentTarget, target)) { // when target changes, switch back to defaults
+        const oldDefaultSettings = { ...scriptureDefaultSettings, ...target }
+        oldDefaultSettings.resourceLink = getResourceLink(oldDefaultSettings)
+        scriptureVersionHist.removeItem(oldDefaultSettings) // remove old default settings from history
+
+        setScriptureSettings(scriptureDefaultSettings)
+        setTarget(currentTarget)
+      } else {
+        scriptureVersionHist.addItemToHistory(scriptureSettings) // make sure current scripture version persisted in history
+      }
+    }
+  }, [languageId, owner, cardNum, scriptureDefaultSettings, scriptureVersionHist, scriptureSettings,
+    currentTarget, target, setScriptureSettings, setTarget])
 
   const scriptureConfig = useScriptureResources(bookId, scriptureSettings, chapter, verse, isNewTestament)
 

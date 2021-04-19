@@ -31,7 +31,6 @@ export default function ScriptureCard({
   },
   resourceLink,
   useUserLocalStorage,
-  userLocalStorage,
   disableWordPopover,
 }) {
   const [urlError, setUrlError] = React.useState(null)
@@ -54,7 +53,6 @@ export default function ScriptureCard({
     resourceId,
     resourceLink,
     useUserLocalStorage,
-    userLocalStorage,
     disableWordPopover,
     originalLanguageOwner,
     setUrlError,
@@ -202,6 +200,4 @@ ScriptureCard.propTypes = {
   resourceLink: PropTypes.any,
   /** use method for using local storage specific for user */
   useUserLocalStorage: PropTypes.func.isRequired,
-  /** object for stateless access of local storage for user */
-  userLocalStorage: PropTypes.object.isRequired,
 }
