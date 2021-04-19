@@ -1,12 +1,7 @@
+import { useEffect } from 'react'
 import { core } from 'scripture-resources-rcl'
 import * as isEqual from 'deep-equal'
-import {
-  addItemToHistory,
-  getLatest,
-  removeItem,
-  removeUrl,
-  saveHistory,
-} from '../utils/ScriptureVersionHistory'
+import { KEY_SCRIPTURE_VER_HISTORY, ScriptureVersionHistory } from '../utils/ScriptureVersionHistory'
 import {
   INVALID_REPO_URL_ERROR,
   INVALID_URL,
@@ -30,7 +25,7 @@ import useScriptureResources from './useScriptureResources'
 const KEY_SETTINGS_BASE = 'scripturePaneConfig_'
 const KEY_TARGET_BASE = 'scripturePaneTarget_'
 
-function fixScriptureSettings(scriptureSettings, languageId, cardNum, owner) {
+function fixScriptureSettings(versionHist, scriptureSettings, languageId, cardNum, owner) {
   // clean up hard-coded original sources
   if ((scriptureSettings.resourceId === NT_ORIG_LANG_BIBLE) || (scriptureSettings.resourceId === OT_ORIG_LANG_BIBLE)) {
     const newScriptureSettings = { ...scriptureSettings }
@@ -39,11 +34,11 @@ function fixScriptureSettings(scriptureSettings, languageId, cardNum, owner) {
     newScriptureSettings.owner = owner
     newScriptureSettings.resourceLink = getResourceLink(newScriptureSettings)
     setLocalStorageValue(KEY_SETTINGS_BASE + cardNum, newScriptureSettings)
-    addItemToHistory(newScriptureSettings)
+    versionHist.addItemToHistory(newScriptureSettings)
   }
 
   // clean history of original sources
-  let history = getLatest() || []
+  let history = versionHist.getLatest() || []
   let first = -1
   let modified = false
 
@@ -63,7 +58,7 @@ function fixScriptureSettings(scriptureSettings, languageId, cardNum, owner) {
   }
 
   if (modified) {
-    saveHistory(history)
+    versionHist.saveHistory(history)
   }
 }
 
@@ -86,7 +81,7 @@ export function useScriptureSettings({
   languageId,
   resourceId,
   resourceLink,
-  useLocalStorage,
+  useUserLocalStorage,
   disableWordPopover,
   originalLanguageOwner,
   setUrlError,
@@ -103,26 +98,34 @@ export function useScriptureSettings({
     disableWordPopover,
     originalLanguageOwner,
   })
-  addItemToHistory(scriptureDefaultSettings) // make sure default setting persisted in history
-  let [scriptureSettings, setScriptureSettings] = useLocalStorage(KEY_SETTINGS_BASE + cardNum, scriptureDefaultSettings)
+  const [versionHistory, saveVersionHist, refreshVersionHist] = useUserLocalStorage(KEY_SCRIPTURE_VER_HISTORY, [])
+  const scriptureVersionHist = new ScriptureVersionHistory(versionHistory, saveVersionHist, refreshVersionHist)
+
+  let [scriptureSettings, setScriptureSettings] = useUserLocalStorage(KEY_SETTINGS_BASE + cardNum, scriptureDefaultSettings)
   const currentTarget = {
     server,
     owner,
     languageId,
   }
-  const [target, setTarget] = useLocalStorage(KEY_TARGET_BASE + cardNum, currentTarget)
-  fixScriptureSettings(scriptureSettings, languageId, cardNum, owner)
+  const [target, setTarget] = useUserLocalStorage(KEY_TARGET_BASE + cardNum, currentTarget)
 
-  if (!isEqual(currentTarget, target)) { // when target changes, switch back to defaults
-    const oldDefaultSettings = { ...scriptureDefaultSettings, ...target }
-    oldDefaultSettings.resourceLink = getResourceLink(oldDefaultSettings)
-    removeItem(oldDefaultSettings) // remove old default settings from history
+  useEffect(() => {
+    if (languageId && owner) { // make sure we have languageId and owner selected first
+      fixScriptureSettings(scriptureVersionHist, scriptureSettings, languageId, cardNum, owner)
 
-    setScriptureSettings(scriptureDefaultSettings)
-    setTarget(currentTarget)
-  } else {
-    addItemToHistory(scriptureSettings) // make sure current setting persisted in history
-  }
+      if (!isEqual(currentTarget, target)) { // when target changes, switch back to defaults
+        const oldDefaultSettings = { ...scriptureDefaultSettings, ...target }
+        oldDefaultSettings.resourceLink = getResourceLink(oldDefaultSettings)
+        scriptureVersionHist.removeItem(oldDefaultSettings) // remove old default settings from history
+
+        setScriptureSettings(scriptureDefaultSettings)
+        setTarget(currentTarget)
+      } else {
+        scriptureVersionHist.addItemToHistory(scriptureSettings) // make sure current scripture version persisted in history
+      }
+    }
+  }, [languageId, owner, cardNum, scriptureDefaultSettings, scriptureVersionHist, scriptureSettings,
+    currentTarget, target, setScriptureSettings, setTarget])
 
   const scriptureConfig = useScriptureResources(bookId, scriptureSettings, chapter, verse, isNewTestament)
 
@@ -136,7 +139,7 @@ export function useScriptureSettings({
         url = new URL(item.url)
       } catch {
         console.log('illegal url', item.url)
-        removeUrl(item.url)
+        scriptureVersionHist.removeUrl(item.url)
         setUrlError(INVALID_URL)
         return
       }
@@ -202,7 +205,7 @@ export function useScriptureSettings({
               originalLanguageOwner,
             })
             newScripture['userAdded'] = true
-            addItemToHistory(newScripture) // persist in local storage
+            scriptureVersionHist.addItemToHistory(newScripture) // persist in local storage
             setScriptureSettings(newScripture)
             error = null // no error
           } else {
@@ -212,7 +215,7 @@ export function useScriptureSettings({
         } else {
           console.error('not found', item.url)
         }
-        removeUrl(item.url)
+        scriptureVersionHist.removeUrl(item.url)
 
         if (error === REPO_NOT_FOUND_ERROR) { // if generic error, validate the URL
           const { validUrl, validRepoPath } = validateDcsUrl(item.url)
@@ -234,7 +237,11 @@ export function useScriptureSettings({
     }
   }
 
-  return { scriptureConfig, setScripture }
+  return {
+    scriptureConfig,
+    setScripture,
+    scriptureVersionHist,
+  }
 }
 
 export default useScriptureSettings
