@@ -1,15 +1,19 @@
 const maxItems = 7
-export const KEY = 'scriptureVersionHistory'
+export const KEY_SCRIPTURE_VER_HISTORY = 'scriptureVersionHistory'
 
 export class ScriptureVersionHistory {
-  userLocalStorage: any;
+  saveVersionHist: Function
+  readVersionHist: Function
+  versionHistory: Function
 
-  constructor(userLocalStorage) {
-    this.userLocalStorage = userLocalStorage
+  constructor(versionHistory, saveVersionHist, readVersionHist) {
+    this.versionHistory = versionHistory
+    this.saveVersionHist = saveVersionHist
+    this.readVersionHist = readVersionHist
   }
 
   saveHistory(history) {
-    this.userLocalStorage.save(KEY, history) // persist settings
+    this.saveVersionHist(history) // persist settings
   }
 
   updateTitle(resourceLink, title) { // update title for resourceLink
@@ -20,13 +24,13 @@ export class ScriptureVersionHistory {
     if (entry) {
       if (entry.title !== title) {
         history[index]['title'] = title // update the title
-        this.userLocalStorage.save(KEY, history) // persist settings
+        this.saveVersionHist(history) // persist settings
       }
     }
   }
 
   getLatest():any[] {
-    const value = this.userLocalStorage.read(KEY)
+    const value = this.readVersionHist()
     return value || []
   }
 
@@ -51,7 +55,7 @@ export class ScriptureVersionHistory {
 
     if ((index >= 0) && (index < history.length)) {
       history.splice(index, 1) // remove old item - we will add it back again to the front
-      this.userLocalStorage.save(KEY, history)
+      this.saveVersionHist(history)
     }
   }
 
@@ -99,7 +103,7 @@ export class ScriptureVersionHistory {
     }
 
     if (changed) {
-      this.userLocalStorage.save(KEY, history)
+      this.saveVersionHist(history)
     }
     return newIndex
   }
