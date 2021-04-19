@@ -91,7 +91,7 @@ export function useScriptureSettings({
     disableWordPopover,
     originalLanguageOwner,
   })
-  const [versionHistory, saveVersionHist, refreshVersionHist] = useUserLocalStorage(KEY_SCRIPTURE_VER_HISTORY, [], false)
+  const [versionHistory, saveVersionHist, refreshVersionHist] = useUserLocalStorage(KEY_SCRIPTURE_VER_HISTORY, [])
   const scriptureVersionHist = new ScriptureVersionHistory(versionHistory, saveVersionHist, refreshVersionHist)
 
   let [scriptureSettings, setScriptureSettings] = useUserLocalStorage(KEY_SETTINGS_BASE + cardNum, scriptureDefaultSettings)
