@@ -31,7 +31,7 @@ export class ScriptureVersionHistory {
 
   getLatest():any[] {
     const value = this.readVersionHist()
-    return value || []
+    return value ? [...value] : [] // make copy of data so it can be mutated
   }
 
   findItemIndexByKey(history, key, match) {
@@ -80,8 +80,8 @@ export class ScriptureVersionHistory {
     history = history || this.getLatest()
 
     const index = history.findIndex((item) => (
-      (item.server === matchItem.server) &&
-      (item.resourceLink === matchItem.resourceLink)))
+      item.server && (item.server === matchItem.server) &&
+      item.resourceLink && (item.resourceLink === matchItem.resourceLink)))
     return index
   }
 
@@ -105,7 +105,7 @@ export class ScriptureVersionHistory {
     if (changed) {
       this.saveVersionHist(history)
     }
-    return newIndex
+    return (newIndex >= 0) ? newIndex : index
   }
 }
 

@@ -64,7 +64,7 @@ export function useScriptureSelector({
   }
 
   function handleDelete(option) {
-    const currentTitle = state.value.title
+    const currentTitle = state?.value?.title || ''
     const removeTitle = option.title
     deleteItem(removeTitle)
     const index = findTitle(removeTitle)
@@ -74,11 +74,11 @@ export function useScriptureSelector({
       currentOptions.splice(index, 1)
       setOptions(currentOptions)
 
-      if (currentTitle === removeTitle) { // if we removed current, we need to select another
+      if (!currentTitle || (currentTitle === removeTitle)) { // if we removed current, we need to select another
         const newIndex = 0
         const newSelection = currentOptions[newIndex]
-        actions.setValue(newSelection)
         onChange && onChange(newSelection.title, newIndex)
+        actions.setValue('')
       } else { // reselect current item since race condition can leave wrong item shown selected
         const index = findTitle(currentTitle)
 
