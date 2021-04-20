@@ -129,7 +129,7 @@ export function useScriptureSettings({
 
   const scriptureConfig = useScriptureResources(bookId, scriptureSettings, chapter, verse, isNewTestament)
 
-  const setScripture = (item) => {
+  const setScripture = (item, validationCB = null) => {
     let url
 
     if (item?.url) {
@@ -141,6 +141,7 @@ export function useScriptureSettings({
         console.log('illegal url', item.url)
         scriptureVersionHist.removeUrl(item.url)
         setUrlError(INVALID_URL)
+        validationCB && validationCB(false)
         return
       }
     }
@@ -229,11 +230,13 @@ export function useScriptureSettings({
           }
         }
         setUrlError(error)
+        validationCB && validationCB(!error)
       })
     } else { // selected a previous setting
       setUrlError(null) // clear previous warnings
       console.log(`setScripture(${cardNum}) - setScriptureSettings to: ${JSON.stringify(item)}`)
       setScriptureSettings(item)
+      validationCB && validationCB(true)
     }
   }
 

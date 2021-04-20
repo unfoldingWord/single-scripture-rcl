@@ -104,7 +104,7 @@ export function getScriptureVersionSettings({
     options: history,
     current: index,
     allowUserInput: true,
-    onChange: (title, index) => {
+    onChange: (title, index, validationCB=null) => {
       if ((index < 0) && title) {
         const newItem = {
           url: title,
@@ -116,7 +116,9 @@ export function getScriptureVersionSettings({
       const item = scriptureVersionHist.getItemByTitle(title)
 
       if (item) {
-        setScripture(item)
+        setScripture(item, (success) => {
+          validationCB && validationCB(success)
+        })
       }
     },
     deleteItem: title => {

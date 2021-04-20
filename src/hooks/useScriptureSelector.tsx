@@ -34,12 +34,26 @@ export function useScriptureSelector({
   deleteItem,
   initialPrompt,
 }: Props) {
+  function scriptureSelectorOnChange(newSelection, index) {
+    onChange && onChange(newSelection, index, (success) => {
+      console.log(`useScriptureSelector-scriptureSelectorOnChange(${JSON.stringify(newSelection)},${index}) - success: ${success}`)
+
+      if (!success) {
+        if (typeof newSelection === 'string') {
+          deleteItem(newSelection)
+        } else {
+          console.log(`useScriptureSelector-scriptureSelectorOnChange() cannot delete item '${JSON.stringify(newSelection)}'`)
+        }
+      }
+    })
+  }
+
   let { state, actions } = useComboBox({
     label,
     options,
     current,
     allowUserInput,
-    onChange,
+    onChange: scriptureSelectorOnChange,
     initialPrompt,
   })
   const [currentOptions, setOptions] = React.useState(state.options)
