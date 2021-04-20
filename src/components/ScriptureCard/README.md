@@ -97,10 +97,14 @@ const useStyles = makeStyles({
   },
 });
 
-function useLocalStorage(key, initialValue) {
+function useUserLocalStorage(key, initialValue) {
   // State to store our value
   // Pass initial state function to useState so logic is only executed once
   const [storedValue, setStoredValue] = useState(() => {
+    return refreshFromLocalStorage();
+  })
+
+  function refreshFromLocalStorage() {
     try {
       // Get from local storage by key
       const item = localStorage.getItem(key)
@@ -111,7 +115,7 @@ function useLocalStorage(key, initialValue) {
       console.log(`useLocalStorage(${key}) - init error:'`, error)
       return initialValue
     }
-  })
+  }
 
   // Return a wrapped version of useState's setter function that ...
   // ... persists the new value to localStorage.
@@ -131,7 +135,7 @@ function useLocalStorage(key, initialValue) {
     }
   }
 
-  return [storedValue, setValue]
+  return [storedValue, setValue, refreshFromLocalStorage]
 }
 
 function Component() {
@@ -140,11 +144,11 @@ function Component() {
 
   const greekScriptureConfig = useScripture({
     ...greekScripture,
-     resource: {
-       ...greekScripture.resource,
-       resourceId: 'ugnt',
-       projectId: 'ugnt',
-     },
+    resource: {
+      ...greekScripture.resource,
+      resourceId: 'ugnt',
+      projectId: 'ugnt',
+    },
     config,
   });
 
@@ -163,7 +167,7 @@ function Component() {
           classes={classes}
           server={config.server}
           branch={config.branch}
-          useLocalStorage={useLocalStorage}
+          useUserLocalStorage={useUserLocalStorage}
           {...greekScripture}
         />
         <ScriptureCard
@@ -172,7 +176,7 @@ function Component() {
           classes={classes}
           server={config.server}
           branch={config.branch}
-          useLocalStorage={useLocalStorage}
+          useUserLocalStorage={useUserLocalStorage}
           {...englishScripture}
         />
         <ScriptureCard
@@ -181,7 +185,7 @@ function Component() {
           classes={classes}
           server={config.server}
           branch={config.branch}
-          useLocalStorage={useLocalStorage}
+          useUserLocalStorage={useUserLocalStorage}
           {...englishUstScripture}
         />
       </SelectionsContextProvider>
@@ -189,5 +193,5 @@ function Component() {
   );
 }
 
-<Component />;
+<Component/>;
 ```
