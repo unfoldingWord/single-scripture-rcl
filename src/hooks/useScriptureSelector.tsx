@@ -78,8 +78,9 @@ export function useScriptureSelector({
       } else {
         selectedItem = currentOptions[index]
       }
-      delay(100).then(() => {
+      delay(500).then(() => {
         actions.setValue(selectedItem) // select this item
+        onChange && onChange(selectedItem?.title, 0)
       })
     }
   }
@@ -100,11 +101,14 @@ export function useScriptureSelector({
         (currentTitle === removeTitle)) { // if we removed current or current already removed, we need to select another
         const newIndex = 0
         const newSelection = currentOptions[newIndex]
-        onChange && onChange(newSelection.title, newIndex)
-        actions.setValue(newSelection)
+
+        delay(500).then(() => {
+          onChange && onChange(newSelection.title, newIndex)
+          actions.setValue(newSelection)
+        })
       } else { // reselect current item since race condition can leave wrong item shown selected
         if (currentSelectionIndex >= 0) {
-          delay(50).then(() => {
+          delay(500).then(() => {
             const currentSelection = currentOptions[currentSelectionIndex]
             actions.setValue(currentSelection.title)
             setOptions(currentOptions)
