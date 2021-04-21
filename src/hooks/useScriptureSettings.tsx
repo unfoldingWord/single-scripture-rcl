@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { core } from 'scripture-resources-rcl'
 import * as isEqual from 'deep-equal'
 import { KEY_SCRIPTURE_VER_HISTORY, ScriptureVersionHistory } from '../utils/ScriptureVersionHistory'
@@ -108,10 +108,14 @@ export function useScriptureSettings({
     languageId,
   }
   const [target, setTarget] = useUserLocalStorage(KEY_TARGET_BASE + cardNum, currentTarget)
+  const [cleanup, setCleanup] = useState(true)
 
   useEffect(() => {
     if (languageId && owner) { // make sure we have languageId and owner selected first
-      fixScriptureSettings(scriptureVersionHist, scriptureSettings, languageId, cardNum, owner)
+      if (cleanup) { // only do cleanup once
+        fixScriptureSettings(scriptureVersionHist, scriptureSettings, languageId, cardNum, owner)
+        setCleanup(false)
+      }
 
       if (!isEqual(currentTarget, target)) { // when target changes, switch back to defaults
         const oldDefaultSettings = { ...scriptureDefaultSettings, ...target }
@@ -179,6 +183,7 @@ export function useScriptureSettings({
         },
       }).then(resource => {
         let error = REPO_NOT_FOUND_ERROR
+        let newScripture = null
 
         if (resource) {
           // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -194,7 +199,7 @@ export function useScriptureSettings({
             error = REPO_NOT_SCRIPTURE_ERROR
           } else if (title && version) {
             // we succeeded in getting resource - use it
-            const newScripture = getScriptureObject({
+            newScripture = getScriptureObject({
               title,
               server: server_,
               owner: resource.username,
@@ -230,7 +235,7 @@ export function useScriptureSettings({
           }
         }
         setUrlError(error)
-        validationCB && validationCB(!error)
+        validationCB && validationCB(!error, newScripture)
       })
     } else { // selected a previous setting
       setUrlError(null) // clear previous warnings

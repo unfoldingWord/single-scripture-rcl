@@ -35,7 +35,7 @@ export function useScriptureSelector({
   initialPrompt,
 }: Props) {
   function scriptureSelectorOnChange(newSelection, index) {
-    onChange && onChange(newSelection, index, (success) => {
+    onChange && onChange(newSelection, index, (success, item) => {
       console.log(`useScriptureSelector-scriptureSelectorOnChange(${JSON.stringify(newSelection)},${index}) - success: ${success}`)
 
       if (!success) {
@@ -44,6 +44,8 @@ export function useScriptureSelector({
         } else {
           console.log(`useScriptureSelector-scriptureSelectorOnChange() cannot delete item '${JSON.stringify(newSelection)}'`)
         }
+      } else {
+        makeSureItemIsSelectedInComboBox(item)
       }
     })
   }
@@ -63,31 +65,50 @@ export function useScriptureSelector({
     return index
   }
 
+  function makeSureItemIsSelectedInComboBox(item) {
+    const title = item?.title
+
+    if (title) {
+      let index = findTitle(title)
+      let selectedItem
+
+      if (index < 0) { // if we need to add
+        const newOptions = currentOptions
+        newOptions.unshift(item)
+        setOptions(newOptions)
+        selectedItem = item
+      } else {
+        selectedItem = currentOptions[index]
+      }
+      actions.setValue(selectedItem) // select this item
+    }
+  }
+
   function handleDelete(option) {
     const currentTitle = state?.value?.title || ''
     const removeTitle = option.title
     deleteItem(removeTitle)
-    const index = findTitle(removeTitle)
+    const removeIndex = findTitle(removeTitle)
+    const currentSelectionIndex = findTitle(currentTitle)
 
-    if (index >= 0) {
-      currentOptions[index].deleting = true // flag we are deleting before onChange called
-      currentOptions.splice(index, 1)
+    if (removeIndex >= 0) {
+      currentOptions[removeIndex].deleting = true // flag we are deleting before onChange called
+      currentOptions.splice(removeIndex, 1)
       setOptions(currentOptions)
 
-      if (!currentTitle || (currentTitle === removeTitle)) { // if we removed current, we need to select another
+      if ((currentSelectionIndex < 0) || !currentTitle ||
+        (currentTitle === removeTitle)) { // if we removed current or current already removed, we need to select another
         const newIndex = 0
         const newSelection = currentOptions[newIndex]
         onChange && onChange(newSelection.title, newIndex)
-        actions.setValue('')
+        actions.setValue(newSelection)
       } else { // reselect current item since race condition can leave wrong item shown selected
-        const index = findTitle(currentTitle)
-
-        if (index >= 0) {
+        if (currentSelectionIndex >= 0) {
           delay(50).then(() => {
-            const currentSelection = currentOptions[index]
+            const currentSelection = currentOptions[currentSelectionIndex]
             actions.setValue(currentSelection.title)
             setOptions(currentOptions)
-            onChange && onChange(currentSelection.title, index)
+            onChange && onChange(currentSelection.title, currentSelectionIndex)
           })
         }
       }

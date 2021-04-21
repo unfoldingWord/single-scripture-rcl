@@ -122,9 +122,7 @@ export function getScriptureVersionSettings({
       }
 
       if (item) {
-        setScripture(item, (success) => {
-          validationCB && validationCB(success)
-        })
+        setScripture(item, validationCB)
       }
     },
     deleteItem: title => {
