@@ -108,13 +108,13 @@ export function useScriptureSettings({
     languageId,
   }
   const [target, setTarget] = useUserLocalStorage(KEY_TARGET_BASE + cardNum, currentTarget)
-  const [cleanup, setCleanup] = useState(true)
+  const [cleanUp, setCleanUp] = useState(true)
 
   useEffect(() => {
     if (languageId && owner) { // make sure we have languageId and owner selected first
-      if (cleanup) { // only do cleanup once
+      if (cleanUp) { // only do cleanup once
         fixScriptureSettings(scriptureVersionHist, scriptureSettings, languageId, cardNum, owner)
-        setCleanup(false)
+        setCleanUp(false)
       }
 
       if (!isEqual(currentTarget, target)) { // when target changes, switch back to defaults
@@ -239,7 +239,6 @@ export function useScriptureSettings({
       })
     } else { // selected a previous setting
       setUrlError(null) // clear previous warnings
-      console.log(`setScripture(${cardNum}) - setScriptureSettings to: ${JSON.stringify(item)}`)
       setScriptureSettings(item)
       validationCB && validationCB(true)
     }

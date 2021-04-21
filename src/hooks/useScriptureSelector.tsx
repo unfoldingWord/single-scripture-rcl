@@ -36,8 +36,6 @@ export function useScriptureSelector({
 }: Props) {
   function scriptureSelectorOnChange(newSelection, index) {
     onChange && onChange(newSelection, index, (success, item) => {
-      console.log(`useScriptureSelector-scriptureSelectorOnChange(${JSON.stringify(newSelection)},${index}) - success: ${success}`)
-
       if (!success) {
         if (typeof newSelection === 'string') {
           deleteItem(newSelection)
@@ -80,7 +78,9 @@ export function useScriptureSelector({
       } else {
         selectedItem = currentOptions[index]
       }
-      actions.setValue(selectedItem) // select this item
+      delay(100).then(() => {
+        actions.setValue(selectedItem) // select this item
+      })
     }
   }
 
