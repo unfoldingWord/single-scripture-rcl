@@ -1,3 +1,5 @@
+import * as cloneDeep from 'lodash/cloneDeep' // cherry pick just the function we need so webpack can strip unneeded parts
+
 const maxItems = 7
 export const KEY_SCRIPTURE_VER_HISTORY = 'scriptureVersionHistory'
 
@@ -17,7 +19,7 @@ export class ScriptureVersionHistory {
   }
 
   updateTitle(resourceLink, title) { // update title for resourceLink
-    const history = this.getLatest()
+    const history = this.getLatestMutable() // make copy so we can modify
     const index = this.findItemIndexByKey(history, 'resourceLink', resourceLink)
     const entry = this.getItemByIndex(index)
 
@@ -34,24 +36,28 @@ export class ScriptureVersionHistory {
     return value || []
   }
 
-  findItemIndexByKey(history, key, match) {
+  getLatestMutable():any[] {
+    return cloneDeep(this.getLatest())
+  }
+
+  findItemIndexByKey(history, key, match):number {
     const index = history.findIndex((item) => (item[key] === match) )
     return index
   }
 
-  getItemByIndex(index, history=null) {
+  getItemByIndex(index, history=null):any {
     history = history || this.getLatest()
     return (index >= 0) ? history[index] : null
   }
 
-  getItemByTitle(title) {
+  getItemByTitle(title):any {
     const history = this.getLatest()
     const index = this.findItemIndexByKey(history, 'title', title)
     return this.getItemByIndex(index, history)
   }
 
   removeItemByIndex(index, history=null) {
-    history = history || this.getLatest()
+    history = cloneDeep(history || this.getLatest())
 
     if ((index >= 0) && (index < history.length)) {
       history.splice(index, 1) // remove old item - we will add it back again to the front
@@ -76,17 +82,17 @@ export class ScriptureVersionHistory {
     }
   }
 
-  findItem(matchItem, history=null) {
+  findItem(matchItem, history=null):number {
     history = history || this.getLatest()
 
     const index = history.findIndex((item) => (
-      (item.server === matchItem.server) &&
-      (item.resourceLink === matchItem.resourceLink)))
+      item.server && (item.server === matchItem.server) &&
+      item.resourceLink && (item.resourceLink === matchItem.resourceLink)))
     return index
   }
 
-  addItemToHistory(newItem) { // add new item to front of the array and only keep up to maxItems
-    let history = this.getLatest()
+  addItemToHistory(newItem):number { // add new item to front of the array and only keep up to maxItems
+    let history = this.getLatestMutable() // make copy so we can modify
     let newIndex = -1
     let changed = false
     const index = this.findItem(newItem, history)
@@ -105,7 +111,7 @@ export class ScriptureVersionHistory {
     if (changed) {
       this.saveVersionHist(history)
     }
-    return newIndex
+    return (newIndex >= 0) ? newIndex : index
   }
 }
 

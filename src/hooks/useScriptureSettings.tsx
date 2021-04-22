@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { core } from 'scripture-resources-rcl'
 import * as isEqual from 'deep-equal'
 import { KEY_SCRIPTURE_VER_HISTORY, ScriptureVersionHistory } from '../utils/ScriptureVersionHistory'
@@ -10,8 +10,9 @@ import {
   ORIGINAL_SOURCE,
   OT_ORIG_LANG_BIBLE,
   REPO_NOT_FOUND_ERROR,
+  REPO_NOT_SCRIPTURE_ERROR,
   setLocalStorageValue,
-  useResourceManifest,
+  parseResourceManifest,
   validateDcsUrl,
 } from '..'
 import {
@@ -61,6 +62,12 @@ function fixScriptureSettings(versionHist, scriptureSettings, languageId, cardNu
   }
 }
 
+function isScriptureResource(subject) {
+  const BibleResources = [ 'Bible', 'Aligned Bible', 'Greek New Testament', 'Hebrew Old Testament' ]
+  const isScripture = BibleResources.includes(subject)
+  return isScripture
+}
+
 export function useScriptureSettings({
   isNT,
   title,
@@ -101,10 +108,14 @@ export function useScriptureSettings({
     languageId,
   }
   const [target, setTarget] = useUserLocalStorage(KEY_TARGET_BASE + cardNum, currentTarget)
+  const [cleanUp, setCleanUp] = useState(true)
 
   useEffect(() => {
     if (languageId && owner) { // make sure we have languageId and owner selected first
-      fixScriptureSettings(scriptureVersionHist, scriptureSettings, languageId, cardNum, owner)
+      if (cleanUp) { // only do cleanup once
+        fixScriptureSettings(scriptureVersionHist, scriptureSettings, languageId, cardNum, owner)
+        setCleanUp(false)
+      }
 
       if (!isEqual(currentTarget, target)) { // when target changes, switch back to defaults
         const oldDefaultSettings = { ...scriptureDefaultSettings, ...target }
@@ -122,7 +133,7 @@ export function useScriptureSettings({
 
   const scriptureConfig = useScriptureResources(bookId, scriptureSettings, chapter, verse, isNewTestament)
 
-  const setScripture = (item) => {
+  const setScripture = (item, validationCB = null) => {
     let url
 
     if (item?.url) {
@@ -134,6 +145,7 @@ export function useScriptureSettings({
         console.log('illegal url', item.url)
         scriptureVersionHist.removeUrl(item.url)
         setUrlError(INVALID_URL)
+        validationCB && validationCB(false)
         return
       }
     }
@@ -171,14 +183,23 @@ export function useScriptureSettings({
         },
       }).then(resource => {
         let error = REPO_NOT_FOUND_ERROR
+        let newScripture = null
 
         if (resource) {
           // eslint-disable-next-line react-hooks/rules-of-hooks
-          const { title, version } = useResourceManifest(resource)
+          const {
+            title,
+            version,
+            subject,
+          } = parseResourceManifest(resource)
+          const isScripture = isScriptureResource(subject)
 
-          if (title && version) {
+          if (!isScripture) {
+            console.warn(`useScriptureSettings.setScripture - URL is not a scripture resource: ${url_}`)
+            error = REPO_NOT_SCRIPTURE_ERROR
+          } else if (title && version) {
             // we succeeded in getting resource - use it
-            const newScripture = getScriptureObject({
+            newScripture = getScriptureObject({
               title,
               server: server_,
               owner: resource.username,
@@ -214,11 +235,12 @@ export function useScriptureSettings({
           }
         }
         setUrlError(error)
+        validationCB && validationCB(!error, newScripture)
       })
     } else { // selected a previous setting
       setUrlError(null) // clear previous warnings
-      console.log(`setScripture(${cardNum}) - setScriptureSettings to: ${JSON.stringify(item)}`)
       setScriptureSettings(item)
+      validationCB && validationCB(true)
     }
   }
 

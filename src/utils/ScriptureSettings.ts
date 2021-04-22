@@ -104,19 +104,25 @@ export function getScriptureVersionSettings({
     options: history,
     current: index,
     allowUserInput: true,
-    onChange: (title, index) => {
+    onChange: (title, index, validationCB=null) => {
+      let item
+
       if ((index < 0) && title) {
         const newItem = {
           url: title,
           title,
         }
-        scriptureVersionHist.addItemToHistory(newItem)
+        const index = scriptureVersionHist.addItemToHistory(newItem)
+
+        if (index >= 0) {
+          item = scriptureVersionHist.getLatest()[index]
+        }
+      } else {
+        item = scriptureVersionHist.getItemByTitle(title)
       }
 
-      const item = scriptureVersionHist.getItemByTitle(title)
-
       if (item) {
-        setScripture(item)
+        setScripture(item, validationCB)
       }
     },
     deleteItem: title => {

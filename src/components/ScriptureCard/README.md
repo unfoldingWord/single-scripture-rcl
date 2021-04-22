@@ -81,6 +81,7 @@ const greekScripture = GreekExample;
 const hebrewScripture = HebrewExample;
 const englishScripture = EnglishExample;
 const englishUstScripture = EnglishUSTExample;
+const userName = 'test-user'
 
 const config = {
   server: "https://git.door43.org",
@@ -97,25 +98,37 @@ const useStyles = makeStyles({
   },
 });
 
-function useLocalStorage(key, initialValue) {
+function useUserLocalStorage(userName, key, initialValue) {
   // State to store our value
   // Pass initial state function to useState so logic is only executed once
   const [storedValue, setStoredValue] = useState(() => {
+    return refreshFromLocalStorage();
+  })
+
+  function getUserKey(username, baseKey) {
+    const key_ = username ? `${username}_${baseKey}` : baseKey // get user key
+    return key_
+  }
+
+  function refreshFromLocalStorage() {
+    const key_ = getUserKey(userName, key)
     try {
       // Get from local storage by key
-      const item = localStorage.getItem(key)
+      const item = localStorage.getItem(key_)
       // Parse stored json or if none return initialValue
       return item ? JSON.parse(item) : initialValue
     } catch (error) {
       // If error also return initialValue
-      console.log(`useLocalStorage(${key}) - init error:'`, error)
+      console.log(`useLocalStorage(${key_}) - init error:'`, error)
       return initialValue
     }
-  })
+  }
 
   // Return a wrapped version of useState's setter function that ...
   // ... persists the new value to localStorage.
   const setValue = value => {
+    const key_ = getUserKey(userName, key)
+
     try {
       // Allow value to be a function so we have same API as useState
       const valueToStore =
@@ -124,14 +137,14 @@ function useLocalStorage(key, initialValue) {
       setStoredValue(valueToStore)
       // Save to local storage
       let valueJSON = JSON.stringify(valueToStore)
-      localStorage.setItem(key, valueJSON)
+      localStorage.setItem(key_, valueJSON)
     } catch (error) {
       // A more advanced implementation would handle the error case
-      console.log(`useLocalStorage.setValue(${key}) - error:'`, error)
+      console.log(`useLocalStorage.setValue(${key_}) - error:'`, error)
     }
   }
 
-  return [storedValue, setValue]
+  return [storedValue, setValue, refreshFromLocalStorage]
 }
 
 function Component() {
@@ -140,13 +153,18 @@ function Component() {
 
   const greekScriptureConfig = useScripture({
     ...greekScripture,
-     resource: {
-       ...greekScripture.resource,
-       resourceId: 'ugnt',
-       projectId: 'ugnt',
-     },
+    resource: {
+      ...greekScripture.resource,
+      resourceId: 'ugnt',
+      projectId: 'ugnt',
+    },
     config,
   });
+
+  /** wrapper that applies current username */
+  function useUserLocalStorage_(key, initialValue) {
+    return useUserLocalStorage(userName, key, initialValue)
+  }
 
   return (
     <div style={{ display: "flex" }}>
@@ -163,7 +181,7 @@ function Component() {
           classes={classes}
           server={config.server}
           branch={config.branch}
-          useLocalStorage={useLocalStorage}
+          useUserLocalStorage={useUserLocalStorage_}
           {...greekScripture}
         />
         <ScriptureCard
@@ -172,7 +190,7 @@ function Component() {
           classes={classes}
           server={config.server}
           branch={config.branch}
-          useLocalStorage={useLocalStorage}
+          useUserLocalStorage={useUserLocalStorage_}
           {...englishScripture}
         />
         <ScriptureCard
@@ -181,7 +199,7 @@ function Component() {
           classes={classes}
           server={config.server}
           branch={config.branch}
-          useLocalStorage={useLocalStorage}
+          useUserLocalStorage={useUserLocalStorage_}
           {...englishUstScripture}
         />
       </SelectionsContextProvider>
@@ -189,5 +207,5 @@ function Component() {
   );
 }
 
-<Component />;
+<Component/>;
 ```

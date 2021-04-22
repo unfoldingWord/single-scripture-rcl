@@ -1,5 +1,5 @@
 export { useComboBox } from './useComboBox'
-export { useResourceManifest } from './useResourceManifest'
+export { parseResourceManifest } from './parseResourceManifest'
 export { useScripture } from './useScripture'
 export { useScriptureResources } from './useScriptureResources'
 export { useScriptureSelector } from './useScriptureSelector'
