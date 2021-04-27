@@ -21,7 +21,6 @@ import {
   getScriptureResourceSettings,
 } from '../utils/ScriptureSettings'
 import useScriptureResources from './useScriptureResources'
-import {delay} from "../utils/delay";
 
 const KEY_SETTINGS_BASE = 'scripturePaneConfig_'
 const KEY_TARGET_BASE = 'scripturePaneTarget_'
@@ -86,7 +85,6 @@ export function useScriptureSettings({
   disableWordPopover,
   originalLanguageOwner,
   setUrlError,
-  loggedInUser,
 }) {
   const isNewTestament = isNT(bookId)
   const scriptureDefaultSettings = getScriptureObject({
@@ -110,45 +108,33 @@ export function useScriptureSettings({
     languageId,
   }
   const [target, setTarget] = useUserLocalStorage(KEY_TARGET_BASE + cardNum, currentTarget)
-  const [runCleanup, setRunCleanup] = useState(false)
-  const [currentUser, setUser] = useState(null)
+  const [cleanUp, setCleanUp] = useState(true)
 
   useEffect(() => {
-    if (languageId && owner && loggedInUser) { // make sure we have languageId, owner and logged-in user first
-      console.log(`${cardNum}-useScriptureSettings - changed: ${JSON.stringify({languageId, owner, loggedInUser})}`)
-      delay(500).then(() => { // wait for settings to be updated from localStorage
-        setRunCleanup(true)
-      })
-    }
-  }, [languageId, owner, loggedInUser])
+    if (languageId && owner) { // make sure we have languageId and owner selected first
+      if (cleanUp) { // do initial cleanup
+        console.log(`${cardNum}-useScriptureSettings - doing initial history cleanup: ${JSON.stringify({languageId, owner})}`)
+        fixScriptureSettings(scriptureVersionHist, scriptureSettings, languageId, cardNum, owner)
+        setCleanUp(false)
+      }
 
-  useEffect(() => {
-    if (runCleanup) { // only run once when languageId, owner and logged-in user changes
-      console.log(`${cardNum}-useScriptureSettings - running cleanup: ${JSON.stringify({languageId, owner, loggedInUser})}`)
-
-      if (languageId && owner && loggedInUser) { // make sure we have languageId, owner and logged in first
-        setRunCleanup(false)
-        console.log(`${cardNum}-useScriptureSettings - fix history`)
+      if (!isEqual(currentTarget, target)) { // when target changes, switch back to defaults
+        console.log(`${cardNum}-useScriptureSettings - reset history, target changed from ${JSON.stringify(currentTarget)} to ${JSON.stringify(target)}`)
+        const oldDefaultSettings = { ...scriptureDefaultSettings, ...target }
+        oldDefaultSettings.resourceLink = getResourceLink(oldDefaultSettings)
+        scriptureVersionHist.removeItem(oldDefaultSettings) // remove old default settings from history
         fixScriptureSettings(scriptureVersionHist, scriptureSettings, languageId, cardNum, owner)
 
-        if (!isEqual(currentTarget, target) || (currentUser === loggedInUser)) { // when target changes for current user, switch back to defaults
-          console.log(`${cardNum}-useScriptureSettings - target changed for user from ${JSON.stringify(currentTarget)} to ${JSON.stringify(target)}`)
-          const oldDefaultSettings = { ...scriptureDefaultSettings, ...target }
-          oldDefaultSettings.resourceLink = getResourceLink(oldDefaultSettings)
-          scriptureVersionHist.removeItem(oldDefaultSettings) // remove old default settings from history
-          setScriptureSettings(scriptureDefaultSettings)
-          setTarget(currentTarget)
-        } else {
-          console.log(`${cardNum}-useScriptureSettings - target unchanged for user ${loggedInUser}`)
-          scriptureVersionHist.addItemToHistory(scriptureSettings) // make sure current scripture version persisted in history
-          setUser((loggedInUser))
-        }
+        setScriptureSettings(scriptureDefaultSettings)
+        setTarget(currentTarget)
       } else {
-        console.log(`${cardNum}-useScriptureSettings - missing one of: ${JSON.stringify({languageId, owner, loggedInUser})}`)
+        console.log(`${cardNum}-useScriptureSettings - add url, target not changed ${JSON.stringify(currentTarget)}`)
+        scriptureVersionHist.addItemToHistory(scriptureSettings) // make sure current scripture version persisted in history
       }
     }
-  }, [languageId, owner, cardNum, scriptureDefaultSettings, scriptureVersionHist, scriptureSettings,
-    currentTarget, target, setScriptureSettings, setTarget, loggedInUser, runCleanup])
+  }, [languageId, owner, cleanUp])
+
+  console.log(`${cardNum}-useScriptureSettings - loading scripture: ${JSON.stringify({owner, languageId, resourceId, branch})}`)
 
   const scriptureConfig = useScriptureResources(bookId, scriptureSettings, chapter, verse, isNewTestament)
 

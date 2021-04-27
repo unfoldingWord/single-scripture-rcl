@@ -32,7 +32,6 @@ export default function ScriptureCard({
   resourceLink,
   useUserLocalStorage,
   disableWordPopover,
-  loggedInUser,
 }) {
   const [urlError, setUrlError] = React.useState(null)
   const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
@@ -57,7 +56,6 @@ export default function ScriptureCard({
     disableWordPopover,
     originalLanguageOwner,
     setUrlError,
-    loggedInUser,
   })
 
   let scriptureTitle
@@ -162,10 +160,6 @@ export default function ScriptureCard({
   )
 }
 
-ScriptureCard.defaultProps = {
-  loggedInUser: '',
-}
-
 ScriptureCard.propTypes = {
   /** method to determine if NT or OT */
   isNT: PropTypes.func.isRequired,
@@ -206,6 +200,4 @@ ScriptureCard.propTypes = {
   resourceLink: PropTypes.any,
   /** use method for using local storage specific for user */
   useUserLocalStorage: PropTypes.func.isRequired,
-  /** current logged in user */
-  loggedInUser: PropTypes.string,
 }
