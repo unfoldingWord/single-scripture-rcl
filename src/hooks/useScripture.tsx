@@ -36,6 +36,8 @@ export function useScripture({
     resourceLink = `${owner}/${languageId}/${projectId}/${branch}`
   }
 
+  console.log(`useScripture - resourceLink: ${resourceLink}`)
+
   const options = { getBibleJson: true }
 
   const {
@@ -55,6 +57,13 @@ export function useScripture({
     scriptureNotLoadedError: !bibleJson,
     manifestNotFoundError: !resource?.manifest,
     invalidManifestError: !title || !version || !languageId,
+  }
+
+  if (!resourceStatus.loading){
+    const error = (resourceStatus.contentNotFoundError || resourceStatus.scriptureNotLoadedError || resourceStatus.manifestNotFoundError || resourceStatus.invalidManifestError)
+    if (error) {
+      console.log(`useScripture - resourceLink: ${resourceLink} Load failure: ${JSON.stringify(resourceStatus)}`)
+    }
   }
 
   if (languageId === 'el-x-koine' || languageId === 'hbo') {
