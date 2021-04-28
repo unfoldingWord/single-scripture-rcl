@@ -113,13 +113,11 @@ export function useScriptureSettings({
   useEffect(() => {
     if (languageId && owner) { // make sure we have languageId and owner selected first
       if (cleanUp) { // do initial cleanup
-        console.log(`${cardNum}-useScriptureSettings - doing initial history cleanup: ${JSON.stringify({languageId, owner})}`)
         fixScriptureSettings(scriptureVersionHist, scriptureSettings, languageId, cardNum, owner)
         setCleanUp(false)
       }
 
       if (!isEqual(currentTarget, target)) { // when target changes, switch back to defaults
-        console.log(`${cardNum}-useScriptureSettings - reset history, target changed from ${JSON.stringify(currentTarget)} to ${JSON.stringify(target)}`)
         const oldDefaultSettings = { ...scriptureDefaultSettings, ...target }
         oldDefaultSettings.resourceLink = getResourceLink(oldDefaultSettings)
         scriptureVersionHist.removeItem(oldDefaultSettings) // remove old default settings from history
@@ -128,13 +126,10 @@ export function useScriptureSettings({
         setScriptureSettings(scriptureDefaultSettings)
         setTarget(currentTarget)
       } else {
-        console.log(`${cardNum}-useScriptureSettings - add url, target not changed ${JSON.stringify(currentTarget)}`)
         scriptureVersionHist.addItemToHistory(scriptureSettings) // make sure current scripture version persisted in history
       }
     }
   }, [languageId, owner, cleanUp])
-
-  console.log(`${cardNum}-useScriptureSettings - loading scripture: ${JSON.stringify({owner, languageId, resourceId, branch})}`)
 
   const scriptureConfig = useScriptureResources(bookId, scriptureSettings, chapter, verse, isNewTestament)
 
