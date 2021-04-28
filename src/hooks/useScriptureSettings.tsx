@@ -112,7 +112,7 @@ export function useScriptureSettings({
 
   useEffect(() => {
     if (languageId && owner) { // make sure we have languageId and owner selected first
-      if (cleanUp) { // only do cleanup once
+      if (cleanUp) { // do initial cleanup
         fixScriptureSettings(scriptureVersionHist, scriptureSettings, languageId, cardNum, owner)
         setCleanUp(false)
       }
@@ -121,6 +121,7 @@ export function useScriptureSettings({
         const oldDefaultSettings = { ...scriptureDefaultSettings, ...target }
         oldDefaultSettings.resourceLink = getResourceLink(oldDefaultSettings)
         scriptureVersionHist.removeItem(oldDefaultSettings) // remove old default settings from history
+        fixScriptureSettings(scriptureVersionHist, scriptureSettings, languageId, cardNum, owner)
 
         setScriptureSettings(scriptureDefaultSettings)
         setTarget(currentTarget)
@@ -128,8 +129,7 @@ export function useScriptureSettings({
         scriptureVersionHist.addItemToHistory(scriptureSettings) // make sure current scripture version persisted in history
       }
     }
-  }, [languageId, owner, cardNum, scriptureDefaultSettings, scriptureVersionHist, scriptureSettings,
-    currentTarget, target, setScriptureSettings, setTarget])
+  }, [languageId, owner, cleanUp])
 
   const scriptureConfig = useScriptureResources(bookId, scriptureSettings, chapter, verse, isNewTestament)
 
