@@ -111,6 +111,7 @@ export function useScriptureSettings({
   const [cleanUp, setCleanUp] = useState(true)
 
   useEffect(() => {
+    console.log(`useScriptureSettings() - changed: `, {languageId, owner, scriptureSettings})
     if (languageId && owner) { // make sure we have languageId and owner selected first
       if (cleanUp) { // do initial cleanup
         fixScriptureSettings(scriptureVersionHist, scriptureSettings, languageId, cardNum, owner)
@@ -131,7 +132,13 @@ export function useScriptureSettings({
     }
   }, [languageId, owner, cleanUp])
 
-  const scriptureConfig = useScriptureResources(bookId, scriptureSettings, chapter, verse, isNewTestament)
+  if ((scriptureSettings.languageId !== languageId) || (scriptureSettings.owner !== owner)) {
+    console.warn(`useScriptureSettings: see glitch on fetching: `, {languageId, owner, scriptureSettings})
+  } else {
+    console.log(`useScriptureSettings: no glitch: `, {languageId, owner, scriptureSettings})
+  }
+
+  const scriptureConfig = useScriptureResources(bookId, languageId, owner, scriptureSettings, chapter, verse, isNewTestament)
 
   const setScripture = (item, validationCB = null) => {
     let url

@@ -36,6 +36,8 @@ export function useScripture({
     resourceLink = `${owner}/${languageId}/${projectId}/${branch}`
   }
 
+  console.log(`useScripture() - getting: ''${resourceLink}, props:`, {config, reference, resource_})
+
   const options = { getBibleJson: true }
 
   const {

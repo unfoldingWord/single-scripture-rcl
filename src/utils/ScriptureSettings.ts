@@ -62,10 +62,14 @@ export function isOriginalBible(resourceId) {
   return isOrig
 }
 
-export function getScriptureResourceSettings(bookId, scriptureSettings_, isNewTestament) {
+export function getScriptureResourceSettings(bookId, scriptureSettings_, isNewTestament, languageId=null, owner=null) {
   const scriptureSettings = { ...scriptureSettings_ }
   scriptureSettings.disableWordPopover = DISABLE_WORD_POPOVER
   const resourceId = scriptureSettings_.resourceId
+
+  if (owner && (owner !== scriptureSettings.owner)) { // if owner changed, update scriptureSettings
+    scriptureSettings.owner = owner
+  }
 
   if ((resourceId === ORIGINAL_SOURCE) || (resourceId === NT_ORIG_LANG_BIBLE) || (resourceId === OT_ORIG_LANG_BIBLE)) {
     // select original language Bible based on which testament the book belongs
@@ -81,9 +85,15 @@ export function getScriptureResourceSettings(bookId, scriptureSettings_, isNewTe
     scriptureSettings.resourceLink = getResourceLink(scriptureSettings)
     scriptureSettings.disableWordPopover = false
   } else if (resourceId === TARGET_LITERAL) {
+    if (languageId && (languageId !== scriptureSettings.languageId)) { // if language changed, update scriptureSettings
+      scriptureSettings.languageId = languageId
+    }
     scriptureSettings.resourceId = scriptureSettings.languageId === 'en' ? 'ult' : 'glt'
     scriptureSettings.resourceLink = getResourceLink(scriptureSettings)
   } else if (resourceId === TARGET_SIMPLIFIED) {
+    if (languageId && (languageId !== scriptureSettings.languageId)) { // if language changed, update scriptureSettings
+      scriptureSettings.languageId = languageId
+    }
     scriptureSettings.resourceId = scriptureSettings.languageId === 'en' ? 'ust' : 'gst'
     scriptureSettings.resourceLink = getResourceLink(scriptureSettings)
   }

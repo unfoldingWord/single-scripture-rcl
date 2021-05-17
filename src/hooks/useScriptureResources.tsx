@@ -1,8 +1,8 @@
 import { useScripture } from '..'
 import { getScriptureResourceSettings } from '../utils/ScriptureSettings'
 
-export function useScriptureResources(bookId, scriptureSettings, chapter, verse, isNewTestament) {
-  const scriptureSettings_ = getScriptureResourceSettings(bookId, scriptureSettings, isNewTestament) // convert any default settings strings
+export function useScriptureResources(bookId, languageId, owner, scriptureSettings, chapter, verse, isNewTestament) {
+  const scriptureSettings_ = getScriptureResourceSettings(bookId, scriptureSettings, isNewTestament, languageId, owner) // convert any default settings strings
 
   const scriptureConfig_ = {
     reference: {
