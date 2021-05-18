@@ -1,8 +1,19 @@
 // @ts-ignore
+import { useEffect, useState } from 'react'
 import {
   core,
   useRsrc,
 } from 'scripture-resources-rcl'
+import {
+  CONTENT_NOT_FOUND_ERROR,
+  ERROR_STATE,
+  INITIALIZED_STATE,
+  INVALID_MANIFEST_ERROR,
+  LOADING_STATE,
+  MANIFEST_NOT_LOADED_ERROR,
+  SCRIPTURE_NOT_LOADED_ERROR,
+} from 'translation-helps-rcl'
+import { getResourceLinkSpecific } from '../utils'
 import {
   ServerConfig,
   ScriptureResource,
@@ -27,13 +38,14 @@ export function useScripture({
   resource: resource_,
   resourceLink: resourceLink_,
 } : Props) {
+  const [initialized, setInitialized] = useState(false)
   let resourceLink = resourceLink_
 
   if (resource_) {
     const {
       owner, languageId, projectId, branch = 'master',
     } = resource_ || {}
-    resourceLink = `${owner}/${languageId}/${projectId}/${branch}`
+    resourceLink = getResourceLinkSpecific(owner, languageId, projectId, branch)
   }
 
   const options = { getBibleJson: true }
@@ -49,13 +61,30 @@ export function useScripture({
   const { title, version } = parseResourceManifest(resource)
   let { verseObjects } = bibleJson || {}
   const { languageId } = resource_ || {}
+  const loading = loadingResource || loadingContent
+  const contentNotFoundError = !content
+  const scriptureNotLoadedError = !bibleJson
+  const manifestNotFoundError = !resource?.manifest
+  const invalidManifestError = !title || !version || !languageId
+  const error = initialized && !loading &&
+    (contentNotFoundError || scriptureNotLoadedError || manifestNotFoundError || invalidManifestError)
   const resourceStatus = {
-    loading: loadingResource || loadingContent,
-    contentNotFoundError: !content,
-    scriptureNotLoadedError: !bibleJson,
-    manifestNotFoundError: !resource?.manifest,
-    invalidManifestError: !title || !version || !languageId,
+    [LOADING_STATE]: loading,
+    [CONTENT_NOT_FOUND_ERROR]: contentNotFoundError,
+    [SCRIPTURE_NOT_LOADED_ERROR]: scriptureNotLoadedError,
+    [MANIFEST_NOT_LOADED_ERROR]: manifestNotFoundError,
+    [INVALID_MANIFEST_ERROR]: invalidManifestError,
+    [ERROR_STATE]: error,
+    [INITIALIZED_STATE]: initialized,
   }
+
+  useEffect(() => {
+    if (!initialized) {
+      if (loading) { // once first load has begun, we are initialized
+        setInitialized(true)
+      }
+    }
+  }, [loading])
 
   if (languageId === 'el-x-koine' || languageId === 'hbo') {
     verseObjects = core.occurrenceInjectVerseObjects(verseObjects)

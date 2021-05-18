@@ -1,9 +1,19 @@
 import * as React from 'react'
 import * as PropTypes from 'prop-types'
-import { Card, useCardState } from 'translation-helps-rcl'
+import {
+  Card,
+  useCardState,
+  ERROR_STATE,
+  MANIFEST_NOT_LOADED_ERROR,
+} from 'translation-helps-rcl'
 import { ScripturePane, ScriptureSelector } from '..'
 import { useScriptureSettings } from '../../hooks/useScriptureSettings'
-import { getScriptureVersionSettings, isOriginalBible } from '../../utils/ScriptureSettings'
+import {
+  getResourceLink,
+  getResourceMessage,
+  getScriptureVersionSettings,
+  isOriginalBible,
+} from '../../utils/ScriptureSettings'
 import { Title } from '../ScripturePane/styled'
 
 const KEY_FONT_SIZE_BASE = 'scripturePaneFontSize_'
@@ -32,6 +42,7 @@ export default function ScriptureCard({
   resourceLink,
   useUserLocalStorage,
   disableWordPopover,
+  onResourceError,
 }) {
   const [urlError, setUrlError] = React.useState(null)
   const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
@@ -59,6 +70,18 @@ export default function ScriptureCard({
   })
 
   let scriptureTitle
+
+  React.useEffect(() => {
+    const error = scriptureConfig?.resourceStatus?.[ERROR_STATE]
+
+    if (error) { // if error was found do callback
+      const resourceStatus = scriptureConfig?.resourceStatus
+      const resourceLink = getResourceLink(scriptureConfig)
+      const message = getResourceMessage(resourceStatus, server, resourceLink, isNT(bookId))
+      const isAccessError = resourceStatus[MANIFEST_NOT_LOADED_ERROR]
+      onResourceError && onResourceError(message, isAccessError, resourceStatus)
+    }
+  }, [scriptureConfig?.resourceStatus?.[ERROR_STATE]])
 
   if (scriptureConfig.title && scriptureConfig.version) {
     scriptureTitle = `${scriptureConfig.title} v${scriptureConfig.version}`
@@ -200,4 +223,9 @@ ScriptureCard.propTypes = {
   resourceLink: PropTypes.any,
   /** use method for using local storage specific for user */
   useUserLocalStorage: PropTypes.func.isRequired,
+  /** optional callback if error loading resource, parameter returned are:
+   *    ({string} errorMessage, {boolean} isAccessError, {object} resourceStatus)
+   *    isAccessError - is true if this was an error trying to access file
+   *    resourceStatus - is object containing details about problems fetching resource */
+  onResourceError: PropTypes.func,
 }
