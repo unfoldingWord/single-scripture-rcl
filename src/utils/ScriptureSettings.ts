@@ -259,7 +259,6 @@ export function getResourceMessage(resourceStatus: object, server: string, resou
     message = getResourceErrorMessage(resourceStatus)
 
     if (message) {
-      console.log(`getResourceMessage(${resourceLink}) - Resource Error: ${JSON.stringify(resourceStatus)}`)
       message = getErrorMessageForResourceLink(resourceLink, server, message, isNT)
     }
   }
