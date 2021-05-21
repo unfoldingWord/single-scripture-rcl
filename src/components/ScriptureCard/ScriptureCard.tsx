@@ -225,7 +225,7 @@ ScriptureCard.propTypes = {
   useUserLocalStorage: PropTypes.func.isRequired,
   /** optional callback if error loading resource, parameter returned are:
    *    ({string} errorMessage, {boolean} isAccessError, {object} resourceStatus)
-   *    isAccessError - is true if this was an error trying to access file
-   *    resourceStatus - is object containing details about problems fetching resource */
+   *      - isAccessError - is true if this was an error trying to access file
+   *      - resourceStatus - is object containing details about problems fetching resource */
   onResourceError: PropTypes.func,
 }
