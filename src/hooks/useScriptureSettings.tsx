@@ -131,7 +131,7 @@ export function useScriptureSettings({
     }
   }, [languageId, owner, cleanUp])
 
-  const scriptureConfig = useScriptureResources(bookId, scriptureSettings, chapter, verse, isNewTestament)
+  const scriptureConfig = useScriptureResources(bookId, scriptureSettings, chapter, verse, isNewTestament, languageId, owner)
 
   const setScripture = (item, validationCB = null) => {
     let url

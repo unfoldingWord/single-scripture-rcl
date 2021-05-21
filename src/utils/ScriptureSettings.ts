@@ -1,14 +1,21 @@
 import {
-  BOOK_NOT_FOUND_ERROR,
+  CONTENT_NOT_FOUND_ERROR,
+  INVALID_MANIFEST_ERROR,
+  LOADING_STATE,
+  MANIFEST_NOT_LOADED_ERROR,
+  SCRIPTURE_NOT_LOADED_ERROR,
+} from 'translation-helps-rcl'
+import {
+  BOOK_NOT_FOUND_ERROR_MSG,
   LOADING_RESOURCE,
-  MANIFEST_INVALID_ERROR,
-  MANIFEST_NOT_FOUND_ERROR,
+  MANIFEST_INVALID_ERROR_MSG,
+  MANIFEST_NOT_FOUND_ERROR_MSG,
   NT_ORIG_LANG,
   NT_ORIG_LANG_BIBLE,
   ORIGINAL_SOURCE,
   OT_ORIG_LANG,
   OT_ORIG_LANG_BIBLE,
-  SCRIPTURE_NOT_FOUND_ERROR,
+  SCRIPTURE_NOT_FOUND_ERROR_MSG,
   TARGET_LITERAL,
   TARGET_SIMPLIFIED,
 } from './common'
@@ -62,7 +69,31 @@ export function isOriginalBible(resourceId) {
   return isOrig
 }
 
-export function getScriptureResourceSettings(bookId, scriptureSettings_, isNewTestament) {
+/**
+ * make sure scriptureSettings are up to date with current owner and language
+ * @param {object} scriptureSettings
+ * @param {string} currentOwner - optional over-ride for transient case where owner in scripture settings have not yet updated
+ * @param {string} currentLanguageId - optional over-ride for transient case where language in scripture settings have not yet updated
+ */
+export function cleanupAccountSettings(scriptureSettings: any, currentOwner: any, currentLanguageId: any) {
+  if (currentOwner && (currentOwner !== scriptureSettings.owner)) { // if owner changed, update scriptureSettings
+    scriptureSettings.owner = currentOwner
+  }
+
+  if (currentLanguageId && (currentLanguageId !== scriptureSettings.languageId)) { // if language changed, update scriptureSettings
+    scriptureSettings.languageId = currentLanguageId
+  }
+}
+
+/**
+ * get the scripture settings needed for fetch - for OrigLang, ULT, GLT will replace owner and languageId with correct values
+ * @param {string} bookId
+ * @param {object} scriptureSettings_
+ * @param {boolean} isNewTestament
+ * @param {string} currentLanguageId - optional over-ride for transient case where language in scripture settings have not yet updated
+ * @param {string} currentOwner - optional over-ride for transient case where owner in scripture settings have not yet updated
+ */
+export function getScriptureResourceSettings(bookId, scriptureSettings_, isNewTestament, currentLanguageId=null, currentOwner=null) {
   const scriptureSettings = { ...scriptureSettings_ }
   scriptureSettings.disableWordPopover = DISABLE_WORD_POPOVER
   const resourceId = scriptureSettings_.resourceId
@@ -81,9 +112,11 @@ export function getScriptureResourceSettings(bookId, scriptureSettings_, isNewTe
     scriptureSettings.resourceLink = getResourceLink(scriptureSettings)
     scriptureSettings.disableWordPopover = false
   } else if (resourceId === TARGET_LITERAL) {
+    cleanupAccountSettings(scriptureSettings, currentOwner, currentLanguageId)
     scriptureSettings.resourceId = scriptureSettings.languageId === 'en' ? 'ult' : 'glt'
     scriptureSettings.resourceLink = getResourceLink(scriptureSettings)
   } else if (resourceId === TARGET_SIMPLIFIED) {
+    cleanupAccountSettings(scriptureSettings, currentOwner, currentLanguageId)
     scriptureSettings.resourceId = scriptureSettings.languageId === 'en' ? 'ust' : 'gst'
     scriptureSettings.resourceLink = getResourceLink(scriptureSettings)
   }
@@ -207,6 +240,22 @@ export function validateDcsUrl(url) {
   }
   return { validUrl, validRepoPath }
 }
+
+export function getResourceErrorMessage(resourceStatus: object) {
+  let message = ''
+
+  if (resourceStatus[MANIFEST_NOT_LOADED_ERROR]) {
+    message = MANIFEST_NOT_FOUND_ERROR_MSG
+  } else if (resourceStatus[INVALID_MANIFEST_ERROR]) {
+    message = MANIFEST_INVALID_ERROR_MSG
+  } else if (resourceStatus[CONTENT_NOT_FOUND_ERROR]) {
+    message = BOOK_NOT_FOUND_ERROR_MSG
+  } else if (resourceStatus[SCRIPTURE_NOT_LOADED_ERROR]) {
+    message = SCRIPTURE_NOT_FOUND_ERROR_MSG
+  }
+  return message
+}
+
 /**
  * decode resource status into string.  Currently only English
  * @param resourceStatus - object that contains state and errors that are detected
@@ -216,26 +265,28 @@ export function validateDcsUrl(url) {
  * @return empty string if no error, else returns user error message
  */
 export function getResourceMessage(resourceStatus: object, server: string, resourceLink: string, isNT: boolean) {
-  let messageKey = ''
+  let message = ''
 
-  if (resourceStatus['loading']) {
-    messageKey = LOADING_RESOURCE
+  if (resourceStatus[LOADING_STATE]) {
+    message = LOADING_RESOURCE
   } else {
-    if (resourceStatus['manifestNotFoundError']) {
-      messageKey = MANIFEST_NOT_FOUND_ERROR
-    } else if (resourceStatus['invalidManifestError']) {
-      messageKey = MANIFEST_INVALID_ERROR
-    } else if (resourceStatus['contentNotFoundError']) {
-      messageKey = BOOK_NOT_FOUND_ERROR
-    } else if (resourceStatus['scriptureNotLoadedError']) {
-      messageKey = SCRIPTURE_NOT_FOUND_ERROR
-    }
+    message = getResourceErrorMessage(resourceStatus)
 
-    if (messageKey) {
-      console.log(`getResourceMessage(${resourceLink}) - Resource Error: ${JSON.stringify(resourceStatus)}`)
-      messageKey = getErrorMessageForResourceLink(resourceLink, server, messageKey, isNT)
+    if (message) {
+      message = getErrorMessageForResourceLink(resourceLink, server, message, isNT)
     }
   }
-  return messageKey
+  return message
+}
+
+/**
+ * generate resource string
+ * @param owner
+ * @param languageId
+ * @param projectId
+ * @param branch
+ */
+export function getResourceLinkSpecific(owner: string, languageId: string, projectId: string, branch: string) {
+  return `${owner}/${languageId}/${projectId}/${branch}`
 }
 
