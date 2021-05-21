@@ -69,17 +69,31 @@ export function isOriginalBible(resourceId) {
   return isOrig
 }
 
-export function cleanupAccountSettings(scriptureSettings: any, owner: any, languageId: any) {
-  if (owner && (owner !== scriptureSettings.owner)) { // if owner changed, update scriptureSettings
-    scriptureSettings.owner = owner
+/**
+ * make sure scriptureSettings are up to date with current owner and language
+ * @param {object} scriptureSettings
+ * @param {string} currentOwner - optional over-ride for transient case where owner in scripture settings have not yet updated
+ * @param {string} currentLanguageId - optional over-ride for transient case where language in scripture settings have not yet updated
+ */
+export function cleanupAccountSettings(scriptureSettings: any, currentOwner: any, currentLanguageId: any) {
+  if (currentOwner && (currentOwner !== scriptureSettings.owner)) { // if owner changed, update scriptureSettings
+    scriptureSettings.owner = currentOwner
   }
 
-  if (languageId && (languageId !== scriptureSettings.languageId)) { // if language changed, update scriptureSettings
-    scriptureSettings.languageId = languageId
+  if (currentLanguageId && (currentLanguageId !== scriptureSettings.languageId)) { // if language changed, update scriptureSettings
+    scriptureSettings.languageId = currentLanguageId
   }
 }
 
-export function getScriptureResourceSettings(bookId, scriptureSettings_, isNewTestament, languageId=null, owner=null) {
+/**
+ * get the scripture settings needed for fetch - for OrigLang, ULT, GLT will replace owner and languageId with correct values
+ * @param {string} bookId
+ * @param {object} scriptureSettings_
+ * @param {boolean} isNewTestament
+ * @param {string} currentLanguageId - optional over-ride for transient case where language in scripture settings have not yet updated
+ * @param {string} currentOwner - optional over-ride for transient case where owner in scripture settings have not yet updated
+ */
+export function getScriptureResourceSettings(bookId, scriptureSettings_, isNewTestament, currentLanguageId=null, currentOwner=null) {
   const scriptureSettings = { ...scriptureSettings_ }
   scriptureSettings.disableWordPopover = DISABLE_WORD_POPOVER
   const resourceId = scriptureSettings_.resourceId
@@ -98,11 +112,11 @@ export function getScriptureResourceSettings(bookId, scriptureSettings_, isNewTe
     scriptureSettings.resourceLink = getResourceLink(scriptureSettings)
     scriptureSettings.disableWordPopover = false
   } else if (resourceId === TARGET_LITERAL) {
-    cleanupAccountSettings(scriptureSettings, owner, languageId)
+    cleanupAccountSettings(scriptureSettings, currentOwner, currentLanguageId)
     scriptureSettings.resourceId = scriptureSettings.languageId === 'en' ? 'ult' : 'glt'
     scriptureSettings.resourceLink = getResourceLink(scriptureSettings)
   } else if (resourceId === TARGET_SIMPLIFIED) {
-    cleanupAccountSettings(scriptureSettings, owner, languageId)
+    cleanupAccountSettings(scriptureSettings, currentOwner, currentLanguageId)
     scriptureSettings.resourceId = scriptureSettings.languageId === 'en' ? 'ust' : 'gst'
     scriptureSettings.resourceLink = getResourceLink(scriptureSettings)
   }

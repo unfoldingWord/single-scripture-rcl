@@ -1,8 +1,18 @@
 import { useScripture } from '..'
 import { getScriptureResourceSettings } from '../utils/ScriptureSettings'
 
-export function useScriptureResources(bookId, languageId, owner, scriptureSettings, chapter, verse, isNewTestament) {
-  const scriptureSettings_ = getScriptureResourceSettings(bookId, scriptureSettings, isNewTestament, languageId, owner) // convert any default settings strings
+/**
+ * hook to get a scripture resource
+ * @param {string} bookId
+ * @param {object} scriptureSettings - info about the scripture being referenced
+ * @param {string} chapter
+ * @param {string} verse
+ * @param {boolean} isNewTestament
+ * @param {string} currentLanguageId - optional over-ride for transient case where language in scripture settings have not yet updated
+ * @param {string} currentOwner - optional over-ride for transient case where owner in scripture settings have not yet updated
+ */
+export function useScriptureResources(bookId, scriptureSettings, chapter, verse, isNewTestament, currentLanguageId=null, currentOwner=null) {
+  const scriptureSettings_ = getScriptureResourceSettings(bookId, scriptureSettings, isNewTestament, currentLanguageId, currentOwner) // convert any default settings strings
 
   const scriptureConfig_ = {
     reference: {
