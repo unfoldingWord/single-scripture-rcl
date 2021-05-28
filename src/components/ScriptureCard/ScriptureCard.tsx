@@ -43,6 +43,7 @@ export default function ScriptureCard({
   useUserLocalStorage,
   disableWordPopover,
   onResourceError,
+  timeout,
 }) {
   const [urlError, setUrlError] = React.useState(null)
   const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
@@ -67,6 +68,7 @@ export default function ScriptureCard({
     disableWordPopover,
     originalLanguageOwner,
     setUrlError,
+    timeout,
   })
 
   let scriptureTitle
@@ -228,4 +230,6 @@ ScriptureCard.propTypes = {
    *      - isAccessError - is true if this was an error trying to access file
    *      - resourceStatus - is object containing details about problems fetching resource */
   onResourceError: PropTypes.func,
+  /** optional http timeout in milliseconds for fetching resources, default is 0 (very long wait) */
+  timeout: PropTypes.number,
 }

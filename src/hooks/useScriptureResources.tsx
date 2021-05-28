@@ -10,8 +10,10 @@ import { getScriptureResourceSettings } from '../utils/ScriptureSettings'
  * @param {boolean} isNewTestament
  * @param {string} currentLanguageId - optional over-ride for transient case where language in scripture settings have not yet updated
  * @param {string} currentOwner - optional over-ride for transient case where owner in scripture settings have not yet updated
+ * @param {number} timeout - optional http timeout in milliseconds for fetching resources, default is 10 sec
  */
-export function useScriptureResources(bookId, scriptureSettings, chapter, verse, isNewTestament, currentLanguageId=null, currentOwner=null) {
+export function useScriptureResources(bookId, scriptureSettings, chapter, verse, isNewTestament,
+                                      currentLanguageId=null, currentOwner=null, timeout=10000) {
   const scriptureSettings_ = getScriptureResourceSettings(bookId, scriptureSettings, isNewTestament, currentLanguageId, currentOwner) // convert any default settings strings
 
   const scriptureConfig_ = {
@@ -30,6 +32,7 @@ export function useScriptureResources(bookId, scriptureSettings, chapter, verse,
     config: {
       server: scriptureSettings_.server,
       cache: { maxAge: 60 * 1000 },
+      timeout,
     },
     disableWordPopover: scriptureSettings_.disableWordPopover,
   }

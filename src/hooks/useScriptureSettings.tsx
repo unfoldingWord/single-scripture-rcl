@@ -85,6 +85,7 @@ export function useScriptureSettings({
   disableWordPopover,
   originalLanguageOwner,
   setUrlError,
+  timeout,
 }) {
   const isNewTestament = isNT(bookId)
   const scriptureDefaultSettings = getScriptureObject({
@@ -131,7 +132,8 @@ export function useScriptureSettings({
     }
   }, [languageId, owner, cleanUp])
 
-  const scriptureConfig = useScriptureResources(bookId, scriptureSettings, chapter, verse, isNewTestament, languageId, owner)
+  const scriptureConfig = useScriptureResources(bookId, scriptureSettings, chapter, verse, isNewTestament,
+    languageId, owner, timeout)
 
   const setScripture = (item, validationCB = null) => {
     let url
