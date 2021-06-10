@@ -41,7 +41,7 @@ export function useScripture({
   const [initialized, setInitialized] = useState(false)
   let resourceLink = resourceLink_
 
-  if (resource_) {
+  if (!resourceLink_ && resource_) {
     const {
       owner, languageId, projectId, branch = 'master',
     } = resource_ || {}

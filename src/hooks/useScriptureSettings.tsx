@@ -86,6 +86,8 @@ export function useScriptureSettings({
   originalLanguageOwner,
   setUrlError,
   timeout,
+  greekRepoUrl,
+  hebrewRepoUrl,
 }) {
   const isNewTestament = isNT(bookId)
   const scriptureDefaultSettings = getScriptureObject({
@@ -132,8 +134,9 @@ export function useScriptureSettings({
     }
   }, [languageId, owner, cleanUp])
 
-  const scriptureConfig = useScriptureResources(bookId, scriptureSettings, chapter, verse, isNewTestament,
-    languageId, owner, timeout)
+  const originalRepoUrl = isNewTestament ? greekRepoUrl : hebrewRepoUrl
+  const scriptureConfig = useScriptureResources(bookId, scriptureSettings,chapter, verse, isNewTestament,
+    originalRepoUrl, languageId, owner, timeout)
 
   const setScripture = (item, validationCB = null) => {
     let url
@@ -167,7 +170,7 @@ export function useScriptureSettings({
       let url_ = item.url
 
       if (!url) { // if not a new resource
-        scriptureSettings = getScriptureResourceSettings(resourceId, bookId, isNewTestament) // convert any default settings strings
+        scriptureSettings = getScriptureResourceSettings(resourceId, bookId, isNewTestament, originalRepoUrl) // convert any default settings strings
         url_ = scriptureSettings.resourceLink
       }
 

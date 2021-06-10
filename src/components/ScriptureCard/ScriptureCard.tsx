@@ -44,6 +44,8 @@ export default function ScriptureCard({
   disableWordPopover,
   onResourceError,
   timeout,
+  greekRepoUrl,
+  hebrewRepoUrl,
 }) {
   const [urlError, setUrlError] = React.useState(null)
   const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
@@ -69,6 +71,8 @@ export default function ScriptureCard({
     originalLanguageOwner,
     setUrlError,
     timeout,
+    greekRepoUrl,
+    hebrewRepoUrl,
   })
 
   let scriptureTitle
@@ -232,4 +236,8 @@ ScriptureCard.propTypes = {
   onResourceError: PropTypes.func,
   /** optional http timeout in milliseconds for fetching resources, default is 0 (very long wait) */
   timeout: PropTypes.number,
+  /** optional url for greek repo */
+  greekRepoUrl: PropTypes.string,
+  /** optional url for hebrew repo */
+  hebrewRepoUrl: PropTypes.string,
 }

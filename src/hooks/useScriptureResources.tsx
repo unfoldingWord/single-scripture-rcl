@@ -8,13 +8,15 @@ import { getScriptureResourceSettings } from '../utils/ScriptureSettings'
  * @param {string} chapter
  * @param {string} verse
  * @param {boolean} isNewTestament
+ * @param {string} originalRepoUrl - optional path to repo for original language
  * @param {string} currentLanguageId - optional over-ride for transient case where language in scripture settings have not yet updated
  * @param {string} currentOwner - optional over-ride for transient case where owner in scripture settings have not yet updated
  * @param {number} timeout - optional http timeout in milliseconds for fetching resources, default is 10 sec
  */
-export function useScriptureResources(bookId, scriptureSettings, chapter, verse, isNewTestament,
+export function useScriptureResources(bookId, scriptureSettings, chapter, verse, isNewTestament, originalRepoUrl=null,
                                       currentLanguageId=null, currentOwner=null, timeout=10000) {
-  const scriptureSettings_ = getScriptureResourceSettings(bookId, scriptureSettings, isNewTestament, currentLanguageId, currentOwner) // convert any default settings strings
+  const scriptureSettings_ = getScriptureResourceSettings(bookId, scriptureSettings, isNewTestament,
+    originalRepoUrl, currentLanguageId, currentOwner) // convert any default settings strings
 
   const scriptureConfig_ = {
     reference: {

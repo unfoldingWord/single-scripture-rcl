@@ -86,14 +86,29 @@ export function cleanupAccountSettings(scriptureSettings: any, currentOwner: any
 }
 
 /**
+ * separate URL into server and resource link
+ * @param {string} originalRepoUrl
+ */
+export function splitUrl(originalRepoUrl) {
+  const url = new URL(originalRepoUrl)
+  const server = url.origin
+  const resourceLink = url.pathname + (url.search || '')
+  return { server, resourceLink }
+}
+
+/**
  * get the scripture settings needed for fetch - for OrigLang, ULT, GLT will replace owner and languageId with correct values
  * @param {string} bookId
  * @param {object} scriptureSettings_
  * @param {boolean} isNewTestament
+ * @param {string} originalRepoUrl - optional path to repo for original language
  * @param {string} currentLanguageId - optional over-ride for transient case where language in scripture settings have not yet updated
  * @param {string} currentOwner - optional over-ride for transient case where owner in scripture settings have not yet updated
  */
-export function getScriptureResourceSettings(bookId, scriptureSettings_, isNewTestament, currentLanguageId=null, currentOwner=null) {
+export function getScriptureResourceSettings(bookId, scriptureSettings_, isNewTestament,
+                                             originalRepoUrl=null,
+                                             currentLanguageId=null, currentOwner=null
+) {
   const scriptureSettings = { ...scriptureSettings_ }
   scriptureSettings.disableWordPopover = DISABLE_WORD_POPOVER
   const resourceId = scriptureSettings_.resourceId
@@ -109,7 +124,13 @@ export function getScriptureResourceSettings(bookId, scriptureSettings_, isNewTe
       scriptureSettings.owner = scriptureSettings.originalLanguageOwner
     }
 
-    scriptureSettings.resourceLink = getResourceLink(scriptureSettings)
+    if (originalRepoUrl) { // if we already have the actual URL
+      const { server, resourceLink } = splitUrl(originalRepoUrl)
+      scriptureSettings.server = server
+      scriptureSettings.resourceLink = resourceLink
+    } else {
+      scriptureSettings.resourceLink = getResourceLink(scriptureSettings)
+    }
     scriptureSettings.disableWordPopover = false
   } else if (resourceId === TARGET_LITERAL) {
     cleanupAccountSettings(scriptureSettings, currentOwner, currentLanguageId)
