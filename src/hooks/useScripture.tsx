@@ -52,7 +52,13 @@ export function useScripture({
 
   const {
     state: {
-      bibleJson, matchedVerse, resource, content, loadingResource, loadingContent,
+      bibleJson,
+      matchedVerse,
+      resource,
+      content,
+      loadingResource,
+      loadingContent,
+      fetchResponse,
     },
   } = useRsrc({
     config, reference, resourceLink, options,
@@ -98,5 +104,6 @@ export function useScripture({
     matchedVerse,
     verseObjects,
     resourceStatus,
+    fetchResponse,
   }
 }

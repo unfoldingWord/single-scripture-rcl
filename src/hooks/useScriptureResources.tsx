@@ -33,7 +33,7 @@ export function useScriptureResources(bookId, scriptureSettings, chapter, verse,
     resourceLink: scriptureSettings_.resourceLink,
     config: {
       server: scriptureSettings_.server,
-      cache: { maxAge: 60 * 1000 },
+      cache: { maxAge: 1 * 60 * 60 * 1000 }, // 1 hr
       timeout,
     },
     disableWordPopover: scriptureSettings_.disableWordPopover,

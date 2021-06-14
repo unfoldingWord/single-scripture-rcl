@@ -90,10 +90,13 @@ export function cleanupAccountSettings(scriptureSettings: any, currentOwner: any
  * @param {string} originalRepoUrl
  */
 export function splitUrl(originalRepoUrl) {
-  const url = new URL(originalRepoUrl)
-  const server = url.origin
-  const resourceLink = url.pathname + (url.search || '')
-  return { server, resourceLink }
+  if (originalRepoUrl) {
+    const url = new URL(originalRepoUrl)
+    const server = url.origin
+    const resourceLink = url.pathname + (url.search || '')
+    return { server, resourceLink }
+  }
+  return {}
 }
 
 /**

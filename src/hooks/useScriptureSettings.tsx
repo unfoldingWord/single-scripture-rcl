@@ -184,7 +184,7 @@ export function useScriptureSettings({
         },
         config: {
           server: server_,
-          cache: { maxAge: 60 * 1000 },
+          cache: { maxAge: 1 * 60 * 60 * 1000 }, // 1 hr
         },
       }).then(resource => {
         let error = REPO_NOT_FOUND_ERROR
