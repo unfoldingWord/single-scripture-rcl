@@ -127,11 +127,11 @@ export function getScriptureResourceSettings(bookId, scriptureSettings_, isNewTe
       scriptureSettings.owner = scriptureSettings.originalLanguageOwner
     }
 
-    if (originalRepoUrl) { // if we already have the actual URL
+    if (originalRepoUrl) { // use this url if defined
       const { server, resourceLink } = splitUrl(originalRepoUrl)
       scriptureSettings.server = server
       scriptureSettings.resourceLink = resourceLink
-    } else {
+    } else { // fall back to app defaults
       scriptureSettings.resourceLink = getResourceLink(scriptureSettings)
     }
     scriptureSettings.disableWordPopover = false
