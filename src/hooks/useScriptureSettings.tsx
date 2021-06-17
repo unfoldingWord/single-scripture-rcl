@@ -77,7 +77,7 @@ export function useScriptureSettings({
   bookId,
   owner,
   server,
-  branch,
+  appRef,
   languageId,
   resourceId,
   resourceLink,
@@ -85,7 +85,7 @@ export function useScriptureSettings({
   disableWordPopover,
   originalLanguageOwner,
   setUrlError,
-  timeout,
+  httpConfig,
   greekRepoUrl,
   hebrewRepoUrl,
 }) {
@@ -94,7 +94,7 @@ export function useScriptureSettings({
     title,
     server,
     owner,
-    branch,
+    ref: appRef,
     languageId,
     resourceId,
     resourceLink,
@@ -135,8 +135,18 @@ export function useScriptureSettings({
   }, [languageId, owner, cleanUp])
 
   const originalRepoUrl = isNewTestament ? greekRepoUrl : hebrewRepoUrl
-  const scriptureConfig = useScriptureResources(bookId, scriptureSettings,chapter, verse, isNewTestament,
-    originalRepoUrl, languageId, owner, timeout)
+  const scriptureConfig = useScriptureResources({
+    bookId,
+    scriptureSettings,
+    chapter,
+    verse,
+    isNewTestament,
+    originalRepoUrl,
+    currentLanguageId: languageId,
+    currentOwner: owner,
+    httpConfig,
+    appRef,
+  })
 
   const setScripture = (item, validationCB = null) => {
     let url

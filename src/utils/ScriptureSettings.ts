@@ -23,14 +23,15 @@ import {
 export const DISABLE_WORD_POPOVER = true // disable word popover for every scripture pane but original languages
 
 export function getResourceLink(scripture) {
-  return `${scripture.owner}/${scripture.languageId}/${scripture.resourceId}/${scripture.branch}`
+  const ref = scripture.ref || scripture.branch
+  return `${scripture.owner}/${scripture.languageId}/${scripture.resourceId}/${ref}`
 }
 
 export function getScriptureObject({
   title,
   server,
   owner,
-  branch,
+  ref,
   languageId,
   resourceId,
   resourceLink,
@@ -42,7 +43,7 @@ export function getScriptureObject({
     server,
     owner,
     originalLanguageOwner,
-    branch,
+    ref,
     languageId,
     resourceId,
     disableWordPopover,
@@ -52,7 +53,7 @@ export function getScriptureObject({
   if (!resourceLink) {
     scripture.resourceLink = getResourceLink({
       owner,
-      branch,
+      ref,
       languageId,
       resourceId,
     })
@@ -110,7 +111,8 @@ export function splitUrl(originalRepoUrl) {
  */
 export function getScriptureResourceSettings(bookId, scriptureSettings_, isNewTestament,
                                              originalRepoUrl=null,
-                                             currentLanguageId=null, currentOwner=null
+                                             currentLanguageId=null,
+                                             currentOwner=null,
 ) {
   const scriptureSettings = { ...scriptureSettings_ }
   scriptureSettings.disableWordPopover = DISABLE_WORD_POPOVER
@@ -308,9 +310,9 @@ export function getResourceMessage(resourceStatus: object, server: string, resou
  * @param owner
  * @param languageId
  * @param projectId
- * @param branch
+ * @param ref
  */
-export function getResourceLinkSpecific(owner: string, languageId: string, projectId: string, branch: string) {
-  return `${owner}/${languageId}/${projectId}/${branch}`
+export function getResourceLinkSpecific(owner: string, languageId: string, projectId: string, ref: string) {
+  return `api/v1/repos/${owner}/${languageId}_${projectId}/contents?ref=${ref}`
 }
 

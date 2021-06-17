@@ -11,10 +11,21 @@ import { getScriptureResourceSettings } from '../utils/ScriptureSettings'
  * @param {string} originalRepoUrl - optional path to repo for original language
  * @param {string} currentLanguageId - optional over-ride for transient case where language in scripture settings have not yet updated
  * @param {string} currentOwner - optional over-ride for transient case where owner in scripture settings have not yet updated
- * @param {number} timeout - optional http timeout in milliseconds for fetching resources, default is 10 sec
+ * @param {object} httpConfig - optional config settings for fetches (timeout, cache, etc.)
+ * @param {string} appRef - app default, points to specific ref that could be a branch or tag
  */
-export function useScriptureResources(bookId, scriptureSettings, chapter, verse, isNewTestament, originalRepoUrl=null,
-                                      currentLanguageId=null, currentOwner=null, timeout=10000) {
+export function useScriptureResources({
+  bookId,
+  scriptureSettings,
+  chapter,
+  verse,
+  isNewTestament,
+  originalRepoUrl,
+  currentLanguageId = null,
+  currentOwner = null,
+  httpConfig = {},
+  appRef = 'master',
+}) {
   const scriptureSettings_ = getScriptureResourceSettings(bookId, scriptureSettings, isNewTestament,
     originalRepoUrl, currentLanguageId, currentOwner) // convert any default settings strings
 
@@ -28,13 +39,12 @@ export function useScriptureResources(bookId, scriptureSettings, chapter, verse,
       languageId: scriptureSettings_.languageId,
       projectId: scriptureSettings_.resourceId,
       owner: scriptureSettings_.owner,
-      branch: scriptureSettings_.branch,
+      ref: scriptureSettings_.ref || scriptureSettings_.branch || appRef,
     },
     resourceLink: scriptureSettings_.resourceLink,
     config: {
       server: scriptureSettings_.server,
-      cache: { maxAge: 1 * 60 * 60 * 1000 }, // 1 hr
-      timeout,
+      ...httpConfig,
     },
     disableWordPopover: scriptureSettings_.disableWordPopover,
   }

@@ -24,7 +24,7 @@ export default function ScriptureCard({
   isNT,
   title,
   server,
-  branch,
+  appRef,
   cardNum,
   classes,
   resource: {
@@ -43,7 +43,7 @@ export default function ScriptureCard({
   useUserLocalStorage,
   disableWordPopover,
   onResourceError,
-  timeout,
+  httpConfig,
   greekRepoUrl,
   hebrewRepoUrl,
 }) {
@@ -59,7 +59,7 @@ export default function ScriptureCard({
     verse,
     owner,
     bookId,
-    branch,
+    appRef,
     server,
     cardNum,
     chapter,
@@ -70,7 +70,7 @@ export default function ScriptureCard({
     disableWordPopover,
     originalLanguageOwner,
     setUrlError,
-    timeout,
+    httpConfig,
     greekRepoUrl,
     hebrewRepoUrl,
   })
@@ -219,8 +219,8 @@ ScriptureCard.propTypes = {
   }),
   /** server (e.g. 'https://git.door43.org') */
   server: PropTypes.string.isRequired,
-  /** repo branch such as master */
-  branch: PropTypes.string.isRequired,
+  /** repo branch or tag such as master */
+  ref: PropTypes.string.isRequired,
   /** if true then word data hover is shown */
   disableWordPopover: PropTypes.bool,
   /** CSS classes */
@@ -235,7 +235,7 @@ ScriptureCard.propTypes = {
    *      - resourceStatus - is object containing details about problems fetching resource */
   onResourceError: PropTypes.func,
   /** optional http timeout in milliseconds for fetching resources, default is 0 (very long wait) */
-  timeout: PropTypes.number,
+  httpConfig: PropTypes.object,
   /** optional url for greek repo */
   greekRepoUrl: PropTypes.string,
   /** optional url for hebrew repo */
