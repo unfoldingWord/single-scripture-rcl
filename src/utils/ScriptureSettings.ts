@@ -118,7 +118,7 @@ export function getScriptureResourceSettings(bookId, scriptureSettings_, isNewTe
   scriptureSettings.disableWordPopover = DISABLE_WORD_POPOVER
   const resourceId = scriptureSettings_.resourceId
 
-  if ((resourceId === ORIGINAL_SOURCE) || (resourceId === NT_ORIG_LANG_BIBLE) || (resourceId === OT_ORIG_LANG_BIBLE)) {
+  if (resourceId === ORIGINAL_SOURCE) {
     // select original language Bible based on which testament the book belongs
     scriptureSettings.languageId = isNewTestament ? NT_ORIG_LANG : OT_ORIG_LANG
     scriptureSettings.resourceId = isNewTestament
