@@ -51,7 +51,6 @@ export function useScripture({
     } = resource_ || {}
     const ref_ = ref || branch
     resourceLink = getResourceLinkSpecific(owner, languageId, projectId, ref_)
-    console.log(`useTsvItems - resourceLink: ${resourceLink}, resource_:`, resource_)
   }
 
   const options = { getBibleJson: true }

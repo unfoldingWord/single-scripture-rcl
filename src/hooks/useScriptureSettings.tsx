@@ -50,7 +50,7 @@ function fixScriptureSettings(versionHist, scriptureSettings, languageId, cardNu
     const resourceId = item.resourceId
 
     if ((resourceId === NT_ORIG_LANG_BIBLE) || (resourceId === OT_ORIG_LANG_BIBLE) || (resourceId === ORIGINAL_SOURCE)) {
-      for ( let j = i + 1; j < history.length; j++) {
+      for ( let j = i + 1; j < history.length; j++) { // search rest of list for duplicates of item at i
         const match_item = history[j]
         const match_resourceId = match_item.resourceId
 
