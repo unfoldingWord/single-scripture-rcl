@@ -220,7 +220,7 @@ ScriptureCard.propTypes = {
   /** server (e.g. 'https://git.door43.org') */
   server: PropTypes.string.isRequired,
   /** repo branch or tag such as master */
-  ref: PropTypes.string.isRequired,
+  appRef: PropTypes.string.isRequired,
   /** if true then word data hover is shown */
   disableWordPopover: PropTypes.bool,
   /** CSS classes */
