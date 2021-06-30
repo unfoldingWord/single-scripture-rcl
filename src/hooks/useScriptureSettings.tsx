@@ -7,8 +7,10 @@ import {
   INVALID_URL,
   MANIFEST_INVALID_SHORT_ERROR,
   NT_ORIG_LANG_BIBLE,
+  NT_ORIG_LANG,
   ORIGINAL_SOURCE,
   OT_ORIG_LANG_BIBLE,
+  OT_ORIG_LANG,
   REPO_NOT_FOUND_ERROR,
   REPO_NOT_SCRIPTURE_ERROR,
   setLocalStorageValue,
@@ -28,18 +30,19 @@ const KEY_TARGET_BASE = 'scripturePaneTarget_'
 function fixScriptureSettings(versionHist, scriptureSettings, languageId, cardNum, owner) {
   // clean up hard-coded original sources
   if ((scriptureSettings.resourceId === NT_ORIG_LANG_BIBLE) || (scriptureSettings.resourceId === OT_ORIG_LANG_BIBLE)) {
-    const newScriptureSettings = { ...scriptureSettings }
-    newScriptureSettings.languageId = languageId
-    newScriptureSettings.resourceId = ORIGINAL_SOURCE
-    newScriptureSettings.owner = owner
-    newScriptureSettings.resourceLink = getResourceLink(newScriptureSettings)
-    setLocalStorageValue(KEY_SETTINGS_BASE + cardNum, newScriptureSettings)
-    versionHist.addItemToHistory(newScriptureSettings)
+    if ((scriptureSettings.languageId !== NT_ORIG_LANG) && (scriptureSettings.languageId !== OT_ORIG_LANG)) { // if this is track with current selected language and testament of book
+      const newScriptureSettings = { ...scriptureSettings }
+      newScriptureSettings.languageId = languageId
+      newScriptureSettings.resourceId = ORIGINAL_SOURCE
+      newScriptureSettings.owner = owner
+      newScriptureSettings.resourceLink = getResourceLink(newScriptureSettings)
+      setLocalStorageValue(KEY_SETTINGS_BASE + cardNum, newScriptureSettings)
+      versionHist.addItemToHistory(newScriptureSettings)
+    }
   }
 
   // clean history of original sources
   let history = versionHist.getLatest() || []
-  let first = -1
   let modified = false
 
   for (let i = 0; i < history.length; i++) { // search for original source duplicates in history
@@ -47,12 +50,20 @@ function fixScriptureSettings(versionHist, scriptureSettings, languageId, cardNu
     const resourceId = item.resourceId
 
     if ((resourceId === NT_ORIG_LANG_BIBLE) || (resourceId === OT_ORIG_LANG_BIBLE) || (resourceId === ORIGINAL_SOURCE)) {
-      if (first < 0) {
-        first = i
-      } else { // found duplicate
-        history.splice(i, 1) // remove duplicate item
-        modified = true
-        i--
+      for ( let j = i + 1; j < history.length; j++) { // search rest of list for duplicates of item at i
+        const match_item = history[j]
+        const match_resourceId = match_item.resourceId
+
+        if ((match_resourceId === resourceId)) {
+          if ((item.owner === match_item.owner) &&
+            (item.ref === match_item.ref) &&
+            (item.server === match_item.server) &&
+            (item.resourceId === match_item.resourceId)) {
+            history.splice(j, 1) // remove duplicate item
+            modified = true
+            j-- // back up index since contents shifted
+          }
+        }
       }
     }
   }
@@ -77,7 +88,7 @@ export function useScriptureSettings({
   bookId,
   owner,
   server,
-  branch,
+  appRef,
   languageId,
   resourceId,
   resourceLink,
@@ -85,7 +96,7 @@ export function useScriptureSettings({
   disableWordPopover,
   originalLanguageOwner,
   setUrlError,
-  timeout,
+  httpConfig,
   greekRepoUrl,
   hebrewRepoUrl,
 }) {
@@ -94,7 +105,7 @@ export function useScriptureSettings({
     title,
     server,
     owner,
-    branch,
+    ref: appRef,
     languageId,
     resourceId,
     resourceLink,
@@ -135,8 +146,18 @@ export function useScriptureSettings({
   }, [languageId, owner, cleanUp])
 
   const originalRepoUrl = isNewTestament ? greekRepoUrl : hebrewRepoUrl
-  const scriptureConfig = useScriptureResources(bookId, scriptureSettings,chapter, verse, isNewTestament,
-    originalRepoUrl, languageId, owner, timeout)
+  const scriptureConfig = useScriptureResources({
+    bookId,
+    scriptureSettings,
+    chapter,
+    verse,
+    isNewTestament,
+    originalRepoUrl,
+    currentLanguageId: languageId,
+    currentOwner: owner,
+    httpConfig,
+    appRef,
+  })
 
   const setScripture = (item, validationCB = null) => {
     let url
@@ -208,7 +229,7 @@ export function useScriptureSettings({
               title,
               server: server_,
               owner: resource.username,
-              branch: resource.tag,
+              ref: resource.ref || 'master',
               languageId: resource.languageId,
               resourceId: resource.resourceId,
               resourceLink: resource.resourceLink,

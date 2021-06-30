@@ -16,6 +16,7 @@ export interface ScriptureResource {
   projectId: string;
   owner: string;
   branch: string;
+  ref: string;
 }
 
 export interface VerseObjectType {
