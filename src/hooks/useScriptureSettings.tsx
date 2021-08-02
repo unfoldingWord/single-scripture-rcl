@@ -161,12 +161,21 @@ export function useScriptureSettings({
 
   const setScripture = (item, validationCB = null) => {
     let url
+    let newUrl = item?.url
 
-    if (item?.url) {
+    if (newUrl) {
       setUrlError(null) // clear previous warnings
 
+      // handle: git@git.door43.org:unfoldingWord/en_ult.git
+      //    by mapping to https git fetch url
+      if (newUrl?.includes('git@')) {
+        const parts = newUrl?.split(':')
+        const [, hostname] = parts[0].split('@')
+        newUrl = `https://${hostname}/${parts.slice(1).join(':')}`
+      }
+
       try {
-        url = new URL(item.url)
+        url = new URL(newUrl)
       } catch {
         console.log('illegal url', item.url)
         scriptureVersionHist.removeUrl(item.url)
@@ -182,13 +191,18 @@ export function useScriptureSettings({
       let hostname = url.hostname
 
       if (hostname) {
+        if (newUrl?.includes(`/door43.org/u/`)) {
+          // handle case of link to d43 reader page https://door43.org/u/unfoldingWord/en_ult/
+          hostname = 'git.' + hostname // redirect to repo
+        }
+
         if (url.port) {
           hostname += ':' + url.port
         }
         server_ = 'https://' + hostname
       }
 
-      let url_ = item.url
+      let url_ = newUrl
 
       if (!url) { // if not a new resource
         scriptureSettings = getScriptureResourceSettings(resourceId, bookId, isNewTestament, originalRepoUrl) // convert any default settings strings
