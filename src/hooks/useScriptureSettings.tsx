@@ -188,7 +188,7 @@ export function useScriptureSettings({
     if (newUrl) {
       setUrlError(null) // clear previous warnings
 
-      // handle: git@git.door43.org:unfoldingWord/en_ult.git
+      // handle: `git@git.door43.org:unfoldingWord/en_ult.git`
       //    by mapping to https git fetch url (e.g. https://git.door43.org:unfoldingWord/en_ult.git)
       if (newUrl?.includes('git@')) {
         const parts = newUrl?.split(':')
