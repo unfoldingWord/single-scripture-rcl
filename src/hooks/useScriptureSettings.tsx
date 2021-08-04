@@ -160,7 +160,9 @@ export function useScriptureSettings({
   })
 
   /**
-   * make sure that bookId or projectId are not embedded in link
+   * make sure that bookId or projectId are not embedded in link.
+   *    For example in `ru_gl/ru/rsob/master/heb` the projectId heb is in the link and will override the
+   *    projectId in the reference when we try to fetch later
    * @param {string} resourceLink
    * @return {string} - cleaned up resource link
    */
@@ -168,7 +170,7 @@ export function useScriptureSettings({
     let resourceLink_ = resourceLink
     const resourceLinks = resourceLink_?.split('/')
 
-    if (resourceLinks?.length > 4) {
+    if (resourceLinks?.length > 4) { // if too many fields, then trim
       resourceLink_ = resourceLinks?.slice(0, 4).join('/')
     }
     return resourceLink_
