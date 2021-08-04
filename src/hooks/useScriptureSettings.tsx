@@ -159,6 +159,26 @@ export function useScriptureSettings({
     appRef,
   })
 
+  /**
+   * make sure that bookId or projectId are not embedded in link
+   * @param {string} resourceLink
+   * @return {string} - cleaned up resource link
+   */
+  function cleanResourceLink(resourceLink) {
+    let resourceLink_ = resourceLink
+    const resourceLinks = resourceLink_?.split('/')
+
+    if (resourceLinks?.length > 4) {
+      resourceLink_ = resourceLinks?.slice(0, 4).join('/')
+    }
+    return resourceLink_
+  }
+
+  /**
+   * callback to either add new scripture item or select existing item in history
+   * @param {object} item - new item to add or existing item to select from history
+   * @param {function} validationCB - callback function to pass back if item url was valid or not
+   */
   const setScripture = (item, validationCB = null) => {
     let url
     let newUrl = item?.url
@@ -167,7 +187,7 @@ export function useScriptureSettings({
       setUrlError(null) // clear previous warnings
 
       // handle: git@git.door43.org:unfoldingWord/en_ult.git
-      //    by mapping to https git fetch url
+      //    by mapping to https git fetch url (e.g. https://git.door43.org:unfoldingWord/en_ult.git)
       if (newUrl?.includes('git@')) {
         const parts = newUrl?.split(':')
         const [, hostname] = parts[0].split('@')
@@ -191,9 +211,9 @@ export function useScriptureSettings({
       let hostname = url.hostname
 
       if (hostname) {
-        if (newUrl?.includes(`/door43.org/u/`)) {
-          // handle case of link to d43 reader page https://door43.org/u/unfoldingWord/en_ult/
-          hostname = 'git.' + hostname // redirect to repo
+        if (hostname === `door43.org`) {
+          // handle case of link to d43 reader page (e.g. https://door43.org/u/unfoldingWord/en_ult/)
+          hostname = 'git.' + hostname // redirect to git repo
         }
 
         if (url.port) {
@@ -246,7 +266,7 @@ export function useScriptureSettings({
               ref: resource.ref || 'master',
               languageId: resource.languageId,
               resourceId: resource.resourceId,
-              resourceLink: resource.resourceLink,
+              resourceLink: cleanResourceLink(resource?.resourceLink),
               disableWordPopover,
               originalLanguageOwner,
             })
