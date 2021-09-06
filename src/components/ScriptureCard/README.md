@@ -10,7 +10,16 @@ import {
 } from "../.."
 import { useScripture } from '../../hooks'
 
-// for testing NT book
+const greekLexExample = {brief: "the first letter of the Greek alphabet", long: "alpha; the first letter of the Greek alphabet."}
+const hebrewLexExample = {brief: "father", long: "Meaning: \"father\", in a literal and immediate, or …are names in 'Abi-'.  Source: a primitive word;  "}
+
+function getLexiconData(lexiconId, entryId) {
+  if (lexiconId === 'ugl') {
+    return greekLexExample
+  } else {
+    return hebrewLexExample
+  }
+}
 
 const EnglishExample = {
   reference: {
@@ -18,6 +27,7 @@ const EnglishExample = {
     chapter: 1,
     verse: 5,
   },
+  appRef: 'master',
   isNT: () => true,
   resource: {
     owner: "unfoldingWord",
@@ -26,6 +36,7 @@ const EnglishExample = {
     resourceId: TARGET_LITERAL
   },
   getLanguage: () => ({ direction: 'ltr'}),
+  getLexiconData,
 }
 
 const HebrewExample = {
@@ -34,6 +45,7 @@ const HebrewExample = {
     chapter: 119,
     verse: 166,
   },
+  appRef: 'master',
   isNT: () => false,
   resource: {
     owner: "unfoldingWord",
@@ -42,6 +54,7 @@ const HebrewExample = {
     resourceId: ORIGINAL_SOURCE
   },
   getLanguage: () => ({ direction: 'rtl'}),
+  getLexiconData,
 }
 
 const GreekExample = {
@@ -50,6 +63,7 @@ const GreekExample = {
     chapter: 1,
     verse: 5,
   },
+  appRef: 'master',
   isNT: () => true,
   resource: {
     owner: "unfoldingWord",
@@ -58,6 +72,7 @@ const GreekExample = {
     resourceId: ORIGINAL_SOURCE
   },
   getLanguage: () => ({ direction: 'ltr'}),
+  getLexiconData,
 }
 
 const EnglishUSTExample = {
@@ -66,6 +81,7 @@ const EnglishUSTExample = {
     chapter: 1,
     verse: 5,
   },
+  appRef: 'master',
   isNT: () => true,
   resource: {
     languageId: "en",
@@ -75,6 +91,7 @@ const EnglishUSTExample = {
     originalLanguageOwner: "unfoldingWord",
   },
   getLanguage: () => ({ direction: 'ltr'}),
+  getLexiconData,
 };
 
 const greekScripture = GreekExample;

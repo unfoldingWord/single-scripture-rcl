@@ -62,6 +62,7 @@ const scripture = HebrewExample;
 const config = {
   server: "https://git.door43.org",
   cache: { maxAge: 1 * 1 * 1 * 60 * 1000 },
+  branch: 'master',
 };
 const useStyles = makeStyles({
   header: {

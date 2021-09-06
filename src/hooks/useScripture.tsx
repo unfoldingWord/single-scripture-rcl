@@ -13,7 +13,7 @@ import {
   MANIFEST_NOT_LOADED_ERROR,
   SCRIPTURE_NOT_LOADED_ERROR,
 } from 'translation-helps-rcl'
-import { getResourceLinkSpecific } from '../utils'
+import { getResourceLink } from '../utils'
 import {
   ServerConfig,
   ScriptureResource,
@@ -50,7 +50,12 @@ export function useScripture({
       ref = null,
     } = resource_ || {}
     const ref_ = ref || branch
-    resourceLink = getResourceLinkSpecific(owner, languageId, projectId, ref_)
+    resourceLink = getResourceLink({
+      owner,
+      languageId,
+      resourceId: projectId,
+      ref: ref_,
+    })
   }
 
   const options = { getBibleJson: true }

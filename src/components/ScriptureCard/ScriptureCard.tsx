@@ -46,6 +46,7 @@ export default function ScriptureCard({
   httpConfig,
   greekRepoUrl,
   hebrewRepoUrl,
+  getLexiconData,
 }) {
   const [urlError, setUrlError] = React.useState(null)
   const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
@@ -240,4 +241,6 @@ ScriptureCard.propTypes = {
   greekRepoUrl: PropTypes.string,
   /** optional url for hebrew repo */
   hebrewRepoUrl: PropTypes.string,
+  /** function to get latest lexicon data */
+  getLexiconData: PropTypes.func,
 }
