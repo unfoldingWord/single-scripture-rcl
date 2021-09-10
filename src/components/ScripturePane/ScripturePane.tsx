@@ -27,6 +27,8 @@ interface Props {
   isNT: boolean;
   /** font size for messages */
   fontSize: number;
+  /** function to get latest lexicon data */
+  getLexiconData: Function;
 }
 
 const MessageStyle = {
@@ -56,6 +58,7 @@ function ScripturePane({
   server,
   isNT,
   fontSize,
+  getLexiconData,
 } : Props) {
   const resourceMsg = getResourceMessage(resourceStatus, server, resourceLink, isNT)
   const { chapter, verse } = reference

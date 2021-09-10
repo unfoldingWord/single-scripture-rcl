@@ -11031,7 +11031,7 @@ tar@^6.0.2:
     mkdirp "^1.0.3"
     yallist "^4.0.0"
 
-tc-ui-toolkit@^5.3.3:
+tc-ui-toolkit@5.3.3:
   version "5.3.3"
   resolved "https://registry.yarnpkg.com/tc-ui-toolkit/-/tc-ui-toolkit-5.3.3.tgz#67d5fd6cb6b165a124c0f1490fad7c963fcaf043"
   integrity sha512-Op9iUXXqyd1gJIimgS80quXDEYa9SGxJDPJSGBmKKx3XahqPMDSZdgyuJM9Lvhi6B6bAeiT4iLED3JZY4fQZoQ==
