@@ -47,7 +47,8 @@ export default function ScriptureCard({
   greekRepoUrl,
   hebrewRepoUrl,
   getLexiconData,
-  fetchLexiconsForVerse,
+  fetchGlossesForVerse,
+  translate,
 }) {
   const [urlError, setUrlError] = React.useState(null)
   const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
@@ -157,13 +158,13 @@ export default function ScriptureCard({
   }
 
   React.useEffect(() => {
-    const fetchLexiconData = async () => {
+    const fetchGlossDataForVerse = async () => {
       if (!disableWordPopover && scriptureConfig?.verseObjects?.length) {
-        await fetchLexiconsForVerse(scriptureConfig?.verseObjects, languageId_)
+        await fetchGlossesForVerse(scriptureConfig?.verseObjects, languageId_)
       }
     }
 
-    fetchLexiconData()
+    fetchGlossDataForVerse()
   }, [scriptureConfig?.verseObjects])
 
   return (
@@ -197,6 +198,7 @@ export default function ScriptureCard({
         fontSize={fontSize}
         disableWordPopover={disableWordPopover_}
         getLexiconData={getLexiconData}
+        translate={translate}
       />
     </Card>
   )
@@ -256,5 +258,7 @@ ScriptureCard.propTypes = {
   /** function to get latest lexicon data */
   getLexiconData: PropTypes.func,
   /** function to pre-load lexicon data for verse */
-  fetchLexiconsForVerse: PropTypes.func,
+  fetchGlossesForVerse: PropTypes.func,
+  /** optional function for localization */
+  translate: PropTypes.func,
 }
