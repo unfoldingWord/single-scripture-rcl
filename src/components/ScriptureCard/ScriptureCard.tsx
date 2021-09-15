@@ -159,7 +159,7 @@ export default function ScriptureCard({
 
   React.useEffect(() => {
     const fetchGlossDataForVerse = async () => {
-      if (!disableWordPopover && scriptureConfig?.verseObjects?.length) {
+      if (!disableWordPopover && scriptureConfig?.verseObjects?.length && fetchGlossesForVerse) {
         await fetchGlossesForVerse(scriptureConfig?.verseObjects, languageId_)
       }
     }

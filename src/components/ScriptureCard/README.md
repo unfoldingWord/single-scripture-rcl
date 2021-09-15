@@ -9,24 +9,48 @@ import {
   TARGET_LITERAL
 } from "../.."
 import { useScripture } from '../../hooks'
+import * as translation from './translation.json'
 
-const greekLexExample = {brief: "the first letter of the Greek alphabet", long: "alpha; the first letter of the Greek alphabet."}
-const hebrewLexExample = {brief: "father", long: "Meaning: \"father\", in a literal and immediate, or …are names in 'Abi-'.  Source: a primitive word;  "}
+const showNT = true; // set to false to show OT
+const ntRef = {
+  projectId: "tit",
+  chapter: 1,
+  verse: 5,
+}
+const otRef = {
+  projectId: "psa",
+  chapter: 119,
+  verse: 166,
+}
+const reference = showNT ? ntRef : otRef;
 
-function getLexiconData(lexiconId, entryId) {
-  if (lexiconId === 'ugl') {
-    return greekLexExample
-  } else {
-    return hebrewLexExample
+const messageToGloss = (message) => {
+  return {
+    brief: message,
+    long: message,
   }
 }
 
+const getLexiconData = (lexiconId, entryId) => {
+  let gloss = null
+  const lexiconGlosses = translation && translation[lexiconId]
+
+  if (lexiconGlosses && Object.keys(lexiconGlosses).length && entryId) {
+    gloss = lexiconGlosses[entryId.toString()]
+
+    if (!gloss) { // show reason we can't find gloss
+      const message = `### ERROR: Gloss not found`
+      gloss = messageToGloss(message)
+    }
+  } else { // show error or reason glosses are not loaded
+    const message = `Not ready - glosses not yet available`
+    gloss = messageToGloss(message)
+  }
+  return { [lexiconId]: { [entryId]: gloss } }
+}
+
 const EnglishExample = {
-  reference: {
-    projectId: "tit",
-    chapter: 1,
-    verse: 5,
-  },
+  reference,
   appRef: 'master',
   isNT: () => true,
   resource: {
@@ -40,11 +64,7 @@ const EnglishExample = {
 }
 
 const HebrewExample = {
-  reference: {
-    projectId: "psa",
-    chapter: 119,
-    verse: 166,
-  },
+  reference,
   appRef: 'master',
   isNT: () => false,
   resource: {
@@ -58,11 +78,7 @@ const HebrewExample = {
 }
 
 const GreekExample = {
-  reference: {
-    projectId: "tit",
-    chapter: 1,
-    verse: 5,
-  },
+  reference,
   appRef: 'master',
   isNT: () => true,
   resource: {
@@ -76,11 +92,7 @@ const GreekExample = {
 }
 
 const EnglishUSTExample = {
-  reference: {
-    projectId: "tit",
-    chapter: 1,
-    verse: 5,
-  },
+  reference,
   appRef: 'master',
   isNT: () => true,
   resource: {
@@ -168,12 +180,21 @@ function Component() {
   const [selections, setSelections] = useState([]);
   const classes = useStyles();
 
-  const greekScriptureConfig = useScripture({
-    ...greekScripture,
+  let origLangResource, origLangScripture;
+  if (showNT) {
+    origLangScripture = greekScripture;
+    origLangResource = 'ugnt';
+  } else {
+    origLangScripture = hebrewScripture;
+    origLangResource = 'uhb';
+  }
+
+  const origLangConfig = useScripture({
+    ...origLangScripture,
     resource: {
-      ...greekScripture.resource,
-      resourceId: 'ugnt',
-      projectId: 'ugnt',
+      ...origLangScripture.resource,
+      resourceId: origLangResource,
+      projectId: origLangResource,
     },
     config,
   });
@@ -189,7 +210,7 @@ function Component() {
         quote={"χάριν"}
         occurrence={1}
         selections={selections}
-        verseObjects={greekScriptureConfig.verseObjects || []}
+        verseObjects={origLangConfig.verseObjects || []}
         onSelections={setSelections}
       >
         <ScriptureCard
@@ -199,7 +220,7 @@ function Component() {
           server={config.server}
           branch={config.branch}
           useUserLocalStorage={useUserLocalStorage_}
-          {...greekScripture}
+          {...origLangScripture}
         />
         <ScriptureCard
           cardNum={1}

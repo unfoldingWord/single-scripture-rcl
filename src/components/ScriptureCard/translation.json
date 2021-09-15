@@ -1,0 +1,121 @@
+{
+  "ugl": {
+    "620": {
+      "brief": "I leave, leave behind, desert, am reserved",
+      "long": "I leave, leave behind; pass: I am reserved, remain; I desert, abandon.",
+      "repo": "en_ugl"
+    },
+    "1299": {
+      "brief": "I give orders to, prescribe",
+      "long": "I give orders to, prescribe, arrange.",
+      "repo": "en_ugl"
+    },
+    "1473": {
+      "brief": "I",
+      "long": "I, the first-person pronoun.",
+      "repo": "en_ugl"
+    },
+    "1722": {
+      "brief": "in, on, among",
+      "long": "in, on, among.",
+      "repo": "en_ugl"
+    },
+    "1930": {
+      "brief": "I put in order",
+      "long": "I set in order besides, put in order, correct.",
+      "repo": "en_ugl"
+    },
+    "2443": {
+      "brief": "in order that, so that",
+      "long": "in order that, so that.",
+      "repo": "en_ugl"
+    },
+    "2525": {
+      "brief": "I set, establish, appoint, conduct",
+      "long": "I set down, bring down to a place; I set in order, appoint, make, constitute.",
+      "repo": "en_ugl"
+    },
+    "2532": {
+      "brief": "and, even, also, namely",
+      "long": "and, even, also, namely.",
+      "repo": "en_ugl"
+    },
+    "2596": {
+      "brief": "down from, against, according to, throughout, during",
+      "long": "gen: against, down from, throughout, by; acc: over…y, day-by-day, each day, according to, by way of.",
+      "repo": "en_ugl"
+    },
+    "2914": {
+      "brief": "Crete",
+      "long": "Crete.",
+      "repo": "en_ugl"
+    },
+    "3007": {
+      "brief": "I am wanting, am left behind",
+      "long": "(earlier: I leave behind, abandon), (a) I am wanti…in, fall short of (some standard), am wanting in.",
+      "repo": "en_ugl"
+    },
+    "3588": {
+      "brief": "the",
+      "long": "the, the definite article.",
+      "repo": "en_ugl"
+    },
+    "3778": {
+      "brief": "this, he, she, it",
+      "long": "this; he, she, it.",
+      "repo": "en_ugl"
+    },
+    "4172": {
+      "brief": "a city",
+      "long": "a city, the inhabitants of a city.",
+      "repo": "en_ugl"
+    },
+    "4245": {
+      "brief": "elder",
+      "long": "elder, usually used as subst.; an elder, a member … the Sanhedrin, an elder of a Christian assembly.",
+      "repo": "en_ugl"
+    },
+    "4771": {
+      "brief": "you",
+      "long": "you.",
+      "repo": "en_ugl"
+    },
+    "5484": {
+      "brief": "on account of",
+      "long": "for the sake of, by reason of, on account of.",
+      "repo": "en_ugl"
+    },
+    "5613": {
+      "brief": "as, like as, how, while, so that",
+      "long": "as, like as, about, as it were, according as, how, when, while, as soon as, so that.",
+      "repo": "en_ugl"
+    }
+  },
+  "uhl": {
+    "3068": {
+      "brief": "Existent",
+      "long": "Meaning: (the) self-\"Existent\" or Eternal; \"Jeho-vah\", Jewish national name of God.  Usage: Jehovah, the Lord. Compare \"H3050\", \"H3069\".  Source: from \"H1961\";  ",
+      "repo": "en_uhl"
+    },
+    "3444": {
+      "brief": "saved",
+      "long": "Meaning: something \"saved\", i.e. (abstractly) \"del…Source: feminine passive participle of \"H3467\";  ",
+      "repo": "en_uhl"
+    },
+    "4687": {
+      "brief": "command",
+      "long": "Meaning: a \"command\", whether human or divine (col…law, ordinance, precept.  Source: from \"H6680\";  ",
+      "repo": "en_uhl"
+    },
+    "6213": {
+      "brief": "to do, to make",
+      "long": "Meaning: to \"do\" or \"make\", in the broadest sense …k(-man), yield, use.  Source: a primitive root;  ",
+      "repo": "en_uhl"
+    },
+    "7663": {
+      "brief": "to wait for, to look for",
+      "long": "Meaning: to \"scrutinize\"; by implication (of watch…\"שָׁבַר\"; (Nehemiah 2:13,15), a primitive root;  ",
+      "repo": "en_uhl"
+    }
+  }
+}
