@@ -27,6 +27,10 @@ interface Props {
   isNT: boolean;
   /** font size for messages */
   fontSize: number;
+  /** function to get latest lexicon data */
+  getLexiconData: Function;
+  /** optional function for localization */
+  translate: Function;
 }
 
 const MessageStyle = {
@@ -56,6 +60,8 @@ function ScripturePane({
   server,
   isNT,
   fontSize,
+  getLexiconData,
+  translate,
 } : Props) {
   const resourceMsg = getResourceMessage(resourceStatus, server, resourceLink, isNT)
   const { chapter, verse } = reference
@@ -82,7 +88,12 @@ function ScripturePane({
         <Content>
           <span style={refStyle}> {chapter}:{verse}&nbsp;</span>
           <span style={contentStyle}>
-            <VerseObjects verseObjects={verseObjects} disableWordPopover={disableWordPopover} />
+            <VerseObjects
+              verseObjects={verseObjects}
+              disableWordPopover={disableWordPopover}
+              getLexiconData={getLexiconData}
+              translate={translate}
+            />
           </span>
         </Content>
       }

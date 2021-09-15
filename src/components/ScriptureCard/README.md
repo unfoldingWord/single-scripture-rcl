@@ -9,15 +9,49 @@ import {
   TARGET_LITERAL
 } from "../.."
 import { useScripture } from '../../hooks'
+import * as translation from './translation.json'
 
-// for testing NT book
+const showNT = true; // set to false to show OT
+const ntRef = {
+  projectId: "tit",
+  chapter: 1,
+  verse: 5,
+}
+const otRef = {
+  projectId: "psa",
+  chapter: 119,
+  verse: 166,
+}
+const reference = showNT ? ntRef : otRef;
+
+const messageToGloss = (message) => {
+  return {
+    brief: message,
+    long: message,
+  }
+}
+
+const getLexiconData = (lexiconId, entryId) => {
+  let gloss = null
+  const lexiconGlosses = translation && translation[lexiconId]
+
+  if (lexiconGlosses && Object.keys(lexiconGlosses).length && entryId) {
+    gloss = lexiconGlosses[entryId.toString()]
+
+    if (!gloss) { // show reason we can't find gloss
+      const message = `### ERROR: Gloss not found`
+      gloss = messageToGloss(message)
+    }
+  } else { // show error or reason glosses are not loaded
+    const message = `Not ready - glosses not yet available`
+    gloss = messageToGloss(message)
+  }
+  return { [lexiconId]: { [entryId]: gloss } }
+}
 
 const EnglishExample = {
-  reference: {
-    projectId: "tit",
-    chapter: 1,
-    verse: 5,
-  },
+  reference,
+  appRef: 'master',
   isNT: () => true,
   resource: {
     owner: "unfoldingWord",
@@ -26,14 +60,12 @@ const EnglishExample = {
     resourceId: TARGET_LITERAL
   },
   getLanguage: () => ({ direction: 'ltr'}),
+  getLexiconData,
 }
 
 const HebrewExample = {
-  reference: {
-    projectId: "psa",
-    chapter: 119,
-    verse: 166,
-  },
+  reference,
+  appRef: 'master',
   isNT: () => false,
   resource: {
     owner: "unfoldingWord",
@@ -42,14 +74,12 @@ const HebrewExample = {
     resourceId: ORIGINAL_SOURCE
   },
   getLanguage: () => ({ direction: 'rtl'}),
+  getLexiconData,
 }
 
 const GreekExample = {
-  reference: {
-    projectId: "tit",
-    chapter: 1,
-    verse: 5,
-  },
+  reference,
+  appRef: 'master',
   isNT: () => true,
   resource: {
     owner: "unfoldingWord",
@@ -58,14 +88,12 @@ const GreekExample = {
     resourceId: ORIGINAL_SOURCE
   },
   getLanguage: () => ({ direction: 'ltr'}),
+  getLexiconData,
 }
 
 const EnglishUSTExample = {
-  reference: {
-    projectId: "tit",
-    chapter: 1,
-    verse: 5,
-  },
+  reference,
+  appRef: 'master',
   isNT: () => true,
   resource: {
     languageId: "en",
@@ -75,6 +103,7 @@ const EnglishUSTExample = {
     originalLanguageOwner: "unfoldingWord",
   },
   getLanguage: () => ({ direction: 'ltr'}),
+  getLexiconData,
 };
 
 const greekScripture = GreekExample;
@@ -151,12 +180,21 @@ function Component() {
   const [selections, setSelections] = useState([]);
   const classes = useStyles();
 
-  const greekScriptureConfig = useScripture({
-    ...greekScripture,
+  let origLangResource, origLangScripture;
+  if (showNT) {
+    origLangScripture = greekScripture;
+    origLangResource = 'ugnt';
+  } else {
+    origLangScripture = hebrewScripture;
+    origLangResource = 'uhb';
+  }
+
+  const origLangConfig = useScripture({
+    ...origLangScripture,
     resource: {
-      ...greekScripture.resource,
-      resourceId: 'ugnt',
-      projectId: 'ugnt',
+      ...origLangScripture.resource,
+      resourceId: origLangResource,
+      projectId: origLangResource,
     },
     config,
   });
@@ -172,7 +210,7 @@ function Component() {
         quote={"χάριν"}
         occurrence={1}
         selections={selections}
-        verseObjects={greekScriptureConfig.verseObjects || []}
+        verseObjects={origLangConfig.verseObjects || []}
         onSelections={setSelections}
       >
         <ScriptureCard
@@ -182,7 +220,7 @@ function Component() {
           server={config.server}
           branch={config.branch}
           useUserLocalStorage={useUserLocalStorage_}
-          {...greekScripture}
+          {...origLangScripture}
         />
         <ScriptureCard
           cardNum={1}
