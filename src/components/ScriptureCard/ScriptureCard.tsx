@@ -21,6 +21,7 @@ const label = 'Version'
 const style = { marginTop: '16px', width: '500px' }
 
 export default function ScriptureCard({
+  id,
   isNT,
   title,
   server,
@@ -49,6 +50,7 @@ export default function ScriptureCard({
   getLexiconData,
   fetchGlossesForVerse,
   translate,
+  onMinimize,
 }) {
   const [urlError, setUrlError] = React.useState(null)
   const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
@@ -186,6 +188,7 @@ export default function ScriptureCard({
       getCustomComponent={getScriptureSelector}
       hideMarkdownToggle
       onMenuClose={onMenuClose}
+      onMinimize={onMinimize ? () => onMinimize(id) : null}
     >
       <ScripturePane
         refStyle={refStyle}
@@ -205,6 +208,8 @@ export default function ScriptureCard({
 }
 
 ScriptureCard.propTypes = {
+  /** identifier to use for card */
+  id: PropTypes.string,
   /** method to determine if NT or OT */
   isNT: PropTypes.func.isRequired,
   /** title for scripture card */
@@ -261,4 +266,6 @@ ScriptureCard.propTypes = {
   fetchGlossesForVerse: PropTypes.func,
   /** optional function for localization */
   translate: PropTypes.func,
+  /** function to minimize the card (optional) */
+  onMinimize: PropTypes.func,
 }
