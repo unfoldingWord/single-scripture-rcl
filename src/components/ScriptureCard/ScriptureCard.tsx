@@ -167,7 +167,7 @@ export default function ScriptureCard({
     }
 
     fetchGlossDataForVerse()
-  }, [scriptureConfig?.verseObjects])
+  }, [scriptureConfig?.verseObjects,fetchGlossesForVerse,disableWordPopover,languageId_])
 
   return (
     <Card

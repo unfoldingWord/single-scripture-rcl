@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { VerseObjects } from 'scripture-resources-rcl'
-import { ScriptureReference, VerseObjectsType } from '../../types'
+import { ScriptureReference, VerseObjectsType, VerseArrayPartsType } from '../../types'
 import { getResourceMessage } from '../../utils'
 import { Container, Content } from './styled'
 
@@ -15,6 +15,8 @@ interface Props {
   direction: string|undefined;
   /** verseObjects **/
   verseObjects: VerseObjectsType|undefined;
+ /** verseObjectsArray **/
+  verseObjectsArray?: VerseArrayPartsType[]|undefined;
   /** if true then do not display lexicon popover on hover **/
   disableWordPopover: boolean|undefined;
   /** object that contains resource loading status or fetching errors */
@@ -54,6 +56,7 @@ function ScripturePane({
   direction,
   contentStyle,
   verseObjects,
+  verseObjectsArray,
   disableWordPopover,
   resourceStatus,
   resourceLink,
@@ -86,15 +89,35 @@ function ScripturePane({
         </div>
         :
         <Content>
-          <span style={refStyle}> {chapter}:{verse}&nbsp;</span>
-          <span style={contentStyle}>
-            <VerseObjects
-              verseObjects={verseObjects}
-              disableWordPopover={disableWordPopover}
-              getLexiconData={getLexiconData}
-              translate={translate}
-            />
-          </span>
+          {verseObjectsArray
+            && (verseObjectsArray.length>0)
+            && verseObjectsArray.map((vObj: any, inx: number) => (
+              <div key={inx}>
+                <span style={refStyle}> {vObj.chapter}:{vObj.verse}&nbsp;</span>
+                <span style={contentStyle}>
+                  <VerseObjects
+                    verseObjects={vObj.verseObjects}
+                    disableWordPopover={disableWordPopover}
+                    getLexiconData={getLexiconData}
+                    translate={translate}
+                  />
+                </span>
+              </div>
+            ))}
+
+          {verseObjects && (
+            <div>
+              <span style={refStyle}> {chapter}:{verse}&nbsp;</span>
+              <span style={contentStyle}>
+                <VerseObjects
+                  verseObjects={verseObjects}
+                  disableWordPopover={disableWordPopover}
+                  getLexiconData={getLexiconData}
+                  translate={translate}
+                />
+              </span>
+            </div>
+          )}
         </Content>
       }
     </Container>

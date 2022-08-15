@@ -34,3 +34,9 @@ export interface VerseObjectType {
 export interface VerseObjectsType {
   [index: number]: VerseObjectType;
 }
+
+export interface VerseArrayPartsType {
+  chapter: number;
+  verse: number;
+  verseObjects: VerseObjectsType;
+}
