@@ -13,8 +13,9 @@ interface Props {
   contentStyle: any;
   /** language direction to use **/
   direction: string|undefined;
+  /** use either verseObjects (single verse) or verseObjectsArray (multiple verses) **/
   /** verseObjects **/
-  verseObjects: VerseObjectsType|undefined;
+  verseObjects?: VerseObjectsType|undefined;
  /** verseObjectsArray **/
   verseObjectsArray?: VerseArrayPartsType[]|undefined;
   /** if true then do not display lexicon popover on hover **/
