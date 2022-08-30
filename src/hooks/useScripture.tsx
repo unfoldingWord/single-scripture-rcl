@@ -47,6 +47,9 @@ export function useScripture({
   resourceLink: resourceLink_,
 } : Props) {
   const [initialized, setInitialized] = useState(false)
+  const { languageId } = resource_ || {}
+  const singleVerse = reference && (reference.verse != null)
+
   let resourceLink = resourceLink_
   let matchedVerse = reference && reference.verse
 
@@ -80,56 +83,45 @@ export function useScripture({
     },
   }
 
-  console.log(useBcvQuery)
   const {
     state: {
-      resource, // Deprecated field
-      content, // Deprecated field
+      success,
       resultTree,
       loadingResource,
       loadingContent,
       fetchResponse,
     },
   } = useBcvQuery( curQuery, config)
+  // errorCode - ToDo: Check the error code and convert to suitable code in resourceStatus
 
-  /*
-  success,
-  resultTree,
-  errorCode,
-*/
-
-  const { title, version } = parseResourceManifest(resource)
+  const { title, version } = parseResourceManifest(resultTree)
   const bookResult = resultTree && resultTree.book
 
   // transform tree result to flat array
-  const vObjArray = []
+  const verseObjectsArray = []
 
   if (bookResult) {
-    // @ts-ignore
+    // @ts-ignore - unknown type
     Object.entries(bookResult).forEach(([bookKey, { ch }]) => {
-      // @ts-ignore
-      Object.entries(ch).forEach(([chNum, { v }]) => {
-        // @ts-ignore
-        Object.entries(v).forEach(([vNum, { verseObjects }]) => {
+      // @ts-ignore - unknown type
+      Object.entries(ch).forEach(([chapter, { v }]) => {
+        // @ts-ignore - unknown type
+        Object.entries(v).forEach(([verse, { verseObjects }]) => {
           if (verseObjects && verseObjects.length>0) {
-            vObjArray.push({ id: `${chNum}:${vNum}`, verseObjects })
+            verseObjectsArray.push({ chapter, verse, verseObjects })
           }
         })
       })
     })
   }
 
-  // transform array to single non-hierarchical object
-  const verseObjectsArray = arrayToObject(vObjArray,'id')
+  const hasSingleVerseData = singleVerse && verseObjectsArray && verseObjectsArray.length>0
+  let verseObjects = hasSingleVerseData ? verseObjectsArray[0].verseObjects : []
 
-  let bibleJson = content
-  //  let { verseObjects } = bibleJson || {}
-  let verseObjects = []
-  const { languageId } = resource_ || {}
   const loading = loadingResource || loadingContent
-  const contentNotFoundError = !content
-  const scriptureNotLoadedError = !bibleJson
-  const manifestNotFoundError = !resource?.manifest
+  const contentNotFoundError = !success
+  const scriptureNotLoadedError = !success
+  const manifestNotFoundError = !resultTree?.manifest
   const invalidManifestError = !title || !version || !languageId
   const error = initialized && !loading &&
     (contentNotFoundError || scriptureNotLoadedError || manifestNotFoundError || invalidManifestError)
@@ -151,9 +143,9 @@ export function useScripture({
     }
   }, [initialized, loading])
 
-  // if (languageId === 'el-x-koine' || languageId === 'hbo') {
-  verseObjects = core.occurrenceInjectVerseObjects(verseObjects)
-  // }
+  if (hasSingleVerseData && ((languageId === 'el-x-koine' || languageId === 'hbo'))) {
+    verseObjects = core.occurrenceInjectVerseObjects(verseObjects)
+  }
 
   return {
     title,

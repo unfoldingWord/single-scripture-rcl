@@ -11,18 +11,33 @@ import {
 import { useScripture } from '../../hooks'
 import * as translation from './translation.json'
 
+const ntQuery = {
+  server: "https://git.door43.org",
+  book: {
+    tit: {
+      ch: {
+        2: { v: { 15: { verseObjects: [] } } },
+        3: { v: { 1: { verseObjects: [] } } },
+      },
+    },
+  },
+}
+
+const otQuery = {
+  server: "https://git.door43.org",
+  book: {
+    psa: {
+      ch: {
+        119: { v: { 176: { verseObjects: [] } } },
+        120: { v: { 1: { verseObjects: [] } } },
+      },
+    },
+  },
+}
+
 const showNT = true; // set to false to show OT
-const ntRef = {
-  projectId: "tit",
-  chapter: 1,
-  verse: 5,
-}
-const otRef = {
-  projectId: "psa",
-  chapter: 119,
-  verse: 166,
-}
-const reference = showNT ? ntRef : otRef;
+
+const query = showNT ? ntQuery : otQuery;
 
 const messageToGloss = (message) => {
   return {
@@ -50,7 +65,7 @@ const getLexiconData = (lexiconId, entryId) => {
 }
 
 const EnglishExample = {
-  reference,
+  bcvQuery: {...query, resourceLink: "unfoldingWord/en/ult/master" },
   appRef: 'master',
   isNT: () => true,
   resource: {
@@ -64,7 +79,7 @@ const EnglishExample = {
 }
 
 const HebrewExample = {
-  reference,
+  bcvQuery: {...query, resourceLink: "unfoldingWord/hbo/uhb/master" },
   appRef: 'master',
   isNT: () => false,
   resource: {
@@ -78,7 +93,7 @@ const HebrewExample = {
 }
 
 const GreekExample = {
-  reference,
+  bcvQuery: {...query, resourceLink: "unfoldingWord/el-x-koine/ugnt/master" },
   appRef: 'master',
   isNT: () => true,
   resource: {
@@ -92,7 +107,7 @@ const GreekExample = {
 }
 
 const EnglishUSTExample = {
-  reference,
+  bcvQuery: {...query, resourceLink: "unfoldingWord/en/ust/master" },
   appRef: 'master',
   isNT: () => true,
   resource: {
@@ -208,7 +223,7 @@ function Component() {
     <div style={{ display: "flex" }}>
       <SelectionsContextProvider
         quote={"χάριν"}
-        occurrence={1}
+        occurrence={"1"}
         selections={selections}
         verseObjects={origLangConfig.verseObjects || []}
         onSelections={setSelections}

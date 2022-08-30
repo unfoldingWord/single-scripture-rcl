@@ -68,7 +68,8 @@ function ScripturePane({
   translate,
 } : Props) {
   const resourceMsg = getResourceMessage(resourceStatus, server, resourceLink, isNT)
-  const { chapter, verse } = reference
+  const chapter = reference && reference.chapter
+  const verse = reference && reference.verse
   direction = direction || 'ltr'
 
   refStyle = refStyle || {
@@ -108,7 +109,7 @@ function ScripturePane({
 
           {verseObjects && (
             <div>
-              <span style={refStyle}> {chapter}:{verse}&nbsp;</span>
+              <span style={refStyle}> {verse}&nbsp;</span>
               <span style={contentStyle}>
                 <VerseObjects
                   verseObjects={verseObjects}

@@ -4,13 +4,33 @@ import { makeStyles } from "@material-ui/core/styles";
 import { ScripturePane, useScripture } from "../.."
 
 // for testing NT book
+const ntQuery = {
+  server: "https://git.door43.org",
+  book: {
+    tit: {
+      ch: {
+        2: { v: { 15: { verseObjects: [] } } },
+        3: { v: { 1: { verseObjects: [] } } },
+      },
+    },
+  },
+}
+
+// for testing OT book
+const otQuery = {
+  server: "https://git.door43.org",
+  book: {
+    psa: {
+      ch: {
+        119: { v: { 176: { verseObjects: [] } } },
+        120: { v: { 1: { verseObjects: [] } } },
+      },
+    },
+  },
+}
 
 const EnglishExample = {
-  reference: {
-    projectId: "tit",
-    chapter: 1,
-    verse: 5,
-  },
+  bcvQuery: {...ntQuery, resourceLink: "unfoldingWord/en/ust/master" },
   resource: {
     owner: "unfoldingWord",
     languageId: "en",
@@ -21,11 +41,7 @@ const EnglishExample = {
 }
 
 const HebrewExample = {
-  reference: {
-    projectId: "psa",
-    chapter: 119,
-    verse: 166,
-  },
+  bcvQuery: {...otQuery, resourceLink: "unfoldingWord/hbo/uhb/master" },
   resource: {
     owner: "unfoldingWord",
     languageId: "hbo",
@@ -36,11 +52,7 @@ const HebrewExample = {
 }
 
 const GreekExample = {
-  reference: {
-    projectId: "tit",
-    chapter: 1,
-    verse: 5,
-  },
+  bcvQuery: {...otQuery, resourceLink: "unfoldingWord/el-x-koine/ugnt/master" },
   resource: {
     owner: "unfoldingWord",
     languageId: "el-x-koine",

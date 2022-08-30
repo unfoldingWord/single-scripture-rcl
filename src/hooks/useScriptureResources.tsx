@@ -3,10 +3,12 @@ import { getScriptureResourceSettings } from '../utils/ScriptureSettings'
 
 /**
  * hook to get a scripture resource
- * @param {string} bookId
+ * @param {string} bookId - optional - in case a single verse is expected
+ * @param {string} chapter - optional - in case a single verse is expected
+ * @param {string} verse - optional - in case a single verse is expected
+ * optional query with expected return structure - in case of multiple verses
+ * @param {object} bcvQuery - optional - in case of multiple verses
  * @param {object} scriptureSettings - info about the scripture being referenced
- * @param {string} chapter
- * @param {string} verse
  * @param {boolean} isNewTestament
  * @param {string} originalRepoUrl - optional path to repo for original language
  * @param {string} currentLanguageId - optional over-ride for transient case where language in scripture settings have not yet updated
@@ -15,10 +17,11 @@ import { getScriptureResourceSettings } from '../utils/ScriptureSettings'
  * @param {string} appRef - app default, points to specific ref that could be a branch or tag
  */
 export function useScriptureResources({
-  bookId,
+  bookId = null,
+  chapter = null,
+  verse = null,
+  bcvQuery = null,
   scriptureSettings,
-  chapter,
-  verse,
   isNewTestament,
   originalRepoUrl,
   currentLanguageId = null,
@@ -35,6 +38,7 @@ export function useScriptureResources({
       chapter: chapter,
       verse: verse,
     },
+    bcvQuery,
     resource: {
       languageId: scriptureSettings_.languageId,
       projectId: scriptureSettings_.resourceId,

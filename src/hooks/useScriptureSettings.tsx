@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { core } from 'scripture-resources-rcl'
 import * as isEqual from 'deep-equal'
 import { KEY_SCRIPTURE_VER_HISTORY, ScriptureVersionHistory } from '../utils/ScriptureVersionHistory'
@@ -86,6 +86,7 @@ export function useScriptureSettings({
   chapter,
   verse,
   bookId,
+  bcvQuery,
   owner,
   server,
   appRef,
@@ -116,13 +117,13 @@ export function useScriptureSettings({
   const scriptureVersionHist = new ScriptureVersionHistory(versionHistory, saveVersionHist, refreshVersionHist)
 
   let [scriptureSettings, setScriptureSettings] = useUserLocalStorage(KEY_SETTINGS_BASE + cardNum, scriptureDefaultSettings)
-  const currentTarget = {
-    server,
-    owner,
-    languageId,
-  }
+  const [currentTarget, setCurrentTarget] = useState({ server, owner, languageId })
   const [target, setTarget] = useUserLocalStorage(KEY_TARGET_BASE + cardNum, currentTarget)
   const [cleanUp, setCleanUp] = useState(true)
+
+  useEffect(() => setCurrentTarget({
+    server, owner, languageId,
+  }), [server, owner, languageId])
 
   useEffect(() => {
     if (languageId && owner) { // make sure we have languageId and owner selected first
@@ -143,7 +144,8 @@ export function useScriptureSettings({
         scriptureVersionHist.addItemToHistory(scriptureSettings) // make sure current scripture version persisted in history
       }
     }
-  }, [languageId, owner, cleanUp])
+  }, [languageId, owner, cleanUp, currentTarget, target, scriptureVersionHist,
+    scriptureSettings, cardNum, scriptureDefaultSettings, setScriptureSettings, setTarget])
 
   const originalRepoUrl = isNewTestament ? greekRepoUrl : hebrewRepoUrl
   const scriptureConfig = useScriptureResources({
@@ -151,6 +153,7 @@ export function useScriptureSettings({
     scriptureSettings,
     chapter,
     verse,
+    bcvQuery,
     isNewTestament,
     originalRepoUrl,
     currentLanguageId: languageId,
