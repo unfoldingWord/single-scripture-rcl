@@ -234,11 +234,11 @@ ScriptureCard.propTypes = {
   /** optional current reference - in case a single verse is expected **/
   reference: PropTypes.any,
   /**
-    // projectId (bookID) to use 
+    // projectId (bookID) to use
     projectId: PropTypes.string.isRequired,
-    // current chapter number 
+    // current chapter number
     chapter: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
-    // current verse number 
+    // current verse number
     verse: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
   }),
   */

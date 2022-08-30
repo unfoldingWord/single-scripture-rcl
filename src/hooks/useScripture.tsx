@@ -18,14 +18,6 @@ import {
 } from '../types'
 import { parseResourceManifest } from './parseResourceManifest'
 
-const arrayToObject = (array: any[], keyField: string) =>
-  array.reduce((obj, item) => {
-    let iCopy = Object.assign({}, item)
-    delete iCopy[keyField]
-    obj[item[keyField]] = iCopy
-    return obj
-  }, {})
-
 interface Props {
   /** optional current reference - in case a single verse is expected **/
   reference?: ScriptureReference;
@@ -76,9 +68,8 @@ export function useScripture({
     server: config.server,
     book: {
       [reference.projectId] : {
-        ch: { 
-          [reference.chapter]: { v: { [reference.verse]: { verseObjects: [] } } },
-        },
+        ch:
+        { [reference.chapter]: { v: { [reference.verse]: { verseObjects: [] } } } },
       },
     },
   }
@@ -108,7 +99,9 @@ export function useScripture({
         // @ts-ignore - unknown type
         Object.entries(v).forEach(([verse, { verseObjects }]) => {
           if (verseObjects && verseObjects.length>0) {
-            verseObjectsArray.push({ chapter, verse, verseObjects })
+            verseObjectsArray.push({
+              chapter, verse, verseObjects,
+            })
           }
         })
       })

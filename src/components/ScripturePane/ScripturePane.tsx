@@ -1,6 +1,8 @@
 import * as React from 'react'
 import { VerseObjects } from 'scripture-resources-rcl'
-import { ScriptureReference, VerseObjectsType, VerseArrayPartsType } from '../../types'
+import {
+  ScriptureReference, VerseObjectsType, VerseArrayPartsType 
+} from '../../types'
 import { getResourceMessage } from '../../utils'
 import { Container, Content } from './styled'
 
@@ -68,7 +70,6 @@ function ScripturePane({
   translate,
 } : Props) {
   const resourceMsg = getResourceMessage(resourceStatus, server, resourceLink, isNT)
-  const chapter = reference && reference.chapter
   const verse = reference && reference.verse
   direction = direction || 'ltr'
 
@@ -83,7 +84,11 @@ function ScripturePane({
   }
 
   return (
-    <Container style={{ direction, width: '100%', height: '100%' }}>
+    <Container
+      style={{
+        direction, width: '100%', height: '100%' 
+      }}
+    >
       {resourceMsg ?
         // @ts-ignore
         <div style={MessageStyle}>
