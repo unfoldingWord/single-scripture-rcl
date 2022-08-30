@@ -1,9 +1,6 @@
 // @ts-ignore
 import { useEffect, useState } from 'react'
-import {
-  core,
-  useRsrc,
-} from 'scripture-resources-rcl'
+import { useBcvQuery, core } from 'scripture-resources-rcl'
 import {
   CONTENT_NOT_FOUND_ERROR,
   ERROR_STATE,
@@ -21,9 +18,19 @@ import {
 } from '../types'
 import { parseResourceManifest } from './parseResourceManifest'
 
+const arrayToObject = (array: any[], keyField: string) =>
+  array.reduce((obj, item) => {
+    let iCopy = Object.assign({}, item)
+    delete iCopy[keyField]
+    obj[item[keyField]] = iCopy
+    return obj
+  }, {})
+
 interface Props {
-  /** reference for scripture **/
-  reference: ScriptureReference;
+  /** optional current reference - in case a single verse is expected **/
+  reference?: ScriptureReference;
+  /** optional query with expected return structure - in case of multiple verses **/
+  bcvQuery?: any;
   /** where to get data **/
   config: ServerConfig;
   /** optional direct path to bible resource, in format ${owner}/${languageId}/${projectId}/${branch} **/
@@ -35,11 +42,13 @@ interface Props {
 export function useScripture({
   config,
   reference,
+  bcvQuery,
   resource: resource_,
   resourceLink: resourceLink_,
 } : Props) {
   const [initialized, setInitialized] = useState(false)
   let resourceLink = resourceLink_
+  let matchedVerse = reference && reference.verse
 
   if (!resourceLink_ && resource_) {
     const {
@@ -50,6 +59,7 @@ export function useScripture({
       ref = null,
     } = resource_ || {}
     const ref_ = ref || branch
+
     resourceLink = getResourceLink({
       owner,
       languageId,
@@ -58,24 +68,63 @@ export function useScripture({
     })
   }
 
-  const options = { getBibleJson: true }
+  const curQuery = bcvQuery || {
+    resourceLink,
+    server: config.server,
+    book: {
+      [reference.projectId] : {
+        ch: { 
+          [reference.chapter]: { v: { [reference.verse]: { verseObjects: [] } } },
+        },
+      },
+    },
+  }
 
+  console.log(useBcvQuery)
   const {
     state: {
-      bibleJson,
-      matchedVerse,
-      resource,
-      content,
+      resource, // Deprecated field
+      content, // Deprecated field
+      resultTree,
       loadingResource,
       loadingContent,
       fetchResponse,
     },
-  } = useRsrc({
-    config, reference, resourceLink, options,
-  })
+  } = useBcvQuery( curQuery, config)
+
+  /*
+  success,
+  resultTree,
+  errorCode,
+*/
 
   const { title, version } = parseResourceManifest(resource)
-  let { verseObjects } = bibleJson || {}
+  const bookResult = resultTree && resultTree.book
+
+  // transform tree result to flat array
+  const vObjArray = []
+
+  if (bookResult) {
+    // @ts-ignore
+    Object.entries(bookResult).forEach(([bookKey, { ch }]) => {
+      // @ts-ignore
+      Object.entries(ch).forEach(([chNum, { v }]) => {
+        // @ts-ignore
+        Object.entries(v).forEach(([vNum, { verseObjects }]) => {
+          if (verseObjects && verseObjects.length>0) {
+            vObjArray.push({ id: `${chNum}:${vNum}`, verseObjects })
+          }
+        })
+      })
+    })
+  }
+
+  // transform array to single non-hierarchical object
+  const verseObjectsArray = arrayToObject(vObjArray,'id')
+
+  let bibleJson = content
+  //  let { verseObjects } = bibleJson || {}
+  let verseObjects = []
   const { languageId } = resource_ || {}
   const loading = loadingResource || loadingContent
   const contentNotFoundError = !content
@@ -100,11 +149,11 @@ export function useScripture({
         setInitialized(true)
       }
     }
-  }, [loading])
+  }, [initialized, loading])
 
-  if (languageId === 'el-x-koine' || languageId === 'hbo') {
-    verseObjects = core.occurrenceInjectVerseObjects(verseObjects)
-  }
+  // if (languageId === 'el-x-koine' || languageId === 'hbo') {
+  verseObjects = core.occurrenceInjectVerseObjects(verseObjects)
+  // }
 
   return {
     title,
@@ -113,6 +162,8 @@ export function useScripture({
     resourceLink,
     matchedVerse,
     verseObjects,
+    verseObjectsArray,
+    resultTree,
     resourceStatus,
     fetchResponse,
   }

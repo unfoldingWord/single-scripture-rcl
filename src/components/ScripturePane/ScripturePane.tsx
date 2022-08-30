@@ -5,8 +5,8 @@ import { getResourceMessage } from '../../utils'
 import { Container, Content } from './styled'
 
 interface Props {
-  /** current reference **/
-  reference: ScriptureReference;
+  /** current reference - in case verseObjects (single verse) is used **/
+  reference?: ScriptureReference;
   /** optional styles to use for reference **/
   refStyle: any;
   /** optional styles to use for content **/
