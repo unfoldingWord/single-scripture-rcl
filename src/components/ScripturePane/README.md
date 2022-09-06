@@ -16,6 +16,12 @@ const ntQuery = {
   },
 }
 
+const ntRef = {
+  projectId: "tit",
+  chapter: 1,
+  verse: 5,
+}
+
 // for testing OT book
 const otQuery = {
   server: "https://git.door43.org",
@@ -29,8 +35,20 @@ const otQuery = {
   },
 }
 
+const otRef = {
+  projectId: "psa",
+  chapter: 119,
+  verse: 166,
+}
+
+///////////////////////////////////////////
+// set to true to show multiple verses 
+const showMultiple = false; 
+///////////////////////////////////////////
+
 const EnglishExample = {
-  bcvQuery: {...ntQuery, resourceLink: "unfoldingWord/en/ust/master" },
+  bcvQuery: showMultiple ? {...ntQuery, resourceLink: "unfoldingWord/en/ust/master" } : undefined,
+  reference: showMultiple ? undefined : ntRef,
   resource: {
     owner: "unfoldingWord",
     languageId: "en",
@@ -41,7 +59,8 @@ const EnglishExample = {
 }
 
 const HebrewExample = {
-  bcvQuery: {...otQuery, resourceLink: "unfoldingWord/hbo/uhb/master" },
+  bcvQuery: showMultiple ? {...otQuery, resourceLink: "unfoldingWord/hbo/uhb/master" } : undefined,
+  reference: showMultiple ? undefined : otRef,
   resource: {
     owner: "unfoldingWord",
     languageId: "hbo",
@@ -52,7 +71,8 @@ const HebrewExample = {
 }
 
 const GreekExample = {
-  bcvQuery: {...otQuery, resourceLink: "unfoldingWord/el-x-koine/ugnt/master" },
+  bcvQuery: showMultiple ? {...ntQuery, resourceLink: "unfoldingWord/el-x-koine/ugnt/master" } : undefined,
+  reference: showMultiple ? undefined : ntRef,
   resource: {
     owner: "unfoldingWord",
     languageId: "el-x-koine",

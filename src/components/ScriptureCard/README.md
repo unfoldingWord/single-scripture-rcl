@@ -35,9 +35,25 @@ const otQuery = {
   },
 }
 
+const ntRef = {
+  projectId: "tit",
+  chapter: 1,
+  verse: 5,
+}
+
+const otRef = {
+  projectId: "psa",
+  chapter: 119,
+  verse: 166,
+}
+
 const showNT = true; // set to false to show OT
 
+const showMultiple = false; // set to true to show multiple verses 
+
 const query = showNT ? ntQuery : otQuery;
+
+const _reference = showNT ? ntRef : otRef;
 
 const messageToGloss = (message) => {
   return {
@@ -65,7 +81,8 @@ const getLexiconData = (lexiconId, entryId) => {
 }
 
 const EnglishExample = {
-  bcvQuery: {...query, resourceLink: "unfoldingWord/en/ult/master" },
+  bcvQuery: showMultiple ? {...query, resourceLink: "unfoldingWord/en/ult/master" } : undefined,
+  reference: showMultiple ? undefined : _reference,
   appRef: 'master',
   isNT: () => true,
   resource: {
@@ -79,7 +96,8 @@ const EnglishExample = {
 }
 
 const HebrewExample = {
-  bcvQuery: {...query, resourceLink: "unfoldingWord/hbo/uhb/master" },
+  bcvQuery: showMultiple ? {...query, resourceLink: "unfoldingWord/hbo/uhb/master" } : undefined,
+  reference: showMultiple ? undefined : _reference,
   appRef: 'master',
   isNT: () => false,
   resource: {
@@ -93,7 +111,8 @@ const HebrewExample = {
 }
 
 const GreekExample = {
-  bcvQuery: {...query, resourceLink: "unfoldingWord/el-x-koine/ugnt/master" },
+  bcvQuery: showMultiple ? {...query, resourceLink: "unfoldingWord/el-x-koine/ugnt/master" } : undefined,
+  reference: showMultiple ? undefined : _reference,
   appRef: 'master',
   isNT: () => true,
   resource: {
@@ -107,7 +126,8 @@ const GreekExample = {
 }
 
 const EnglishUSTExample = {
-  bcvQuery: {...query, resourceLink: "unfoldingWord/en/ust/master" },
+  bcvQuery: showMultiple ? {...query, resourceLink: "unfoldingWord/en/ust/master" } : undefined,
+  reference: showMultiple ? undefined : _reference,
   appRef: 'master',
   isNT: () => true,
   resource: {

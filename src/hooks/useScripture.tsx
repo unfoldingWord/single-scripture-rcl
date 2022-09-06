@@ -89,7 +89,7 @@ export function useScripture({
   const bookResult = resultTree && resultTree.book
 
   // transform tree result to flat array
-  const verseObjectsArray = []
+  const _verseObjectsArray = []
 
   if (bookResult) {
     // @ts-ignore - unknown type
@@ -99,7 +99,7 @@ export function useScripture({
         // @ts-ignore - unknown type
         Object.entries(v).forEach(([verse, { verseObjects }]) => {
           if (verseObjects && verseObjects.length>0) {
-            verseObjectsArray.push({
+            _verseObjectsArray.push({
               chapter, verse, verseObjects,
             })
           }
@@ -108,8 +108,8 @@ export function useScripture({
     })
   }
 
-  const hasSingleVerseData = singleVerse && verseObjectsArray && verseObjectsArray.length>0
-  let verseObjects = hasSingleVerseData ? verseObjectsArray[0].verseObjects : []
+  const hasSingleVerseData = singleVerse && _verseObjectsArray && _verseObjectsArray.length>0
+  let verseObjects = hasSingleVerseData ? _verseObjectsArray[0].verseObjects : []
 
   const loading = loadingResource || loadingContent
   const contentNotFoundError = !success
@@ -147,7 +147,7 @@ export function useScripture({
     resourceLink,
     matchedVerse,
     verseObjects,
-    verseObjectsArray,
+    verseObjectsArray: hasSingleVerseData ? undefined : _verseObjectsArray,
     resultTree,
     resourceStatus,
     fetchResponse,
