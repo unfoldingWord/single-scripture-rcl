@@ -4,13 +4,51 @@ import { makeStyles } from "@material-ui/core/styles";
 import { ScripturePane, useScripture } from "../.."
 
 // for testing NT book
+const ntQuery = {
+  server: "https://git.door43.org",
+  book: {
+    tit: {
+      ch: {
+        2: { v: { 15: { verseObjects: [] } } },
+        3: { v: { 1: { verseObjects: [] } } },
+      },
+    },
+  },
+}
+
+const ntRef = {
+  projectId: "tit",
+  chapter: 1,
+  verse: 5,
+}
+
+// for testing OT book
+const otQuery = {
+  server: "https://git.door43.org",
+  book: {
+    psa: {
+      ch: {
+        119: { v: { 176: { verseObjects: [] } } },
+        120: { v: { 1: { verseObjects: [] } } },
+      },
+    },
+  },
+}
+
+const otRef = {
+  projectId: "psa",
+  chapter: 119,
+  verse: 166,
+}
+
+///////////////////////////////////////////
+// set to true to show multiple verses 
+const showMultiple = false; 
+///////////////////////////////////////////
 
 const EnglishExample = {
-  reference: {
-    projectId: "tit",
-    chapter: 1,
-    verse: 5,
-  },
+  bcvQuery: showMultiple ? {...ntQuery, resourceLink: "unfoldingWord/en/ust/master" } : undefined,
+  reference: showMultiple ? undefined : ntRef,
   resource: {
     owner: "unfoldingWord",
     languageId: "en",
@@ -21,11 +59,8 @@ const EnglishExample = {
 }
 
 const HebrewExample = {
-  reference: {
-    projectId: "psa",
-    chapter: 119,
-    verse: 166,
-  },
+  bcvQuery: showMultiple ? {...otQuery, resourceLink: "unfoldingWord/hbo/uhb/master" } : undefined,
+  reference: showMultiple ? undefined : otRef,
   resource: {
     owner: "unfoldingWord",
     languageId: "hbo",
@@ -36,11 +71,8 @@ const HebrewExample = {
 }
 
 const GreekExample = {
-  reference: {
-    projectId: "tit",
-    chapter: 1,
-    verse: 5,
-  },
+  bcvQuery: showMultiple ? {...ntQuery, resourceLink: "unfoldingWord/el-x-koine/ugnt/master" } : undefined,
+  reference: showMultiple ? undefined : ntRef,
   resource: {
     owner: "unfoldingWord",
     languageId: "el-x-koine",

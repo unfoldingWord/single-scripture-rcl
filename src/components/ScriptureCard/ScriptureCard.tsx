@@ -35,11 +35,8 @@ export default function ScriptureCard({
     originalLanguageOwner,
   },
   getLanguage,
-  reference: {
-    verse,
-    chapter,
-    projectId: bookId,
-  },
+  reference: _reference,
+  bcvQuery,
   resourceLink,
   useUserLocalStorage,
   disableWordPopover,
@@ -51,7 +48,11 @@ export default function ScriptureCard({
   fetchGlossesForVerse,
   translate,
   onMinimize,
-}) {
+}): JSX.Element {
+  const verse = _reference && _reference.verse
+  const chapter = _reference && _reference.chapter
+  const bookId = _reference && _reference.projectId
+
   const [urlError, setUrlError] = React.useState(null)
   const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
   const {
@@ -69,6 +70,7 @@ export default function ScriptureCard({
     cardNum,
     chapter,
     languageId,
+    bcvQuery,
     resourceId,
     resourceLink,
     useUserLocalStorage,
@@ -80,7 +82,7 @@ export default function ScriptureCard({
     hebrewRepoUrl,
   })
 
-  let scriptureTitle
+  let scriptureTitle: string
 
   React.useEffect(() => {
     const error = scriptureConfig?.resourceStatus?.[ERROR_STATE]
@@ -92,7 +94,7 @@ export default function ScriptureCard({
       const isAccessError = resourceStatus[MANIFEST_NOT_LOADED_ERROR]
       onResourceError && onResourceError(message, isAccessError, resourceStatus)
     }
-  }, [scriptureConfig?.resourceStatus?.[ERROR_STATE]])
+  }, [bookId, isNT, onResourceError, scriptureConfig, scriptureConfig?.resourceStatus, server])
 
   if (scriptureConfig.title && scriptureConfig.version) {
     scriptureTitle = `${scriptureConfig.title} v${scriptureConfig.version}`
@@ -167,7 +169,7 @@ export default function ScriptureCard({
     }
 
     fetchGlossDataForVerse()
-  }, [scriptureConfig?.verseObjects])
+  }, [scriptureConfig?.verseObjects,fetchGlossesForVerse,disableWordPopover,languageId_])
 
   return (
     <Card
@@ -229,14 +231,20 @@ ScriptureCard.propTypes = {
     /** repo owner for original languages such as unfoldingWord */
     originalLanguageOwner: PropTypes.string.isRequired,
   }),
-  reference: PropTypes.shape({
-    /** projectId (bookID) to use */
+  /** optional current reference - in case a single verse is expected **/
+  reference: PropTypes.any,
+  /**
+    // projectId (bookID) to use
     projectId: PropTypes.string.isRequired,
-    /** current chapter number */
+    // current chapter number
     chapter: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
-    /** current verse number */
+    // current verse number
     verse: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
   }),
+  */
+  /** optional query with expected return structure - in case of multiple verses **/
+  bcvQuery: PropTypes.any,
+  /** where to get data **/
   /** server (e.g. 'https://git.door43.org') */
   server: PropTypes.string.isRequired,
   /** repo branch or tag such as master */

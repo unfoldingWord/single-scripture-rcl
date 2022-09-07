@@ -1,20 +1,25 @@
 import * as React from 'react'
 import { VerseObjects } from 'scripture-resources-rcl'
-import { ScriptureReference, VerseObjectsType } from '../../types'
+import {
+  ScriptureReference, VerseObjectsType, VerseArrayPartsType 
+} from '../../types'
 import { getResourceMessage } from '../../utils'
 import { Container, Content } from './styled'
 
 interface Props {
-  /** current reference **/
-  reference: ScriptureReference;
+  /** current reference - in case verseObjects (single verse) is used **/
+  reference?: ScriptureReference;
   /** optional styles to use for reference **/
   refStyle: any;
   /** optional styles to use for content **/
   contentStyle: any;
   /** language direction to use **/
   direction: string|undefined;
+  /** use either verseObjects (single verse) or verseObjectsArray (multiple verses) **/
   /** verseObjects **/
-  verseObjects: VerseObjectsType|undefined;
+  verseObjects?: VerseObjectsType|undefined;
+ /** verseObjectsArray **/
+  verseObjectsArray?: VerseArrayPartsType[]|undefined;
   /** if true then do not display lexicon popover on hover **/
   disableWordPopover: boolean|undefined;
   /** object that contains resource loading status or fetching errors */
@@ -54,6 +59,7 @@ function ScripturePane({
   direction,
   contentStyle,
   verseObjects,
+  verseObjectsArray,
   disableWordPopover,
   resourceStatus,
   resourceLink,
@@ -64,7 +70,7 @@ function ScripturePane({
   translate,
 } : Props) {
   const resourceMsg = getResourceMessage(resourceStatus, server, resourceLink, isNT)
-  const { chapter, verse } = reference
+  const verse = reference && reference.verse
   direction = direction || 'ltr'
 
   refStyle = refStyle || {
@@ -78,7 +84,11 @@ function ScripturePane({
   }
 
   return (
-    <Container style={{ direction, width: '100%', height: '100%' }}>
+    <Container
+      style={{
+        direction, width: '100%', height: '100%' 
+      }}
+    >
       {resourceMsg ?
         // @ts-ignore
         <div style={MessageStyle}>
@@ -86,15 +96,35 @@ function ScripturePane({
         </div>
         :
         <Content>
-          <span style={refStyle}> {chapter}:{verse}&nbsp;</span>
-          <span style={contentStyle}>
-            <VerseObjects
-              verseObjects={verseObjects}
-              disableWordPopover={disableWordPopover}
-              getLexiconData={getLexiconData}
-              translate={translate}
-            />
-          </span>
+          {verseObjectsArray
+            && (verseObjectsArray.length>0)
+            && verseObjectsArray.map((vObj: any, inx: number) => (
+              <div key={inx}>
+                <span style={refStyle}> {vObj.chapter}:{vObj.verse}&nbsp;</span>
+                <span style={contentStyle}>
+                  <VerseObjects
+                    verseObjects={vObj.verseObjects}
+                    disableWordPopover={disableWordPopover}
+                    getLexiconData={getLexiconData}
+                    translate={translate}
+                  />
+                </span>
+              </div>
+            ))}
+
+          {verseObjects && (
+            <div>
+              <span style={refStyle}> {verse}&nbsp;</span>
+              <span style={contentStyle}>
+                <VerseObjects
+                  verseObjects={verseObjects}
+                  disableWordPopover={disableWordPopover}
+                  getLexiconData={getLexiconData}
+                  translate={translate}
+                />
+              </span>
+            </div>
+          )}
         </Content>
       }
     </Container>

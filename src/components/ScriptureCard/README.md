@@ -11,18 +11,49 @@ import {
 import { useScripture } from '../../hooks'
 import * as translation from './translation.json'
 
-const showNT = true; // set to false to show OT
+const ntQuery = {
+  server: "https://git.door43.org",
+  book: {
+    tit: {
+      ch: {
+        2: { v: { 15: { verseObjects: [] } } },
+        3: { v: { 1: { verseObjects: [] } } },
+      },
+    },
+  },
+}
+
+const otQuery = {
+  server: "https://git.door43.org",
+  book: {
+    psa: {
+      ch: {
+        119: { v: { 176: { verseObjects: [] } } },
+        120: { v: { 1: { verseObjects: [] } } },
+      },
+    },
+  },
+}
+
 const ntRef = {
   projectId: "tit",
   chapter: 1,
   verse: 5,
 }
+
 const otRef = {
   projectId: "psa",
   chapter: 119,
   verse: 166,
 }
-const reference = showNT ? ntRef : otRef;
+
+const showNT = true; // set to false to show OT
+
+const showMultiple = false; // set to true to show multiple verses 
+
+const query = showNT ? ntQuery : otQuery;
+
+const _reference = showNT ? ntRef : otRef;
 
 const messageToGloss = (message) => {
   return {
@@ -50,7 +81,8 @@ const getLexiconData = (lexiconId, entryId) => {
 }
 
 const EnglishExample = {
-  reference,
+  bcvQuery: showMultiple ? {...query, resourceLink: "unfoldingWord/en/ult/master" } : undefined,
+  reference: showMultiple ? undefined : _reference,
   appRef: 'master',
   isNT: () => true,
   resource: {
@@ -64,7 +96,8 @@ const EnglishExample = {
 }
 
 const HebrewExample = {
-  reference,
+  bcvQuery: showMultiple ? {...query, resourceLink: "unfoldingWord/hbo/uhb/master" } : undefined,
+  reference: showMultiple ? undefined : _reference,
   appRef: 'master',
   isNT: () => false,
   resource: {
@@ -78,7 +111,8 @@ const HebrewExample = {
 }
 
 const GreekExample = {
-  reference,
+  bcvQuery: showMultiple ? {...query, resourceLink: "unfoldingWord/el-x-koine/ugnt/master" } : undefined,
+  reference: showMultiple ? undefined : _reference,
   appRef: 'master',
   isNT: () => true,
   resource: {
@@ -92,7 +126,8 @@ const GreekExample = {
 }
 
 const EnglishUSTExample = {
-  reference,
+  bcvQuery: showMultiple ? {...query, resourceLink: "unfoldingWord/en/ust/master" } : undefined,
+  reference: showMultiple ? undefined : _reference,
   appRef: 'master',
   isNT: () => true,
   resource: {
@@ -208,7 +243,7 @@ function Component() {
     <div style={{ display: "flex" }}>
       <SelectionsContextProvider
         quote={"χάριν"}
-        occurrence={1}
+        occurrence={"1"}
         selections={selections}
         verseObjects={origLangConfig.verseObjects || []}
         onSelections={setSelections}

@@ -1,9 +1,6 @@
 // @ts-ignore
 import { useEffect, useState } from 'react'
-import {
-  core,
-  useRsrc,
-} from 'scripture-resources-rcl'
+import { useBcvQuery, core } from 'scripture-resources-rcl'
 import {
   CONTENT_NOT_FOUND_ERROR,
   ERROR_STATE,
@@ -22,8 +19,10 @@ import {
 import { parseResourceManifest } from './parseResourceManifest'
 
 interface Props {
-  /** reference for scripture **/
-  reference: ScriptureReference;
+  /** optional current reference - in case a single verse is expected **/
+  reference?: ScriptureReference;
+  /** optional query with expected return structure - in case of multiple verses **/
+  bcvQuery?: any;
   /** where to get data **/
   config: ServerConfig;
   /** optional direct path to bible resource, in format ${owner}/${languageId}/${projectId}/${branch} **/
@@ -35,11 +34,16 @@ interface Props {
 export function useScripture({
   config,
   reference,
+  bcvQuery,
   resource: resource_,
   resourceLink: resourceLink_,
 } : Props) {
   const [initialized, setInitialized] = useState(false)
+  const { languageId } = resource_ || {}
+  const singleVerse = reference && (reference.verse != null)
+
   let resourceLink = resourceLink_
+  let matchedVerse = reference && reference.verse
 
   if (!resourceLink_ && resource_) {
     const {
@@ -50,6 +54,7 @@ export function useScripture({
       ref = null,
     } = resource_ || {}
     const ref_ = ref || branch
+
     resourceLink = getResourceLink({
       owner,
       languageId,
@@ -58,29 +63,58 @@ export function useScripture({
     })
   }
 
-  const options = { getBibleJson: true }
+  const curQuery = bcvQuery || {
+    resourceLink,
+    server: config.server,
+    book: {
+      [reference.projectId] : {
+        ch:
+        { [reference.chapter]: { v: { [reference.verse]: { verseObjects: [] } } } },
+      },
+    },
+  }
 
   const {
     state: {
-      bibleJson,
-      matchedVerse,
-      resource,
-      content,
+      success,
+      resultTree,
       loadingResource,
       loadingContent,
       fetchResponse,
     },
-  } = useRsrc({
-    config, reference, resourceLink, options,
-  })
+  } = useBcvQuery( curQuery, config)
+  // errorCode - ToDo: Check the error code and convert to suitable code in resourceStatus
 
-  const { title, version } = parseResourceManifest(resource)
-  let { verseObjects } = bibleJson || {}
-  const { languageId } = resource_ || {}
+  const { title, version } = parseResourceManifest(resultTree)
+  const bookResult = resultTree && resultTree.book
+
+  // transform tree result to flat array
+  const _verseObjectsArray = []
+
+  if (bookResult) {
+    // @ts-ignore - unknown type
+    Object.entries(bookResult).forEach(([bookKey, { ch }]) => {
+      // @ts-ignore - unknown type
+      Object.entries(ch).forEach(([chapter, { v }]) => {
+        // @ts-ignore - unknown type
+        Object.entries(v).forEach(([verse, { verseObjects }]) => {
+          if (verseObjects && verseObjects.length>0) {
+            _verseObjectsArray.push({
+              chapter, verse, verseObjects,
+            })
+          }
+        })
+      })
+    })
+  }
+
+  const hasSingleVerseData = singleVerse && _verseObjectsArray && _verseObjectsArray.length>0
+  let verseObjects = hasSingleVerseData ? _verseObjectsArray[0].verseObjects : []
+
   const loading = loadingResource || loadingContent
-  const contentNotFoundError = !content
-  const scriptureNotLoadedError = !bibleJson
-  const manifestNotFoundError = !resource?.manifest
+  const contentNotFoundError = !success
+  const scriptureNotLoadedError = !success
+  const manifestNotFoundError = !resultTree?.manifest
   const invalidManifestError = !title || !version || !languageId
   const error = initialized && !loading &&
     (contentNotFoundError || scriptureNotLoadedError || manifestNotFoundError || invalidManifestError)
@@ -100,9 +134,9 @@ export function useScripture({
         setInitialized(true)
       }
     }
-  }, [loading])
+  }, [initialized, loading])
 
-  if (languageId === 'el-x-koine' || languageId === 'hbo') {
+  if (hasSingleVerseData && ((languageId === 'el-x-koine' || languageId === 'hbo'))) {
     verseObjects = core.occurrenceInjectVerseObjects(verseObjects)
   }
 
@@ -113,6 +147,8 @@ export function useScripture({
     resourceLink,
     matchedVerse,
     verseObjects,
+    verseObjectsArray: hasSingleVerseData ? undefined : _verseObjectsArray,
+    resultTree,
     resourceStatus,
     fetchResponse,
   }
