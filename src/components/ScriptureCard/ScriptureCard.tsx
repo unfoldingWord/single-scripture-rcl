@@ -54,6 +54,7 @@ export default function ScriptureCard({
 }) {
   const [urlError, setUrlError] = React.useState(null)
   const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
+  const [editing, setEditing] = React.useState(null)
   const {
     scriptureConfig,
     setScripture,
@@ -202,13 +203,15 @@ export default function ScriptureCard({
         disableWordPopover={disableWordPopover_}
         getLexiconData={getLexiconData}
         translate={translate}
+        editing={editing}
+        setEditing={setEditing}
       />
     </Card>
   )
 }
 
 ScriptureCard.propTypes = {
-  /** identifier to use for card */
+  /** html identifier to use for card */
   id: PropTypes.string,
   /** method to determine if NT or OT */
   isNT: PropTypes.func.isRequired,
