@@ -3,6 +3,7 @@ import * as PropTypes from 'prop-types'
 import {
   Card,
   useCardState,
+  useUserBranch,
   ERROR_STATE,
   MANIFEST_NOT_LOADED_ERROR,
 } from 'translation-helps-rcl'
@@ -51,10 +52,13 @@ export default function ScriptureCard({
   fetchGlossesForVerse,
   translate,
   onMinimize,
+  loggedInUser,
+  authentication,
 }) {
   const [urlError, setUrlError] = React.useState(null)
   const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
-  const [editing, setEditing] = React.useState(null)
+  const [editing, setEditing] = React.useState(false)
+  const [verseChanged, setVerseChanged] = React.useState(false)
   const {
     scriptureConfig,
     setScripture,
@@ -143,6 +147,30 @@ export default function ScriptureCard({
     },
   } = useCardState({ items })
 
+  // @ts-ignore
+  const cardResourceId = scriptureConfig?.resource?.projectId || resourceId
+
+  const {
+    state: {
+      listRef,
+      contentRef,
+      usingUserBranch,
+      workingResourceBranch,
+    },
+    actions: { startEdit },
+  } = useUserBranch({
+    owner,
+    server,
+    appRef,
+    languageId,
+    cardId: id,
+    loggedInUser,
+    authentication,
+    cardResourceId,
+    onResourceError,
+    useUserLocalStorage,
+  })
+
   const refStyle = {
     fontFamily: 'Noto Sans',
     fontSize: `${Math.round(scaledFontSize * 0.9)}%`,
@@ -170,6 +198,10 @@ export default function ScriptureCard({
     fetchGlossDataForVerse()
   }, [scriptureConfig?.verseObjects])
 
+  function onSaveEdit() {
+    console.log(`onSaveEdit`)
+  }
+
   return (
     <Card
       id={`scripture_card_${cardNum}`}
@@ -190,6 +222,9 @@ export default function ScriptureCard({
       hideMarkdownToggle
       onMenuClose={onMenuClose}
       onMinimize={onMinimize ? () => onMinimize(id) : null}
+      editable={editing}
+      saved={!verseChanged}
+      onSaveEdit={onSaveEdit}
     >
       <ScripturePane
         refStyle={refStyle}
@@ -205,6 +240,7 @@ export default function ScriptureCard({
         translate={translate}
         editing={editing}
         setEditing={setEditing}
+        setVerseChanged={setVerseChanged}
       />
     </Card>
   )
@@ -271,4 +307,8 @@ ScriptureCard.propTypes = {
   translate: PropTypes.func,
   /** function to minimize the card (optional) */
   onMinimize: PropTypes.func,
+  /** user-name */
+  loggedInUser: PropTypes.string,
+  /** authentication info */
+  authentication: PropTypes.object,
 }
