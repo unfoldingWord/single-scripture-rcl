@@ -85,6 +85,33 @@ export default function ScriptureCard({
     hebrewRepoUrl,
   })
 
+  // @ts-ignore
+  const cardResourceId = scriptureConfig?.resource?.projectId || resourceId
+  // @ts-ignore
+  const ref = scriptureConfig?.resource?.ref || appRef
+  const canUseEditBranch = loggedInUser && authentication && ((ref === 'master') || (ref.substring(0, loggedInUser.length) === loggedInUser) )
+
+  const {
+    state: {
+      listRef,
+      contentRef,
+      usingUserBranch,
+      workingResourceBranch,
+    },
+    actions: { startEdit },
+  } = useUserBranch({
+    owner,
+    server,
+    appRef,
+    languageId,
+    cardId: id,
+    loggedInUser: canUseEditBranch ? loggedInUser : null,
+    authentication: canUseEditBranch ? authentication : null,
+    cardResourceId,
+    onResourceError,
+    useUserLocalStorage,
+  })
+
   let scriptureTitle
 
   React.useEffect(() => {
@@ -147,30 +174,6 @@ export default function ScriptureCard({
     },
   } = useCardState({ items })
 
-  // @ts-ignore
-  const cardResourceId = scriptureConfig?.resource?.projectId || resourceId
-
-  const {
-    state: {
-      listRef,
-      contentRef,
-      usingUserBranch,
-      workingResourceBranch,
-    },
-    actions: { startEdit },
-  } = useUserBranch({
-    owner,
-    server,
-    appRef,
-    languageId,
-    cardId: id,
-    loggedInUser,
-    authentication,
-    cardResourceId,
-    onResourceError,
-    useUserLocalStorage,
-  })
-
   const refStyle = {
     fontFamily: 'Noto Sans',
     fontSize: `${Math.round(scaledFontSize * 0.9)}%`,
@@ -200,6 +203,11 @@ export default function ScriptureCard({
 
   function onSaveEdit() {
     console.log(`onSaveEdit`)
+  }
+
+  function setEditing_(state) {
+    state && startEdit()
+    setEditing(state)
   }
 
   return (
@@ -239,7 +247,7 @@ export default function ScriptureCard({
         getLexiconData={getLexiconData}
         translate={translate}
         editing={editing}
-        setEditing={setEditing}
+        setEditing={setEditing_}
         setVerseChanged={setVerseChanged}
       />
     </Card>
