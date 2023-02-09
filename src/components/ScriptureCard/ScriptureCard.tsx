@@ -16,6 +16,7 @@ import {
   isOriginalBible,
 } from '../../utils/ScriptureSettings'
 import { Title } from '../ScripturePane/styled'
+import { ORIGINAL_SOURCE } from '../../utils'
 
 const KEY_FONT_SIZE_BASE = 'scripturePaneFontSize_'
 const label = 'Version'
@@ -59,6 +60,8 @@ export default function ScriptureCard({
   const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
   const [editing, setEditing] = React.useState(false)
   const [verseChanged, setVerseChanged] = React.useState(false)
+  const [ref, setRef] = React.useState(appRef)
+
   const {
     scriptureConfig,
     setScripture,
@@ -69,7 +72,7 @@ export default function ScriptureCard({
     verse,
     owner,
     bookId,
-    appRef,
+    appRef: ref,
     server,
     cardNum,
     chapter,
@@ -88,13 +91,13 @@ export default function ScriptureCard({
   // @ts-ignore
   const cardResourceId = scriptureConfig?.resource?.projectId || resourceId
   // @ts-ignore
-  const ref = scriptureConfig?.resource?.ref || appRef
-  const canUseEditBranch = loggedInUser && authentication && ((ref === 'master') || (ref.substring(0, loggedInUser.length) === loggedInUser) )
+  let ref_ = scriptureConfig?.resource?.ref || appRef
+  const canUseEditBranch = loggedInUser && authentication &&
+    (resourceId !== ORIGINAL_SOURCE) &&
+    ((ref_ === 'master') || (ref_.substring(0, loggedInUser.length) === loggedInUser) ) // not tag
 
   const {
     state: {
-      listRef,
-      contentRef,
       usingUserBranch,
       workingResourceBranch,
     },
@@ -111,6 +114,14 @@ export default function ScriptureCard({
     onResourceError,
     useUserLocalStorage,
   })
+
+  const workingRef = canUseEditBranch ? workingResourceBranch : appRef
+
+  React.useEffect(() => {
+    if (ref !== workingRef) {
+      setRef(workingRef)
+    }
+  }, [workingRef])
 
   let scriptureTitle
 
