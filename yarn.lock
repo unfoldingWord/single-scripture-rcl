@@ -3547,6 +3547,11 @@ bcrypt-pbkdf@^1.0.0:
   dependencies:
     tweetnacl "^0.14.3"
 
+bible-reference-range@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/bible-reference-range/-/bible-reference-range-1.1.0.tgz#2e80f066d30e9884d30f582c623de9cc2414676b"
+  integrity sha512-EVPhDLSY/hmeW6reO9XLst1SKAAf6Opyfy6l2MZSna9kE6DqEiFW/eWOrkPq5g40Hs+Xe8odPGJuIpdysokQpg==
+
 big.js@^5.2.2:
   version "5.2.2"
   resolved "https://registry.yarnpkg.com/big.js/-/big.js-5.2.2.tgz#65f0af382f578bcdc742bd9c281e9cb2d7768328"
@@ -6023,6 +6028,14 @@ file-entry-cache@^6.0.0:
   integrity sha512-fqoO76jZ3ZnYrXLDRxBR1YvOvc0k844kcOg40bgsPrE25LAb/PDqTY+ho64Xh2c8ZXgIKldchCFHczG2UVRcWA==
   dependencies:
     flat-cache "^3.0.4"
+
+file-loader@^6.2.0:
+  version "6.2.0"
+  resolved "https://registry.yarnpkg.com/file-loader/-/file-loader-6.2.0.tgz#baef7cf8e1840df325e4390b4484879480eebe4d"
+  integrity sha512-qo3glqyTa61Ytg4u73GultjHGjdRyig3tG6lPtyX/jOEJvHif9uB0/OCI2Kif6ctF3caQTW2G5gym21oAsI4pw==
+  dependencies:
+    loader-utils "^2.0.0"
+    schema-utils "^3.0.0"
 
 file-uri-to-path@1.0.0:
   version "1.0.0"
@@ -12043,6 +12056,13 @@ string-punctuation-tokenizer@2.1.2:
   dependencies:
     xregexp "^4.1.1"
 
+string-punctuation-tokenizer@2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/string-punctuation-tokenizer/-/string-punctuation-tokenizer-2.2.0.tgz#058465f994e29bfb93eaf4a9a2503d3ab6a50a18"
+  integrity sha512-QOTErphviG7wtzhM6A0tVZugwPtfHFNySboO0SEkruFwW/d2HHalSHWri4230HG/F6egvJx76kZdtYY359+rrA==
+  dependencies:
+    xregexp "^4.1.1"
+
 string-width@^3.0.0, string-width@^3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/string-width/-/string-width-3.1.0.tgz#22767be21b62af1081574306f69ac51b62203961"
@@ -12308,6 +12328,25 @@ tar@^6.0.2:
     minizlib "^2.1.1"
     mkdirp "^1.0.3"
     yallist "^4.0.0"
+
+tc-ui-toolkit@6.2.6:
+  version "6.2.6"
+  resolved "https://registry.yarnpkg.com/tc-ui-toolkit/-/tc-ui-toolkit-6.2.6.tgz#e548a434f9b5ef9f547d1091d9f695f44bae9841"
+  integrity sha512-69aY7VmmpYzG/efbuMjbGS2vhEqqvDK41hcNfXeyOj0XygOW9xa/W6C/GH4teLFVWFeHQiJIrwDCAC7fpfrBow==
+  dependencies:
+    "@material-ui/core" "^4.10.2"
+    "@material-ui/icons" "^3.0.2"
+    deep-equal "^1.1.1"
+    jest-environment-jsdom "^24.9.0"
+    lodash "^4.17.15"
+    marked "^0.6.3"
+    memoize-one "^5.1.1"
+    prop-types "^15.7.2"
+    react-bootstrap "^0.32.1"
+    react-container-dimensions "^1.3.3"
+    react-draggable "^3.3.2"
+    react-remarkable "^1.1.3"
+    react-tooltip "^3.11.6"
 
 tc-ui-toolkit@^5.3.3:
   version "5.3.3"
@@ -13474,10 +13513,21 @@ which@^2.0.1, which@^2.0.2:
   dependencies:
     isexe "^2.0.0"
 
-word-aligner@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/word-aligner/-/word-aligner-1.0.0.tgz#eee4be21b2550f80e5af8df419427cb4272c36cc"
-  integrity sha512-eok7g0bz5yCodu3UusLpIbZMIjP7NkW4E4lpJH70txYFJsNYsASQaGdlc09MzyTwfQcxN076in/zWoNwyHug7g==
+"word-aligner-rcl@file:.yalc/word-aligner-rcl":
+  version "0.0.2-alpha"
+  dependencies:
+    bible-reference-range "^1.1.0"
+    file-loader "^6.2.0"
+    string-punctuation-tokenizer "2.2.0"
+    tc-ui-toolkit "6.2.6"
+    usfm-js "3.4.2"
+    word-aligner "1.0.1"
+    wordmap-lexer "^0.3.6"
+
+word-aligner@1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/word-aligner/-/word-aligner-1.0.1.tgz#97c9f25ff2bb9a0fb5a58fcd6bc9e5080b0e6a02"
+  integrity sha512-LVTzXmRA46dz66HPN2H4ReI4rYmAUW/RKdFxHe25vwhPFXl2ieHXNAxghygpGJpvy8oB39scIGu5WRVgdArAKg==
   dependencies:
     babel-runtime "^6.26.0"
     fs-extra "6.0.1"
@@ -13493,7 +13543,7 @@ word-wrap@^1.2.3, word-wrap@~1.2.3:
   resolved "https://registry.yarnpkg.com/word-wrap/-/word-wrap-1.2.3.tgz#610636f6b1f703891bd34771ccb17fb93b47079c"
   integrity sha512-Hz/mrNwitNRh/HUAtM/VT/5VH+ygD6DV7mYKZAtHOrbs8U7lvPS6xf7EJKMF0uW1KJCl0H701g3ZGus+muE5vQ==
 
-wordmap-lexer@0.3.6:
+wordmap-lexer@^0.3.6:
   version "0.3.6"
   resolved "https://registry.yarnpkg.com/wordmap-lexer/-/wordmap-lexer-0.3.6.tgz#69b474c2bb58e6ecc36f9533efb24b512d198f40"
   integrity sha512-7yyNIW6E4ea5vgaqvgcXihjZlVrlEg4KUuHdkmSC3O73yyTZs8YUY7ipGpHI2zWwgErTwfWCLXZ49s8eJoVn8g==

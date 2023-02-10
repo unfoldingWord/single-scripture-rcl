@@ -7,6 +7,7 @@ import {
   ERROR_STATE,
   MANIFEST_NOT_LOADED_ERROR,
 } from 'translation-helps-rcl'
+import { AlignmentHelpers } from 'word-aligner-rcl'
 import { ScripturePane, ScriptureSelector } from '..'
 import { useScriptureSettings } from '../../hooks/useScriptureSettings'
 import {
@@ -240,7 +241,8 @@ export default function ScriptureCard({
     if (verseChanged) {
       const verseObjects = scriptureConfig?.verseObjects
       // TODO re-apply alignments
-      console.log(newVerseText)
+      const { targetVerseText } = AlignmentHelpers.updateAlignmentsToTargetVerse(verseObjects, newVerseText)
+      console.log(`onSaveEdit() - new text:`, targetVerseText)
     }
   }
 
