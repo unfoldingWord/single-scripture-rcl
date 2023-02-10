@@ -56,11 +56,31 @@ export default function ScriptureCard({
   loggedInUser,
   authentication,
 }) {
-  const [urlError, setUrlError] = React.useState(null)
+  const [state, setState_] = React.useState({
+    urlError: null,
+    editing: false,
+    verseChanged: false,
+    ref: appRef,
+    initialVerseText: null,
+    newVerseText: null,
+  })
+  const {
+    urlError,
+    editing,
+    verseChanged,
+    ref,
+    initialVerseText,
+    newVerseText,
+  } = state
+
   const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
-  const [editing, setEditing] = React.useState(false)
-  const [verseChanged, setVerseChanged] = React.useState(false)
-  const [ref, setRef] = React.useState(appRef)
+
+  function setState(newState) {
+    setState_({
+      ...state,
+      ...newState,
+    })
+  }
 
   const {
     scriptureConfig,
@@ -82,7 +102,7 @@ export default function ScriptureCard({
     useUserLocalStorage,
     disableWordPopover,
     originalLanguageOwner,
-    setUrlError,
+    setUrlError: (error) => setState({ urlError: error }),
     httpConfig,
     greekRepoUrl,
     hebrewRepoUrl,
@@ -118,10 +138,12 @@ export default function ScriptureCard({
   const workingRef = canUseEditBranch ? workingResourceBranch : appRef
 
   React.useEffect(() => {
-    if (ref !== workingRef) {
-      setRef(workingRef)
+    let workingRef_ = workingRef || appRef
+
+    if (ref !== workingRef_) {
+      setState({ ref: workingRef_ })
     }
-  }, [workingRef])
+  }, [workingRef, ref, appRef])
 
   let scriptureTitle
 
@@ -158,7 +180,7 @@ export default function ScriptureCard({
 
   function onMenuClose() {
     // console.log(`onMenuClose()`)
-    setUrlError(null) // clear any error messages
+    setState({ urlError: null })
   }
 
   // @ts-ignore
@@ -214,11 +236,28 @@ export default function ScriptureCard({
 
   function onSaveEdit() {
     console.log(`onSaveEdit`)
+
+    if (verseChanged) {
+      const verseObjects = scriptureConfig?.verseObjects
+      // TODO re-apply alignments
+      console.log(newVerseText)
+    }
   }
 
-  function setEditing_(state) {
-    state && startEdit()
-    setEditing(state)
+  function setEditing_(editing_) {
+    (editing_ && !editing) && startEdit()
+
+    if (editing_ !== editing) {
+      setState({editing: editing_})
+    }
+  }
+
+  function setVerseChanged_(changed, newVerseText, initialVerseText) {
+    setState({
+      verseChanged: changed,
+      initialVerseText,
+      newVerseText,
+    })
   }
 
   return (
@@ -241,9 +280,10 @@ export default function ScriptureCard({
       hideMarkdownToggle
       onMenuClose={onMenuClose}
       onMinimize={onMinimize ? () => onMinimize(id) : null}
-      editable={editing}
+      editable={editing || verseChanged}
       saved={!verseChanged}
       onSaveEdit={onSaveEdit}
+      onBlur={() => setEditing_(false)}
     >
       <ScripturePane
         refStyle={refStyle}
@@ -259,7 +299,7 @@ export default function ScriptureCard({
         translate={translate}
         editing={editing}
         setEditing={setEditing_}
-        setVerseChanged={setVerseChanged}
+        setVerseChanged={setVerseChanged_}
       />
     </Card>
   )

@@ -74,6 +74,7 @@ function ScripturePane({
   setVerseChanged,
 } : Props) {
   const [initialVerseText, setInitialVerseText] = React.useState(null)
+  const [currentVerseText, setCurrentVerseText] = React.useState(null)
   const resourceMsg = getResourceMessage(resourceStatus, server, resourceLink, isNT)
   const { chapter, verse } = reference
   direction = direction || 'ltr'
@@ -97,8 +98,18 @@ function ScripturePane({
     // console.log(`onTextChange`, event)
     const newText = event?.target?.value
     const changed = newText !== initialVerseText
-    setVerseChanged(changed)
+    setVerseChanged(changed, newText, initialVerseText)
+    setCurrentVerseText(newText)
     console.log(`onTextChange: new text ${changed ? 'changed' : 'unchanged'}: `, newText)
+  }
+
+  function onBlur(event: React.ChangeEvent<HTMLTextAreaElement>) {
+    // console.log(`onTextChange`, event)
+    const changed = currentVerseText !== initialVerseText
+
+    if (!changed) {
+      setEditing(false)
+    }
   }
 
   return (
@@ -119,6 +130,7 @@ function ScripturePane({
               <textarea
                 defaultValue={initialVerseText}
                 onChange={onTextChange}
+                onBlur={onBlur}
                 style={{ height: '60%', width: '300px' }}
               />
               :

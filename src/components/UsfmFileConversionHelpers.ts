@@ -1,7 +1,9 @@
 /* eslint-disable no-async-promise-executor, no-throw-literal */
-import { toJSON, toUSFM } from 'usfm-js';
+import {
+  toJSON,
+  toUSFM,
+} from 'usfm-js';
 import _ from 'lodash';
-// import {getVerseAlignments, getWordCountInVerse} from "./alignmentHelpers";
 
 /**
  * test to see if verse is a verseSpan
