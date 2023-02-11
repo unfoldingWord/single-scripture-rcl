@@ -7,7 +7,10 @@ import {
   ERROR_STATE,
   MANIFEST_NOT_LOADED_ERROR,
 } from 'translation-helps-rcl'
-import { AlignmentHelpers } from 'word-aligner-rcl'
+import { AlignmentHelpers, UsfmFileConversionHelpers } from 'word-aligner-rcl'
+import BugReportIcon from '@mui/icons-material/BugReport'
+import CheckOutlinedIcon from '@mui/icons-material/CheckOutlined';
+import { IconButton } from '@mui/material'
 import { ScripturePane, ScriptureSelector } from '..'
 import { useScriptureSettings } from '../../hooks/useScriptureSettings'
 import {
@@ -64,6 +67,7 @@ export default function ScriptureCard({
     ref: appRef,
     initialVerseText: null,
     newVerseText: null,
+    aligned: false,
   })
   const {
     urlError,
@@ -72,6 +76,7 @@ export default function ScriptureCard({
     ref,
     initialVerseText,
     newVerseText,
+    aligned,
   } = state
 
   const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
@@ -220,9 +225,10 @@ export default function ScriptureCard({
 
   const scriptureLabel = <Title>{scriptureTitle}</Title>
   let disableWordPopover_ = disableWordPopover
+  const originalBible = isOriginalBible(scriptureConfig['resource']?.projectId)
 
   if (disableWordPopover === undefined) { // if not specified, then determine if original language resource
-    disableWordPopover_ = !isOriginalBible(scriptureConfig['resource']?.projectId)
+    disableWordPopover_ = !originalBible
   }
 
   React.useEffect(() => {
@@ -235,6 +241,31 @@ export default function ScriptureCard({
     fetchGlossDataForVerse()
   }, [scriptureConfig?.verseObjects])
 
+  React.useEffect(() => {
+    const verseObjects = scriptureConfig?.verseObjects
+    const notEmpty = verseObjects?.length
+    let aligned_ = false
+
+    if ((newVerseText !== null) && notEmpty) {
+      // TODO: add
+    } else if (notEmpty) {
+      if (originalBible) {
+        aligned_ = true
+      } else {
+        // const {wordListWords, verseAlignments} = AlignmentHelpers.parseUsfmToWordAlignerData(targetVerseUSFM, sourceVerseUSFM);
+        const targetVerseUSFM = UsfmFileConversionHelpers.convertVerseDataToUSFM(verseObjects)
+        const targetVerseAlignments = AlignmentHelpers.extractAlignmentsFromTargetVerse(targetVerseUSFM, null)
+        const verseAlignments = targetVerseAlignments.alignments
+        const wordListWords = targetVerseAlignments.wordBank
+        aligned_ = AlignmentHelpers.areAlgnmentsComplete(wordListWords, verseAlignments)
+      }
+    }
+
+    if (aligned_ != aligned) {
+      setState({ aligned: aligned_ } )
+    }
+  }, [scriptureConfig?.verseObjects, newVerseText, aligned, originalBible])
+
   function onSaveEdit() {
     console.log(`onSaveEdit`)
 
@@ -244,6 +275,10 @@ export default function ScriptureCard({
       const { targetVerseText } = AlignmentHelpers.updateAlignmentsToTargetVerse(verseObjects, newVerseText)
       console.log(`onSaveEdit() - new text:`, targetVerseText)
     }
+  }
+
+  function doAlignment() {
+    console.log(`doAlignment`)
   }
 
   function setEditing_(editing_) {
@@ -303,6 +338,21 @@ export default function ScriptureCard({
         setEditing={setEditing_}
         setVerseChanged={setVerseChanged_}
       />
+      <IconButton
+        disabled={false}
+        className={classes.margin}
+        key='align-button'
+        onClick={() => doAlignment()}
+        title={aligned ? 'Aligned' : 'Unaligned'}
+        aria-label={aligned ? 'Aligned' : 'Unaligned'}
+        style={{ cursor: 'pointer ' }}
+      >
+        {aligned ? (
+          <CheckOutlinedIcon id='aligned_icon' htmlColor='#000' />
+        ) : (
+          <BugReportIcon id='aligned_icon' htmlColor='#000' />
+        )}
+      </IconButton>
     </Card>
   )
 }
