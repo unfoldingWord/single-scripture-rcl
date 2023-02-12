@@ -13512,8 +13512,10 @@ which@^2.0.1, which@^2.0.2:
   dependencies:
     isexe "^2.0.0"
 
-"word-aligner-rcl@file:.yalc/word-aligner-rcl":
-  version "0.0.2-alpha"
+word-aligner-rcl@0.0.3-alpha.2:
+  version "0.0.3-alpha.2"
+  resolved "https://registry.yarnpkg.com/word-aligner-rcl/-/word-aligner-rcl-0.0.3-alpha.2.tgz#4d8c6961fd540136a194372471f8d6d0598ac7d7"
+  integrity sha512-d/ULv1rMssx0UCDkAvLJptZCgvWTJcrCGnZjt0NhTynJZJkpcALT5b4gPHsme2KK3jY0PldeCgJOoQD+hRVT8Q==
   dependencies:
     bible-reference-range "^1.1.0"
     file-loader "^6.2.0"
