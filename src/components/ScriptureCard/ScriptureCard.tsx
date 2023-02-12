@@ -7,7 +7,11 @@ import {
   ERROR_STATE,
   MANIFEST_NOT_LOADED_ERROR,
 } from 'translation-helps-rcl'
-import { AlignmentHelpers, UsfmFileConversionHelpers } from 'word-aligner-rcl'
+import {
+  AlignmentHelpers,
+  UsfmFileConversionHelpers,
+  WordAligner,
+} from 'word-aligner-rcl'
 import BugReportIcon from '@mui/icons-material/BugReport'
 import CheckOutlinedIcon from '@mui/icons-material/CheckOutlined';
 import { IconButton } from '@mui/material'
@@ -20,7 +24,11 @@ import {
   isOriginalBible,
 } from '../../utils/ScriptureSettings'
 import { Title } from '../ScripturePane/styled'
-import { ORIGINAL_SOURCE } from '../../utils'
+import {
+  NT_ORIG_LANG,
+  ORIGINAL_SOURCE,
+  OT_ORIG_LANG,
+} from '../../utils'
 
 const KEY_FONT_SIZE_BASE = 'scripturePaneFontSize_'
 const label = 'Version'
@@ -68,6 +76,7 @@ export default function ScriptureCard({
     initialVerseText: null,
     newVerseText: null,
     aligned: false,
+    alignerData: null,
   })
   const {
     urlError,
@@ -77,6 +86,7 @@ export default function ScriptureCard({
     initialVerseText,
     newVerseText,
     aligned,
+    alignerData,
   } = state
 
   const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
@@ -142,6 +152,8 @@ export default function ScriptureCard({
   })
 
   const workingRef = canUseEditBranch ? workingResourceBranch : appRef
+  const reference_ = { bookId, chapter, verse };
+  let scriptureTitle
 
   React.useEffect(() => {
     let workingRef_ = workingRef || appRef
@@ -151,7 +163,6 @@ export default function ScriptureCard({
     }
   }, [workingRef, ref, appRef])
 
-  let scriptureTitle
 
   React.useEffect(() => {
     const error = scriptureConfig?.resourceStatus?.[ERROR_STATE]
@@ -273,12 +284,24 @@ export default function ScriptureCard({
     }
   }
 
-  function doAlignment() {
-    console.log(`doAlignment`)
-    const targetVerseUSFM = getVerseUsfm()
-    const { wordListWords, verseAlignments } = AlignmentHelpers.parseUsfmToWordAlignerData(targetVerseUSFM, null)
-    // TODO show aligner
-    console.log({ wordListWords, verseAlignments })
+  function handleAlignmentClick() {
+    let alignerData_ = null
+
+    if (!alignerData) { // if word aligner not shown
+      console.log(`handleAlignmentClick - toggle ON alignment`)
+      const targetVerseUSFM = getVerseUsfm()
+      const {
+        wordListWords: wordBank,
+        verseAlignments: alignments,
+      } = AlignmentHelpers.parseUsfmToWordAlignerData(targetVerseUSFM, null)
+      alignerData_ = { wordBank, alignments }
+    } else { // word aligner currently shown
+      console.log(`handleAlignmentClick - toggle OFF alignment`)
+      alignerData_ = null
+      // TODO save updated alignments
+    }
+    setState({ alignerData: alignerData_ })
+    console.log(alignerData_)
   }
 
   function setEditing_(editing_) {
@@ -335,27 +358,43 @@ export default function ScriptureCard({
       onSaveEdit={onSaveEdit}
       onBlur={() => setEditing_(false)}
     >
-      <ScripturePane
-        refStyle={refStyle}
-        {...scriptureConfig}
-        isNT={isNT(bookId)}
-        server={server}
-        reference={reference}
-        direction={direction}
-        contentStyle={contentStyle}
-        fontSize={fontSize}
-        disableWordPopover={disableWordPopover_}
-        getLexiconData={getLexiconData}
-        translate={translate}
-        editing={editing}
-        setEditing={setEditing_}
-        setVerseChanged={setVerseChanged_}
-      />
+      {alignerData ?
+        <WordAligner
+          verseAlignments={alignerData.alignments}
+          wordListWords={alignerData.wordBank}
+          translate={translate}
+          contextId={{ reference: reference_ }}
+          targetLanguageFont={''}
+          sourceLanguage={isNT ? NT_ORIG_LANG : OT_ORIG_LANG }
+          showPopover={() => null}
+          lexicons={{}}
+          loadLexiconEntry={() => null}
+          onChange={() => null}
+          getLexiconData={() => null}
+        />
+        :
+        <ScripturePane
+          refStyle={refStyle}
+          {...scriptureConfig}
+          isNT={isNT(bookId)}
+          server={server}
+          reference={reference}
+          direction={direction}
+          contentStyle={contentStyle}
+          fontSize={fontSize}
+          disableWordPopover={disableWordPopover_}
+          getLexiconData={getLexiconData}
+          translate={translate}
+          editing={editing}
+          setEditing={setEditing_}
+          setVerseChanged={setVerseChanged_}
+        />
+      }
       <IconButton
         disabled={false}
         className={classes.margin}
         key='align-button'
-        onClick={() => doAlignment()}
+        onClick={() => handleAlignmentClick()}
         title={aligned ? 'Aligned' : 'Unaligned'}
         aria-label={aligned ? 'Aligned' : 'Unaligned'}
         style={{ cursor: 'pointer ' }}
