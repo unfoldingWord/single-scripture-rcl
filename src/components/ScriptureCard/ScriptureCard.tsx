@@ -63,7 +63,7 @@ export default function ScriptureCard({
   const [state, setState_] = React.useState({
     urlError: null,
     editing: false,
-    verseChanged: false,
+    verseTextChanged: false,
     ref: appRef,
     initialVerseText: null,
     newVerseText: null,
@@ -72,7 +72,7 @@ export default function ScriptureCard({
   const {
     urlError,
     editing,
-    verseChanged,
+    verseTextChanged,
     ref,
     initialVerseText,
     newVerseText,
@@ -252,12 +252,9 @@ export default function ScriptureCard({
       if (originalBible) {
         aligned_ = true
       } else {
-        // const {wordListWords, verseAlignments} = AlignmentHelpers.parseUsfmToWordAlignerData(targetVerseUSFM, sourceVerseUSFM);
         const targetVerseUSFM = UsfmFileConversionHelpers.convertVerseDataToUSFM(verseObjects)
-        const targetVerseAlignments = AlignmentHelpers.extractAlignmentsFromTargetVerse(targetVerseUSFM, null)
-        const verseAlignments = targetVerseAlignments.alignments
-        const wordListWords = targetVerseAlignments.wordBank
-        aligned_ = AlignmentHelpers.areAlgnmentsComplete(wordListWords, verseAlignments)
+        const { alignments, wordBank } = AlignmentHelpers.extractAlignmentsFromTargetVerse(targetVerseUSFM, null)
+        aligned_ = AlignmentHelpers.areAlgnmentsComplete(wordBank, alignments)
       }
     }
 
@@ -269,9 +266,8 @@ export default function ScriptureCard({
   function onSaveEdit() {
     console.log(`onSaveEdit`)
 
-    if (verseChanged) {
+    if (verseTextChanged) {
       const verseObjects = scriptureConfig?.verseObjects
-      // TODO re-apply alignments
       const { targetVerseText } = AlignmentHelpers.updateAlignmentsToTargetVerse(verseObjects, newVerseText)
       console.log(`onSaveEdit() - new text:`, targetVerseText)
     }
@@ -279,6 +275,10 @@ export default function ScriptureCard({
 
   function doAlignment() {
     console.log(`doAlignment`)
+    const targetVerseUSFM = getVerseUsfm()
+    const { wordListWords, verseAlignments } = AlignmentHelpers.parseUsfmToWordAlignerData(targetVerseUSFM, null)
+    // TODO show aligner
+    console.log({ wordListWords, verseAlignments })
   }
 
   function setEditing_(editing_) {
@@ -291,10 +291,23 @@ export default function ScriptureCard({
 
   function setVerseChanged_(changed, newVerseText, initialVerseText) {
     setState({
-      verseChanged: changed,
+      verseTextChanged: changed,
       initialVerseText,
       newVerseText,
     })
+  }
+
+  function getVerseUsfm() {
+    let targetVerseUSFM = null
+    const verseObjects = scriptureConfig?.verseObjects
+
+    if (verseTextChanged) {
+      const { targetVerseText } = AlignmentHelpers.updateAlignmentsToTargetVerse(verseObjects, newVerseText)
+      targetVerseUSFM = targetVerseText
+    } else {
+      targetVerseUSFM = UsfmFileConversionHelpers.convertVerseDataToUSFM(verseObjects)
+    }
+    return targetVerseUSFM
   }
 
   return (
@@ -317,8 +330,8 @@ export default function ScriptureCard({
       hideMarkdownToggle
       onMenuClose={onMenuClose}
       onMinimize={onMinimize ? () => onMinimize(id) : null}
-      editable={editing || verseChanged}
-      saved={!verseChanged}
+      editable={editing || verseTextChanged}
+      saved={!verseTextChanged}
       onSaveEdit={onSaveEdit}
       onBlur={() => setEditing_(false)}
     >
