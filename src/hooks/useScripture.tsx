@@ -1,5 +1,6 @@
 // @ts-ignore
 import { useEffect, useState } from 'react'
+import _ from 'lodash'
 import {
   core,
   useRsrc,
@@ -13,6 +14,7 @@ import {
   MANIFEST_NOT_LOADED_ERROR,
   SCRIPTURE_NOT_LOADED_ERROR,
 } from 'translation-helps-rcl'
+import { getVerses } from 'bible-reference-range'
 import { getResourceLink } from '../utils'
 import {
   ServerConfig,
@@ -39,6 +41,8 @@ export function useScripture({
   resourceLink: resourceLink_,
 } : Props) {
   const [initialized, setInitialized] = useState(false)
+  const [bookObjects, setBookObjects] = useState(null)
+  const [versesForRef, setVersesForRef] = useState(null)
   let resourceLink = resourceLink_
 
   if (!resourceLink_ && resource_) {
@@ -102,6 +106,49 @@ export function useScripture({
     }
   }, [loading])
 
+  function getVersesForRef(ref, content_ = bookObjects) {
+    if (content_) {
+      let verses = getVerses(content_.chapters, ref)
+
+      if (languageId === 'el-x-koine' || languageId === 'hbo') {
+        verses = verses.map(verse => {
+          if (verse.verseObjects) {
+            const verseObjects_ = core.occurrenceInjectVerseObjects(verse.verseObjects)
+            verse.verseObjects = verseObjects_
+          }
+          return verse
+        })
+      }
+
+      return verses
+    }
+    return null
+  }
+
+  function updateVerse(chapter, verse, verseData) {
+    if (bookObjects) {
+      const bookObjects_ = _.cloneDeep(bookObjects)
+
+      if (bookObjects_?.chapters?.[chapter]) {
+        bookObjects_.chapters[chapter][verse] = verseData
+        setBookObjects(bookObjects_)
+      }
+    }
+    return null
+  }
+
+  useEffect(() => {
+    setBookObjects(content)
+
+    if (content) {
+      const ref = `${reference.chapter}:${reference.verse}`
+      const versesForRef = getVersesForRef(ref, content)
+      setVersesForRef(versesForRef)
+    } else {
+      setVersesForRef(null)
+    }
+  }, [content])
+
   if (languageId === 'el-x-koine' || languageId === 'hbo') {
     verseObjects = core.occurrenceInjectVerseObjects(verseObjects)
   }
@@ -113,7 +160,12 @@ export function useScripture({
     resourceLink,
     matchedVerse,
     verseObjects,
+    bookObjects,
     resourceStatus,
     fetchResponse,
+    setBookObjects,
+    getVersesForRef,
+    versesForRef,
+    updateVerse,
   }
 }

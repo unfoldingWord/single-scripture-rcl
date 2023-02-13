@@ -92,7 +92,7 @@ function ScripturePane({
   useDeepCompareEffect(() => {
     const verseText = UsfmFileConversionHelpers.getUsfmForVerseContent({ verseObjects })
     setInitialVerseText(verseText)
-  }, [verseObjects])
+  }, [{ verseObjects }])
 
   function onTextChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
     // console.log(`onTextChange`, event)
