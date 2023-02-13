@@ -334,7 +334,11 @@ export default function ScriptureCard({
     const verseUsfm = AlignmentHelpers.addAlignmentsToVerseUSFM(newAlignments.wordListWords, newAlignments.verseAlignments, targetVerseText)
     const alignedVerseObjects = usfmHelpers.usfmVerseToJson(verseUsfm)
     updateVerseNum(0, alignedVerseObjects)
-    setState({ alignerData: null, editing: false })
+    setState({
+      alignerData: null,
+      editing: false,
+      newAlignments: null,
+    })
   }
 
   function cancelAlignment() {
@@ -353,10 +357,14 @@ export default function ScriptureCard({
   }
 
   function setVerseChanged_(changed, newVerseText, initialVerseText) {
+    const { targetVerseText } = AlignmentHelpers.updateAlignmentsToTargetVerse(verseObjects_, newVerseText)
+    const aligned = isUsfmAligned(targetVerseText)
+
     setState({
       verseTextChanged: changed,
       initialVerseText,
       newVerseText,
+      aligned,
     })
   }
 
@@ -375,9 +383,6 @@ export default function ScriptureCard({
   function onAlignmentsChange(results) {
     console.log(`onAlignmentsChange() - alignment changed, results`, results) // merge alignments into target verse and convert to USFM
     const { wordListWords, verseAlignments } = results
-    // const targetVerseText = newVerseText || UsfmFileConversionHelpers.getUsfmForVerseContent({ verseObjects: verseObjects_ })
-    // const verseUsfm = AlignmentHelpers.addAlignmentsToVerseUSFM(wordListWords, verseAlignments, targetVerseText)
-    // console.log(verseUsfm)
     const alignmentComplete = AlignmentHelpers.areAlgnmentsComplete(wordListWords, verseAlignments)
     console.log(`Alignments are ${alignmentComplete ? 'COMPLETE!' : 'incomplete'}`)
     setState({ newAlignments: results, aligned: alignmentComplete })

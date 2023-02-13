@@ -27,7 +27,7 @@
     "react-dom": "^17.x",
     "scripture-resources-rcl": "^5.2.0",
     "tc-ui-toolkit": "^5.3.3",
-    "translation-helps-rcl": "^1.x"
+    "translation-helps-rcl": "^3.3.5"
   },
   "devDependencies": {
     "@babel/cli": "^7.12.1",
@@ -74,7 +74,7 @@
     "scripture-resources-rcl": "^5.2.0",
     "style-loader": "^2.0.0",
     "tc-ui-toolkit": "^5.3.3",
-    "translation-helps-rcl": "file:.yalc/translation-helps-rcl",
+    "translation-helps-rcl": "3.3.6-alpha.3",
     "ts-jest": "^29.0.5",
     "use-deep-compare-effect": "1.8.1",
     "usfm-js": "3.4.2",
