@@ -127,26 +127,33 @@ export function useScripture({
 
   function updateVerse(chapter, verse, verseData) {
     if (bookObjects) {
-      const bookObjects_ = _.cloneDeep(bookObjects)
+      const bookObjects_ = { ...bookObjects } // shallow cope
 
-      if (bookObjects_?.chapters?.[chapter]) {
-        bookObjects_.chapters[chapter][verse] = verseData
-        setBookObjects(bookObjects_)
+      if (bookObjects_?.chapters) {
+        bookObjects_.chapters = { ...bookObjects_.chapters } // shallow copy
+
+        if (bookObjects_.chapters[chapter]) {
+          bookObjects_.chapters[chapter] = { ...bookObjects_.chapters[chapter] } // shallow copy
+          bookObjects_.chapters[chapter][verse] = verseData
+          setBookObjects(bookObjects_)
+        }
       }
     }
     return null
   }
 
   useEffect(() => {
-    setBookObjects(content)
-
-    if (content) {
+    if (bookObjects) {
       const ref = `${reference.chapter}:${reference.verse}`
-      const versesForRef = getVersesForRef(ref, content)
+      const versesForRef = getVersesForRef(ref, bookObjects)
       setVersesForRef(versesForRef)
     } else {
       setVersesForRef(null)
     }
+  }, [bookObjects])
+
+  useEffect(() => {
+    setBookObjects(content)
   }, [content])
 
   if (languageId === 'el-x-koine' || languageId === 'hbo') {
