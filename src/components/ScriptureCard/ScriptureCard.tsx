@@ -84,6 +84,7 @@ export default function ScriptureCard({
     aligned: false,
     alignerData: null,
     newAlignments: null,
+    updatedVerseObjects: null,
   })
   const {
     urlError,
@@ -95,15 +96,13 @@ export default function ScriptureCard({
     aligned,
     alignerData,
     newAlignments,
+    updatedVerseObjects,
   } = state
 
   const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
 
   function setState(newState) {
-    setState_({
-      ...state,
-      ...newState,
-    })
+    setState_(prevState => ({ ...prevState, ...newState }))
   }
 
   const {
@@ -234,15 +233,15 @@ export default function ScriptureCard({
     },
   } = useCardState({ items })
 
-  const refStyle = {
+  const refStyle = React.useMemo(() => ({
     fontFamily: 'Noto Sans',
     fontSize: `${Math.round(scaledFontSize * 0.9)}%`,
-  }
+  }), [scaledFontSize])
 
-  const contentStyle = {
+  const contentStyle = React.useMemo(() => ({
     fontFamily: 'Noto Sans',
     fontSize: `${scaledFontSize}%`,
-  }
+  }), [scaledFontSize])
 
   const scriptureLabel = <Title>{scriptureTitle}</Title>
   let disableWordPopover_ = disableWordPopover
@@ -291,6 +290,7 @@ export default function ScriptureCard({
       updateVerseNum(0)
     }
     setEditing_(false)
+    setState({ updatedVerseObjects: null })
   }
 
   function updateVerseNum(index, newVerseObjects = verseObjects_) {
@@ -314,7 +314,7 @@ export default function ScriptureCard({
 
     if (!alignerData) { // if word aligner not shown
       console.log(`handleAlignmentClick - toggle ON alignment`)
-      const targetVerseUSFM = getVerseUsfm()
+      const targetVerseUSFM = getCurrentVerseUsfm()
       const {
         wordListWords: wordBank,
         verseAlignments: alignments,
@@ -338,12 +338,13 @@ export default function ScriptureCard({
       alignerData: null,
       editing: false,
       newAlignments: null,
+      updatedVerseObjects: alignedVerseObjects,
     })
   }
 
   function cancelAlignment() {
     console.log(`cancelAlignment()`)
-    const targetVerseUSFM = getVerseUsfm()
+    const targetVerseUSFM = getCurrentVerseUsfm()
     const aligned = isUsfmAligned(targetVerseUSFM)
     setState({ alignerData: null, aligned })
   }
@@ -368,16 +369,23 @@ export default function ScriptureCard({
     })
   }
 
-  function getVerseUsfm() {
+  function getCurrentVerseUsfm() {
     let targetVerseUSFM = null
+    const currentVerseObjects = updatedVerseObjects && verseObjects_
 
-    if (verseTextChanged) {
-      const { targetVerseText } = AlignmentHelpers.updateAlignmentsToTargetVerse(verseObjects_, newVerseText)
+    if (verseTextChanged || newVerseText) {
+      const { targetVerseText } = AlignmentHelpers.updateAlignmentsToTargetVerse(currentVerseObjects, newVerseText)
       targetVerseUSFM = targetVerseText
     } else {
-      targetVerseUSFM = UsfmFileConversionHelpers.convertVerseDataToUSFM(verseObjects_)
+      targetVerseUSFM = UsfmFileConversionHelpers.convertVerseDataToUSFM(currentVerseObjects)
     }
     return targetVerseUSFM
+  }
+
+  function getCurrentVerseObjects() {
+    const targetVerseUSFM = getCurrentVerseUsfm()
+    const currentVerseObjects = usfmHelpers.usfmVerseToJson(targetVerseUSFM)
+    return currentVerseObjects
   }
 
   function onAlignmentsChange(results) {
@@ -456,7 +464,7 @@ export default function ScriptureCard({
         <ScripturePane
           refStyle={refStyle}
           {...scriptureConfig}
-          verseObjects={verseObjects_}
+          verseObjects={getCurrentVerseObjects()}
           isNT={isNT(bookId)}
           server={server}
           reference={reference}
