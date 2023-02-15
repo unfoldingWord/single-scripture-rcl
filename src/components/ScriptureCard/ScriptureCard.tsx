@@ -289,8 +289,11 @@ export default function ScriptureCard({
       console.log(`onSaveEdit() - new text:`, targetVerseText)
       updateVerseNum(0)
     }
-    setEditing_(false)
-    setState({ updatedVerseObjects: null })
+    setState({
+      updatedVerseObjects: null,
+      editing,
+      newVerseText: null,
+    })
   }
 
   function updateVerseNum(index, newVerseObjects = verseObjects_) {
