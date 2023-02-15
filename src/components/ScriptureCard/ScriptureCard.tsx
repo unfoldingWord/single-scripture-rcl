@@ -40,6 +40,19 @@ function isUsfmAligned(targetVerseUSFM) {
   return AlignmentHelpers.areAlgnmentsComplete(wordBank, alignments)
 }
 
+function getCurrentVerseUsfm(updatedVerseObjects, verseObjects_, verseTextChanged: boolean, newVerseText) {
+  let targetVerseUSFM = null
+  const currentVerseObjects = updatedVerseObjects && verseObjects_
+
+  if (verseTextChanged || newVerseText) {
+    const {targetVerseText} = AlignmentHelpers.updateAlignmentsToTargetVerse(currentVerseObjects, newVerseText)
+    targetVerseUSFM = targetVerseText
+  } else {
+    targetVerseUSFM = UsfmFileConversionHelpers.convertVerseDataToUSFM(currentVerseObjects)
+  }
+  return targetVerseUSFM
+}
+
 export default function ScriptureCard({
   id,
   isNT,
@@ -164,7 +177,7 @@ export default function ScriptureCard({
   const reference_ = { bookId, chapter, verse }
   let scriptureTitle
 
-  React.useEffect(() => {
+  React.useEffect(() => { // select correct working ref - could be master, user branch, or release
     let workingRef_ = workingRef || appRef
 
     if (ref !== workingRef_) {
@@ -172,8 +185,7 @@ export default function ScriptureCard({
     }
   }, [workingRef, ref, appRef])
 
-
-  React.useEffect(() => {
+  React.useEffect(() => { // update display status if error
     const error = scriptureConfig?.resourceStatus?.[ERROR_STATE]
 
     if (error) { // if error was found do callback
@@ -245,13 +257,13 @@ export default function ScriptureCard({
 
   const scriptureLabel = <Title>{scriptureTitle}</Title>
   let disableWordPopover_ = disableWordPopover
-  const originalBible = isOriginalBible(scriptureConfig['resource']?.projectId)
+  const usingOriginalBible = isOriginalBible(scriptureConfig['resource']?.projectId)
 
   if (disableWordPopover === undefined) { // if not specified, then determine if original language resource
-    disableWordPopover_ = !originalBible
+    disableWordPopover_ = !usingOriginalBible
   }
 
-  React.useEffect(() => {
+  React.useEffect(() => { // pre-cache glosses on verse change
     const fetchGlossDataForVerse = async () => {
       if (!disableWordPopover && verseObjects_ && fetchGlossesForVerse) {
         await fetchGlossesForVerse(verseObjects_, languageId_)
@@ -261,13 +273,13 @@ export default function ScriptureCard({
     fetchGlossDataForVerse()
   }, [verseObjects_])
 
-  React.useEffect(() => {
+  React.useEffect(() => { // update alignment status when aligner is hidden
     const notEmpty = !!verseObjects_
     let aligned_ = false
 
     if (!alignerData) { // skip if aligner is being shown
       if (notEmpty) { // skip if empty
-        if (originalBible) {
+        if (usingOriginalBible) {
           aligned_ = true
         } else if (newVerseText !== initialVerseText) {
           const results = AlignmentHelpers.updateAlignmentsToTargetVerse(verseObjects_, newVerseText)
@@ -279,7 +291,7 @@ export default function ScriptureCard({
       }
       setState({ aligned: aligned_ })
     }
-  }, [verseObjects_, newVerseText, aligned, originalBible])
+  }, [verseObjects_, newVerseText, aligned, usingOriginalBible])
 
   function onSaveEdit() {
     console.log(`onSaveEdit`)
@@ -293,6 +305,7 @@ export default function ScriptureCard({
       updatedVerseObjects: null,
       editing,
       newVerseText: null,
+      alignerData: null,
     })
   }
 
@@ -317,7 +330,7 @@ export default function ScriptureCard({
 
     if (!alignerData) { // if word aligner not shown
       console.log(`handleAlignmentClick - toggle ON alignment`)
-      const targetVerseUSFM = getCurrentVerseUsfm()
+      const targetVerseUSFM = getCurrentVerseUsfm(updatedVerseObjects, verseObjects_, verseTextChanged, newVerseText)
       const {
         wordListWords: wordBank,
         verseAlignments: alignments,
@@ -347,7 +360,7 @@ export default function ScriptureCard({
 
   function cancelAlignment() {
     console.log(`cancelAlignment()`)
-    const targetVerseUSFM = getCurrentVerseUsfm()
+    const targetVerseUSFM = getCurrentVerseUsfm(updatedVerseObjects, verseObjects_, verseTextChanged, newVerseText)
     const aligned = isUsfmAligned(targetVerseUSFM)
     setState({ alignerData: null, aligned })
   }
@@ -372,24 +385,11 @@ export default function ScriptureCard({
     })
   }
 
-  function getCurrentVerseUsfm() {
-    let targetVerseUSFM = null
-    const currentVerseObjects = updatedVerseObjects && verseObjects_
-
-    if (verseTextChanged || newVerseText) {
-      const { targetVerseText } = AlignmentHelpers.updateAlignmentsToTargetVerse(currentVerseObjects, newVerseText)
-      targetVerseUSFM = targetVerseText
-    } else {
-      targetVerseUSFM = UsfmFileConversionHelpers.convertVerseDataToUSFM(currentVerseObjects)
-    }
-    return targetVerseUSFM
-  }
-
-  function getCurrentVerseObjects() {
-    const targetVerseUSFM = getCurrentVerseUsfm()
+  const currentVerseObjects = React.useMemo( () => { // if verse has been edited or alignment changed, then generate new verseObjects to display in ScripturePane
+    const targetVerseUSFM = getCurrentVerseUsfm(updatedVerseObjects, verseObjects_, verseTextChanged, newVerseText)
     const currentVerseObjects = usfmHelpers.usfmVerseToJson(targetVerseUSFM)
     return currentVerseObjects
-  }
+  }, [updatedVerseObjects, verseObjects_, verseTextChanged, newVerseText])
 
   function onAlignmentsChange(results) {
     console.log(`onAlignmentsChange() - alignment changed, results`, results) // merge alignments into target verse and convert to USFM
@@ -467,7 +467,7 @@ export default function ScriptureCard({
         <ScripturePane
           refStyle={refStyle}
           {...scriptureConfig}
-          verseObjects={getCurrentVerseObjects()}
+          verseObjects={currentVerseObjects}
           isNT={isNT(bookId)}
           server={server}
           reference={reference}
