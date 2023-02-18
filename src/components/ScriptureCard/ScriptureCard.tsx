@@ -42,10 +42,10 @@ function isUsfmAligned(targetVerseUSFM) {
 
 function getCurrentVerseUsfm(updatedVerseObjects, verseObjects_, verseTextChanged: boolean, newVerseText) {
   let targetVerseUSFM = null
-  const currentVerseObjects = updatedVerseObjects && verseObjects_
+  const currentVerseObjects = updatedVerseObjects || verseObjects_
 
   if (verseTextChanged || newVerseText) {
-    const {targetVerseText} = AlignmentHelpers.updateAlignmentsToTargetVerse(currentVerseObjects, newVerseText)
+    const { targetVerseText } = AlignmentHelpers.updateAlignmentsToTargetVerse(currentVerseObjects, newVerseText)
     targetVerseUSFM = targetVerseText
   } else {
     targetVerseUSFM = UsfmFileConversionHelpers.convertVerseDataToUSFM(currentVerseObjects)
@@ -386,9 +386,12 @@ export default function ScriptureCard({
   }
 
   const currentVerseObjects = React.useMemo( () => { // if verse has been edited or alignment changed, then generate new verseObjects to display in ScripturePane
-    const targetVerseUSFM = getCurrentVerseUsfm(updatedVerseObjects, verseObjects_, verseTextChanged, newVerseText)
-    const currentVerseObjects = usfmHelpers.usfmVerseToJson(targetVerseUSFM)
-    return currentVerseObjects
+    if (verseObjects_) {
+      const targetVerseUSFM = getCurrentVerseUsfm(updatedVerseObjects, verseObjects_, verseTextChanged, newVerseText)
+      const currentVerseObjects = usfmHelpers.usfmVerseToJson(targetVerseUSFM)
+      return currentVerseObjects
+    }
+    return verseObjects_
   }, [updatedVerseObjects, verseObjects_, verseTextChanged, newVerseText])
 
   function onAlignmentsChange(results) {
