@@ -5,3 +5,6 @@
 styleguide.config.js
 styleguide.styles.js
 yalc.lock
+src/
+coverage/
+node_modules/
