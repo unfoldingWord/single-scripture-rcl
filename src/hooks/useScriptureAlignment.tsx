@@ -26,7 +26,7 @@ function getCurrentVerseUsfm(updatedVerseObjects, verseObjects_, verseTextChange
   let targetVerseUSFM = null
   const currentVerseObjects = updatedVerseObjects || verseObjects_
 
-  if (verseTextChanged || newVerseText) {
+  if (verseTextChanged && newVerseText) {
     const { targetVerseText } = AlignmentHelpers.updateAlignmentsToTargetVerse(currentVerseObjects, newVerseText)
     targetVerseUSFM = targetVerseText
   } else {
@@ -75,7 +75,7 @@ export function useScriptureAlignment({
       if (notEmpty) { // skip if empty
         if (usingOriginalBible) {
           aligned_ = true
-        } else if (newVerseText !== initialVerseText) {
+        } else if (newVerseText && (newVerseText !== initialVerseText)) {
           const results = AlignmentHelpers.updateAlignmentsToTargetVerse(verseObjects_, newVerseText)
           aligned_ = isUsfmAligned(results?.targetVerseText)
         } else {
@@ -90,7 +90,7 @@ export function useScriptureAlignment({
   function onSaveEdit() {
     console.log(`onSaveEdit`)
 
-    if (verseTextChanged) {
+    if (verseTextChanged && newVerseText) {
       const { targetVerseText } = AlignmentHelpers.updateAlignmentsToTargetVerse(verseObjects_, newVerseText)
       console.log(`onSaveEdit() - new text:`, targetVerseText)
       updateVerseNum(0)
@@ -104,6 +104,7 @@ export function useScriptureAlignment({
   }
 
   function updateVerseNum(index, newVerseObjects = verseObjects_) {
+    // @ts-ignore
     const ref = scriptureConfig?.versesForRef?.[index]
     let targetVerseObjects_ = null
 
@@ -115,6 +116,7 @@ export function useScriptureAlignment({
         targetVerseObjects_ = newVerseObjects
       }
 
+      // @ts-ignore
       targetVerseObjects_ && scriptureConfig?.updateVerse(ref.chapter, ref.verse, { verseObjects: targetVerseObjects_ })
     }
   }
@@ -122,7 +124,7 @@ export function useScriptureAlignment({
   function handleAlignmentClick() {
     let alignerData_ = null
 
-    if (!alignerData) { // if word aligner not shown
+    if (!alignerData && newVerseText) { // if word aligner not shown
       console.log(`handleAlignmentClick - toggle ON alignment`)
       const targetVerseUSFM = getCurrentVerseUsfm(updatedVerseObjects, verseObjects_, verseTextChanged, newVerseText)
       const {
