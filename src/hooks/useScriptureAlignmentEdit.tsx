@@ -131,7 +131,10 @@ export function useScriptureAlignmentEdit({
           aligned_ = isUsfmAligned(targetVerseUSFM, originalVerseObjects)
         }
       }
-      setState({ aligned: aligned_ })
+
+      if (aligned !== aligned_) {
+        setState({ aligned: aligned_ })
+      }
     }
   }, [verseObjects_, newVerseText, aligned, enableAlignment, originalScriptureResource?.verseObjects])
 
