@@ -307,9 +307,11 @@ export function useScriptureSettings({
   }
 
   return {
+    isNewTestament,
     scriptureConfig,
     setScripture,
     scriptureVersionHist,
+    scriptureSettings,
   }
 }
 

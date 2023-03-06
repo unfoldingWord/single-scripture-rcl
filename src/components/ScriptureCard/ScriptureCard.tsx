@@ -25,7 +25,7 @@ import {
   ORIGINAL_SOURCE,
   OT_ORIG_LANG,
 } from '../../utils'
-import { useScriptureAlignment } from '../../hooks/useScriptureAlignment';
+import { useScriptureAlignmentEdit } from '../../hooks/useScriptureAlignmentEdit'
 
 const KEY_FONT_SIZE_BASE = 'scripturePaneFontSize_'
 const label = 'Version'
@@ -81,8 +81,10 @@ export default function ScriptureCard({
   }
 
   const {
+    isNewTestament,
     scriptureConfig,
     setScripture,
+    scriptureSettings,
     scriptureVersionHist,
   } = useScriptureSettings({
     isNT,
@@ -232,6 +234,9 @@ export default function ScriptureCard({
     fetchGlossDataForVerse()
   }, [ verseObjects_ ])
 
+  const enableEdit = !usingOriginalBible
+  const enableAlignment = !usingOriginalBible
+  const originalRepoUrl = isNewTestament ? greekRepoUrl : hebrewRepoUrl
   const {
     actions: {
       cancelAlignment,
@@ -249,10 +254,17 @@ export default function ScriptureCard({
       editing,
       verseTextChanged,
     },
-  } = useScriptureAlignment({
+  } = useScriptureAlignmentEdit({
+    enableEdit,
+    enableAlignment,
+    httpConfig,
+    isNewTestament,
+    originalLanguageOwner,
+    originalRepoUrl,
+    // @ts-ignore
     scriptureConfig,
+    scriptureSettings,
     startEdit,
-    usingOriginalBible,
     verseObjects_,
   })
 
