@@ -156,7 +156,7 @@ export default function ScriptureCard({
       const isAccessError = resourceStatus[MANIFEST_NOT_LOADED_ERROR]
       onResourceError && onResourceError(message, isAccessError, resourceStatus)
     }
-  }, [scriptureConfig?.resourceStatus?.[ERROR_STATE]])
+  }, [scriptureConfig?.resourceStatus?.[ERROR_STATE], onResourceError])
 
   if (scriptureConfig.title && scriptureConfig.version) {
     scriptureTitle = `${scriptureConfig.title} v${scriptureConfig.version}`
@@ -232,7 +232,7 @@ export default function ScriptureCard({
     }
 
     fetchGlossDataForVerse()
-  }, [ verseObjects_ ])
+  }, [ verseObjects_, disableWordPopover, languageId_, fetchGlossesForVerse ])
 
   const enableEdit = !usingOriginalBible
   const enableAlignment = !usingOriginalBible
@@ -267,6 +267,11 @@ export default function ScriptureCard({
     startEdit,
     verseObjects_,
   })
+
+  function showPopover(PopoverTitle, wordDetails, positionCoord, rawData) {
+    // TODO: make show popover work
+    console.log(`showPopover`, rawData)
+  }
 
   return (
     <Card
@@ -304,11 +309,10 @@ export default function ScriptureCard({
             contextId={{ reference: reference_ }}
             targetLanguageFont={''}
             sourceLanguage={isNT ? NT_ORIG_LANG : OT_ORIG_LANG}
-            showPopover={() => null}
+            showPopover={showPopover}
             lexicons={{}}
-            loadLexiconEntry={() => null}
+            loadLexiconEntry={getLexiconData}
             onChange={(results) => onAlignmentsChange(results)}
-            getLexiconData={() => null}
           />
           <br />
           <div style={{ width: '100%' }}>

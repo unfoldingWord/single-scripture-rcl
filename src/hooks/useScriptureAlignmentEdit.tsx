@@ -136,7 +136,7 @@ export function useScriptureAlignmentEdit({
         setState({ aligned: aligned_ })
       }
     }
-  }, [verseObjects_, newVerseText, aligned, enableAlignment, originalScriptureResource?.verseObjects])
+  }, [verseObjects_, alignerData, newVerseText, initialVerseText, enableAlignment, originalScriptureResource?.verseObjects])
 
   function onSaveEdit() {
     console.log(`onSaveEdit`)
@@ -176,7 +176,7 @@ export function useScriptureAlignmentEdit({
     if (enableAlignment) {
       let alignerData_ = null
 
-      if (!alignerData && newVerseText) { // if word aligner not shown
+      if (!alignerData) { // if word aligner not shown
         console.log(`handleAlignmentClick - toggle ON alignment`)
         const targetVerseUSFM = getCurrentVerseUsfm(updatedVerseObjects, verseObjects_, verseTextChanged, newVerseText)
         const {

@@ -49,6 +49,11 @@ const getLexiconData = (lexiconId, entryId) => {
   return { [lexiconId]: { [entryId]: gloss } }
 }
 
+function translate(key) {
+  console.log('translate() find key', key)
+  return key
+}
+
 const EnglishExample = {
   reference,
   appRef: 'master',
@@ -60,6 +65,7 @@ const EnglishExample = {
     resourceId: TARGET_LITERAL
   },
   getLanguage: () => ({ direction: 'ltr'}),
+  translate,
   getLexiconData,
 }
 
@@ -74,6 +80,7 @@ const HebrewExample = {
     resourceId: ORIGINAL_SOURCE
   },
   getLanguage: () => ({ direction: 'rtl'}),
+  translate,
   getLexiconData,
 }
 
@@ -88,6 +95,7 @@ const GreekExample = {
     resourceId: ORIGINAL_SOURCE
   },
   getLanguage: () => ({ direction: 'ltr'}),
+  translate,
   getLexiconData,
 }
 
@@ -103,6 +111,7 @@ const EnglishUSTExample = {
     originalLanguageOwner: "unfoldingWord",
   },
   getLanguage: () => ({ direction: 'ltr'}),
+  translate,
   getLexiconData,
 };
 
