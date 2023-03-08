@@ -270,6 +270,7 @@ export default function ScriptureCard({
 
   function showPopover(PopoverTitle, wordDetails, positionCoord, rawData) {
     // TODO: make show popover work
+    window.prompt(`User clicked on ${JSON.stringify(rawData.token)}`)
     console.log(`showPopover`, rawData)
   }
 

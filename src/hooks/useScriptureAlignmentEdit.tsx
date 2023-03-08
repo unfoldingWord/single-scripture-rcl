@@ -195,16 +195,23 @@ export function useScriptureAlignmentEdit({
 
   function saveAlignment() {
     console.log(`saveAlignment()`)
-    const targetVerseText = newVerseText || UsfmFileConversionHelpers.convertVerseDataToUSFM(verseObjects_)
-    const verseUsfm = AlignmentHelpers.addAlignmentsToVerseUSFM(newAlignments.wordListWords, newAlignments.verseAlignments, targetVerseText)
-    const alignedVerseObjects = usfmHelpers.usfmVerseToJson(verseUsfm)
-    updateVerseNum(0, alignedVerseObjects)
-    setState({
-      alignerData: null,
-      editing: false,
-      newAlignments: null,
-      updatedVerseObjects: alignedVerseObjects,
-    })
+    if (newAlignments) {
+      const targetVerseText = newVerseText || UsfmFileConversionHelpers.convertVerseDataToUSFM(verseObjects_)
+      const verseUsfm = AlignmentHelpers.addAlignmentsToVerseUSFM(newAlignments.wordListWords, newAlignments.verseAlignments, targetVerseText)
+      const alignedVerseObjects = usfmHelpers.usfmVerseToJson(verseUsfm)
+      updateVerseNum(0, alignedVerseObjects)
+      setState({
+        alignerData: null,
+        editing: false,
+        newAlignments: null,
+        updatedVerseObjects: alignedVerseObjects,
+      })
+    } else {
+      setState({
+        alignerData: null,
+        editing: false,
+      })
+    }
   }
 
   function cancelAlignment() {
