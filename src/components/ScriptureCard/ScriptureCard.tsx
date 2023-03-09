@@ -307,7 +307,7 @@ export default function ScriptureCard({
         <div style={{ flexDirection: 'column' }}>
           <WordAligner
             verseAlignments={alignerData.alignments}
-            wordListWords={alignerData.wordBank}
+            targetWords={alignerData.wordBank}
             translate={translate}
             contextId={{ reference: reference_ }}
             targetLanguageFont={''}
