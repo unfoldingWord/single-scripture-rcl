@@ -66,12 +66,14 @@ export default function ScriptureCard({
   authentication,
 }) {
   const [state, setState_] = React.useState({
-    urlError: null,
+    currentVerseNum: 0, //TODO will be used in future when need to support multiple verses in card
     ref: appRef,
+    urlError: null,
   })
   const {
-    urlError,
+    currentVerseNum,
     ref,
+    urlError,
   } = state
 
   const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
@@ -110,8 +112,8 @@ export default function ScriptureCard({
 
   // @ts-ignore
   const cardResourceId = scriptureConfig?.resource?.projectId || resourceId
-  const currentVerseData_ = scriptureConfig?.versesForRef?.[0] || null // TODO add support for multiverse
-  const verseObjects_ = currentVerseData_?.verseData?.verseObjects || null
+  const currentVerseData_ = scriptureConfig?.versesForRef?.[currentVerseNum] || null
+  const initialVerseObjects = currentVerseData_?.verseData?.verseObjects || null
   // @ts-ignore
   let ref_ = scriptureConfig?.resource?.ref || appRef
   const canUseEditBranch = loggedInUser && authentication &&
@@ -226,13 +228,13 @@ export default function ScriptureCard({
 
   React.useEffect(() => { // pre-cache glosses on verse change
     const fetchGlossDataForVerse = async () => {
-      if (!disableWordPopover && verseObjects_ && fetchGlossesForVerse) {
-        await fetchGlossesForVerse(verseObjects_, languageId_)
+      if (!disableWordPopover && initialVerseObjects && fetchGlossesForVerse) {
+        await fetchGlossesForVerse(initialVerseObjects, languageId_)
       }
     }
 
     fetchGlossDataForVerse()
-  }, [ verseObjects_, disableWordPopover, languageId_, fetchGlossesForVerse ])
+  }, [ initialVerseObjects, disableWordPopover, languageId_, fetchGlossesForVerse ])
 
   const enableEdit = !usingOriginalBible
   const enableAlignment = !usingOriginalBible
@@ -244,9 +246,9 @@ export default function ScriptureCard({
       handleAlignmentClick,
       onAlignmentsChange,
       saveAlignment,
-      setEditing_,
-      setVerseChanged_,
-      onSaveEdit,
+      setEditing,
+      setVerseChanged,
+      saveEdit,
     },
     state: {
       aligned,
@@ -265,7 +267,7 @@ export default function ScriptureCard({
     scriptureConfig,
     scriptureSettings,
     startEdit,
-    verseObjects_,
+    initialVerseObjects,
   })
 
   function showPopover(PopoverTitle, wordDetails, positionCoord, rawData) {
@@ -296,8 +298,8 @@ export default function ScriptureCard({
       onMinimize={onMinimize ? () => onMinimize(id) : null}
       editable={editing || verseTextChanged}
       saved={!verseTextChanged}
-      onSaveEdit={onSaveEdit}
-      onBlur={() => setEditing_(false)}
+      onSaveEdit={saveEdit}
+      onBlur={() => setEditing(false)}
       checkingState={aligned ? 'valid' : 'invalid'}
       onCheckingStateClick={() => handleAlignmentClick()}
     >
@@ -352,8 +354,8 @@ export default function ScriptureCard({
           getLexiconData={getLexiconData}
           translate={translate}
           editing={editing}
-          setEditing={setEditing_}
-          setVerseChanged={setVerseChanged_}
+          setEditing={setEditing}
+          setVerseChanged={setVerseChanged}
         />
       }
     </Card>

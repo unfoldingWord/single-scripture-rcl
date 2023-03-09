@@ -15,6 +15,7 @@ interface StartEdit {
 }
 
 interface Props {
+  currentVerseNum: number,
   enableEdit: boolean,
   enableAlignment: boolean,
   httpConfig: ServerConfig,
@@ -24,7 +25,7 @@ interface Props {
   scriptureConfig: ScriptureConfig,
   scriptureSettings: { },
   startEdit: StartEdit,
-  verseObjects_: [],
+  initialVerseObjects: [],
 }
 
 function isUsfmAligned(targetVerseUSFM, originalVerseObjects) {
@@ -33,20 +34,21 @@ function isUsfmAligned(targetVerseUSFM, originalVerseObjects) {
   return AlignmentHelpers.areAlgnmentsComplete(wordBank, alignments)
 }
 
-function getCurrentVerseUsfm(updatedVerseObjects, verseObjects_, verseTextChanged: boolean, newVerseText) {
+function getCurrentVerseUsfm(updatedVerseObjects, initialVerseObjects, verseTextChanged: boolean, newVerseText) {
   let targetVerseUSFM = null
-  const currentVerseObjects = updatedVerseObjects || verseObjects_
+  const currentVerseObjects_ = updatedVerseObjects || initialVerseObjects
 
   if (verseTextChanged && newVerseText) {
-    const { targetVerseText } = AlignmentHelpers.updateAlignmentsToTargetVerse(currentVerseObjects, newVerseText)
+    const { targetVerseText } = AlignmentHelpers.updateAlignmentsToTargetVerse(currentVerseObjects_, newVerseText)
     targetVerseUSFM = targetVerseText
   } else {
-    targetVerseUSFM = UsfmFileConversionHelpers.convertVerseDataToUSFM(currentVerseObjects)
+    targetVerseUSFM = UsfmFileConversionHelpers.convertVerseDataToUSFM(currentVerseObjects_)
   }
   return targetVerseUSFM
 }
 
 export function useScriptureAlignmentEdit({
+  currentVerseNum,
   enableEdit,
   enableAlignment,
   httpConfig,
@@ -56,28 +58,28 @@ export function useScriptureAlignmentEdit({
   scriptureConfig,
   scriptureSettings,
   startEdit,
-  verseObjects_,
+  initialVerseObjects,
 } : Props) {
   const [state, setState_] = React.useState({
-    editing: false,
-    verseTextChanged: false,
-    initialVerseText: null,
-    newVerseText: null,
     aligned: false,
     alignerData: null,
+    editing: false,
+    initialVerseText: null,
     newAlignments: null,
+    newVerseText: null,
     updatedVerseObjects: null,
+    verseTextChanged: false,
   })
 
   const {
-    editing,
-    verseTextChanged,
-    initialVerseText,
-    newVerseText,
     aligned,
     alignerData,
+    editing,
+    initialVerseText,
     newAlignments,
+    newVerseText,
     updatedVerseObjects,
+    verseTextChanged,
   } = state
 
   function setState(newState) {
@@ -114,7 +116,7 @@ export function useScriptureAlignmentEdit({
   })
 
   React.useEffect(() => { // update alignment status when aligner is hidden
-    const notEmpty = !!verseObjects_
+    const notEmpty = !!initialVerseObjects
     let aligned_ = false
 
     if (!alignerData) { // skip if aligner is being shown
@@ -124,10 +126,10 @@ export function useScriptureAlignmentEdit({
         if (!enableAlignment) {
           aligned_ = true
         } else if (newVerseText && (newVerseText !== initialVerseText)) {
-          const results = AlignmentHelpers.updateAlignmentsToTargetVerse(verseObjects_, newVerseText)
+          const results = AlignmentHelpers.updateAlignmentsToTargetVerse(initialVerseObjects, newVerseText)
           aligned_ = isUsfmAligned(results?.targetVerseText, originalVerseObjects)
         } else {
-          const targetVerseUSFM = UsfmFileConversionHelpers.convertVerseDataToUSFM(verseObjects_)
+          const targetVerseUSFM = UsfmFileConversionHelpers.convertVerseDataToUSFM(initialVerseObjects)
           aligned_ = isUsfmAligned(targetVerseUSFM, originalVerseObjects)
         }
       }
@@ -136,25 +138,35 @@ export function useScriptureAlignmentEdit({
         setState({ aligned: aligned_ })
       }
     }
-  }, [verseObjects_, alignerData, newVerseText, initialVerseText, enableAlignment, originalScriptureResource?.verseObjects])
+  }, [initialVerseObjects, alignerData, newVerseText, initialVerseText, enableAlignment, originalScriptureResource?.verseObjects])
 
-  function onSaveEdit() {
-    console.log(`onSaveEdit`)
+  function saveEdit() {
+    console.log(`saveEdit`)
+    let updatedVerseObjects_
 
-    if (verseTextChanged && newVerseText) {
-      const { targetVerseText } = AlignmentHelpers.updateAlignmentsToTargetVerse(verseObjects_, newVerseText)
-      console.log(`onSaveEdit() - new text:`, targetVerseText)
-      updateVerseNum(0)
+    if (newAlignments) { // if unsaved alignment changes, apply them
+      updatedVerseObjects_ = updateVerseWithNewAlignments()
+    } else if (verseTextChanged && newVerseText) {
+      const currentVerseObjects_ = updatedVerseObjects || initialVerseObjects
+      const { targetVerseText, targetVerseObjects } = AlignmentHelpers.updateAlignmentsToTargetVerse(currentVerseObjects_, newVerseText)
+      console.log(`saveEdit() - new text:`, targetVerseText)
+      updatedVerseObjects_ = targetVerseObjects
     }
+
+    if (updatedVerseObjects_) {
+      updateVerseNum(currentVerseNum, updatedVerseObjects_)
+      //TODO add save to user branch
+    }
+
     setState({
       updatedVerseObjects: null,
-      editing,
+      editing: false,
       newVerseText: null,
       alignerData: null,
     })
   }
 
-  function updateVerseNum(index, newVerseObjects = verseObjects_) {
+  function updateVerseNum(index, newVerseObjects = initialVerseObjects) {
     // @ts-ignore
     const ref = scriptureConfig?.versesForRef?.[index]
     let targetVerseObjects_ = null
@@ -178,7 +190,7 @@ export function useScriptureAlignmentEdit({
 
       if (!alignerData) { // if word aligner not shown
         console.log(`handleAlignmentClick - toggle ON alignment`)
-        const targetVerseUSFM = getCurrentVerseUsfm(updatedVerseObjects, verseObjects_, verseTextChanged, newVerseText)
+        const targetVerseUSFM = getCurrentVerseUsfm(updatedVerseObjects, initialVerseObjects, verseTextChanged, newVerseText)
         const {
           wordListWords: wordBank,
           verseAlignments: alignments,
@@ -193,13 +205,20 @@ export function useScriptureAlignmentEdit({
     }
   }
 
+  function updateVerseWithNewAlignments() {
+    const targetVerseText = newVerseText || UsfmFileConversionHelpers.convertVerseDataToUSFM(initialVerseObjects)
+    const verseUsfm = AlignmentHelpers.addAlignmentsToVerseUSFM(newAlignments.wordListWords, newAlignments.verseAlignments, targetVerseText)
+    const alignedVerseObjects = usfmHelpers.usfmVerseToJson(verseUsfm)
+    return alignedVerseObjects
+  }
+
   function saveAlignment() {
     console.log(`saveAlignment()`)
+
     if (newAlignments) {
-      const targetVerseText = newVerseText || UsfmFileConversionHelpers.convertVerseDataToUSFM(verseObjects_)
-      const verseUsfm = AlignmentHelpers.addAlignmentsToVerseUSFM(newAlignments.wordListWords, newAlignments.verseAlignments, targetVerseText)
-      const alignedVerseObjects = usfmHelpers.usfmVerseToJson(verseUsfm)
-      updateVerseNum(0, alignedVerseObjects)
+      const alignedVerseObjects = updateVerseWithNewAlignments()
+      updateVerseNum(currentVerseNum, alignedVerseObjects)
+
       setState({
         alignerData: null,
         editing: false,
@@ -216,12 +235,12 @@ export function useScriptureAlignmentEdit({
 
   function cancelAlignment() {
     console.log(`cancelAlignment()`)
-    const targetVerseUSFM = getCurrentVerseUsfm(updatedVerseObjects, verseObjects_, verseTextChanged, newVerseText)
+    const targetVerseUSFM = getCurrentVerseUsfm(updatedVerseObjects, initialVerseObjects, verseTextChanged, newVerseText)
     const aligned = isUsfmAligned(targetVerseUSFM, originalScriptureResource?.verseObjects)
     setState({ alignerData: null, aligned })
   }
 
-  function setEditing_(editing_) {
+  function setEditing(editing_) {
     if (enableEdit) {
       (editing_ && !editing) && startEdit()
 
@@ -231,8 +250,8 @@ export function useScriptureAlignmentEdit({
     }
   }
 
-  function setVerseChanged_(changed, newVerseText, initialVerseText) {
-    const { targetVerseText } = AlignmentHelpers.updateAlignmentsToTargetVerse(verseObjects_, newVerseText)
+  function setVerseChanged(changed, newVerseText, initialVerseText) {
+    const { targetVerseText } = AlignmentHelpers.updateAlignmentsToTargetVerse(initialVerseObjects, newVerseText)
     const aligned = isUsfmAligned(targetVerseText, originalScriptureResource?.verseObjects)
 
     setState({
@@ -244,13 +263,13 @@ export function useScriptureAlignmentEdit({
   }
 
   const currentVerseObjects = React.useMemo( () => { // if verse has been edited or alignment changed, then generate new verseObjects to display in ScripturePane
-    if (verseObjects_) {
-      const targetVerseUSFM = getCurrentVerseUsfm(updatedVerseObjects, verseObjects_, verseTextChanged, newVerseText)
-      const currentVerseObjects = usfmHelpers.usfmVerseToJson(targetVerseUSFM)
-      return currentVerseObjects
+    if (initialVerseObjects) {
+      const targetVerseUSFM = getCurrentVerseUsfm(updatedVerseObjects, initialVerseObjects, verseTextChanged, newVerseText)
+      const currentVerseObjects_ = usfmHelpers.usfmVerseToJson(targetVerseUSFM)
+      return currentVerseObjects_
     }
-    return verseObjects_
-  }, [updatedVerseObjects, verseObjects_, verseTextChanged, newVerseText])
+    return initialVerseObjects
+  }, [updatedVerseObjects, initialVerseObjects, verseTextChanged, newVerseText])
 
   function onAlignmentsChange(results) {
     console.log(`onAlignmentsChange() - alignment changed, results`, results) // merge alignments into target verse and convert to USFM
@@ -267,9 +286,9 @@ export function useScriptureAlignmentEdit({
       handleAlignmentClick,
       onAlignmentsChange,
       saveAlignment,
-      setEditing_,
-      setVerseChanged_,
-      onSaveEdit,
+      setEditing,
+      setVerseChanged,
+      saveEdit,
     },
     state: {
       aligned,
