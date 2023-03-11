@@ -192,7 +192,7 @@ export function useScriptureAlignmentEdit({
         console.log(`handleAlignmentClick - toggle ON alignment`)
         const targetVerseUSFM = getCurrentVerseUsfm(updatedVerseObjects, initialVerseObjects, verseTextChanged, newVerseText)
         const {
-          wordListWords: wordBank,
+          targetWords: wordBank,
           verseAlignments: alignments,
         } = AlignmentHelpers.parseUsfmToWordAlignerData(targetVerseUSFM, null)
         alignerData_ = { wordBank, alignments }
@@ -273,8 +273,8 @@ export function useScriptureAlignmentEdit({
 
   function onAlignmentsChange(results) {
     console.log(`onAlignmentsChange() - alignment changed, results`, results) // merge alignments into target verse and convert to USFM
-    const { wordListWords, verseAlignments } = results
-    const alignmentComplete = AlignmentHelpers.areAlgnmentsComplete(wordListWords, verseAlignments)
+    const { targetWords, verseAlignments } = results
+    const alignmentComplete = AlignmentHelpers.areAlgnmentsComplete(targetWords, verseAlignments)
     console.log(`Alignments are ${alignmentComplete ? 'COMPLETE!' : 'incomplete'}`)
     setState({ newAlignments: results, aligned: alignmentComplete })
   }
