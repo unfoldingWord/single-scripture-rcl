@@ -5,6 +5,7 @@ import {
   UsfmFileConversionHelpers,
   usfmHelpers,
 } from 'word-aligner-rcl'
+import * as isEqual from 'deep-equal'
 import { ScriptureConfig, ServerConfig } from '../types'
 import { getScriptureResourceSettings } from '../utils/ScriptureSettings'
 import { ORIGINAL_SOURCE } from '../utils'
@@ -273,6 +274,10 @@ export function useScriptureAlignmentEdit({
     return initialVerseObjects
   }, [updatedVerseObjects, initialVerseObjects, verseTextChanged, newVerseText])
 
+  const saved = React.useMemo( () => // if verse has been edited or alignment changed, then generate new verseObjects to display in ScripturePane
+    !verseTextChanged && (!updatedVerseObjects || isEqual(initialVerseObjects, updatedVerseObjects))
+  , [updatedVerseObjects, initialVerseObjects, verseTextChanged])
+
   function onAlignmentsChange(results) {
     console.log(`onAlignmentsChange() - alignment changed, results`, results) // merge alignments into target verse and convert to USFM
     const { targetWords, verseAlignments } = results
@@ -297,7 +302,7 @@ export function useScriptureAlignmentEdit({
       alignerData,
       editing,
       verseTextChanged,
-      saved: !verseTextChanged && !updatedVerseObjects,
+      saved,
     },
   }
 }

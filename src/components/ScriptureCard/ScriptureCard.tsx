@@ -298,7 +298,7 @@ export default function ScriptureCard({
       hideMarkdownToggle
       onMenuClose={onMenuClose}
       onMinimize={onMinimize ? () => onMinimize(id) : null}
-      editable={editing || !saved}
+      editable={enableEdit || enableAlignment}
       saved={saved}
       onSaveEdit={saveEdit}
       onBlur={() => setEditing(false)}
