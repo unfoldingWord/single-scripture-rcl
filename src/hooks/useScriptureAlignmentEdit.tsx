@@ -122,14 +122,15 @@ export function useScriptureAlignmentEdit({
     if (!alignerData) { // skip if aligner is being shown
       if (notEmpty) { // skip if empty
         const originalVerseObjects = originalScriptureResource?.verseObjects
+        const currentVerseObjects_ = updatedVerseObjects || initialVerseObjects
 
         if (!enableAlignment) {
           aligned_ = true
         } else if (newVerseText && (newVerseText !== initialVerseText)) {
-          const results = AlignmentHelpers.updateAlignmentsToTargetVerse(initialVerseObjects, newVerseText)
+          const results = AlignmentHelpers.updateAlignmentsToTargetVerse(currentVerseObjects_, newVerseText)
           aligned_ = isUsfmAligned(results?.targetVerseText, originalVerseObjects)
         } else {
-          const targetVerseUSFM = UsfmFileConversionHelpers.convertVerseDataToUSFM(initialVerseObjects)
+          const targetVerseUSFM = UsfmFileConversionHelpers.convertVerseDataToUSFM(currentVerseObjects_)
           aligned_ = isUsfmAligned(targetVerseUSFM, originalVerseObjects)
         }
       }
@@ -206,8 +207,9 @@ export function useScriptureAlignmentEdit({
   }
 
   function updateVerseWithNewAlignments() {
-    const targetVerseText = newVerseText || UsfmFileConversionHelpers.convertVerseDataToUSFM(initialVerseObjects)
-    const verseUsfm = AlignmentHelpers.addAlignmentsToVerseUSFM(newAlignments.wordListWords, newAlignments.verseAlignments, targetVerseText)
+    const currentVerseObjects_ = updatedVerseObjects || initialVerseObjects
+    const targetVerseText = newVerseText || UsfmFileConversionHelpers.convertVerseDataToUSFM(currentVerseObjects_)
+    const verseUsfm = AlignmentHelpers.addAlignmentsToVerseUSFM(newAlignments.targetWords, newAlignments.verseAlignments, targetVerseText)
     const alignedVerseObjects = usfmHelpers.usfmVerseToJson(verseUsfm)
     return alignedVerseObjects
   }
@@ -295,6 +297,7 @@ export function useScriptureAlignmentEdit({
       alignerData,
       editing,
       verseTextChanged,
+      saved: !verseTextChanged && !updatedVerseObjects,
     },
   }
 }

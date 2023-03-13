@@ -254,7 +254,7 @@ export default function ScriptureCard({
       aligned,
       alignerData,
       editing,
-      verseTextChanged,
+      saved,
     },
   } = useScriptureAlignmentEdit({
     enableEdit,
@@ -276,6 +276,8 @@ export default function ScriptureCard({
     console.log(`showPopover`, rawData)
   }
 
+  // console.log(`${cardResourceId} saved: ${saved}`)
+
   return (
     <Card
       id={`scripture_card_${cardNum}`}
@@ -296,8 +298,8 @@ export default function ScriptureCard({
       hideMarkdownToggle
       onMenuClose={onMenuClose}
       onMinimize={onMinimize ? () => onMinimize(id) : null}
-      editable={editing || verseTextChanged}
-      saved={!verseTextChanged}
+      editable={editing || !saved}
+      saved={saved}
       onSaveEdit={saveEdit}
       onBlur={() => setEditing(false)}
       checkingState={aligned ? 'valid' : 'invalid'}
