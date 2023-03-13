@@ -108,6 +108,7 @@ export default function ScriptureCard({
     httpConfig,
     greekRepoUrl,
     hebrewRepoUrl,
+    wholeBook: true,
   })
 
   // @ts-ignore
@@ -271,9 +272,9 @@ export default function ScriptureCard({
   })
 
   function showPopover(PopoverTitle, wordDetails, positionCoord, rawData) {
-    // TODO: make show popover work
-    window.prompt(`User clicked on ${JSON.stringify(rawData.token)}`)
+    // TODO: make show popover pretty
     console.log(`showPopover`, rawData)
+    window.prompt(`User clicked on ${JSON.stringify(rawData.token)}`)
   }
 
   // console.log(`${cardResourceId} saved: ${saved}`)

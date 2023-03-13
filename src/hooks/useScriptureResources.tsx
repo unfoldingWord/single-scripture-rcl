@@ -13,6 +13,7 @@ import { getScriptureResourceSettings } from '../utils/ScriptureSettings'
  * @param {string} currentOwner - optional over-ride for transient case where owner in scripture settings have not yet updated
  * @param {object} httpConfig - optional config settings for fetches (timeout, cache, etc.)
  * @param {string} appRef - app default, points to specific ref that could be a branch or tag
+ * @param {boolean} wholeBook - if true then fetch the entire book
  */
 export function useScriptureResources({
   bookId,
@@ -25,6 +26,7 @@ export function useScriptureResources({
   currentOwner = null,
   httpConfig = {},
   appRef = 'master',
+  wholeBook = false,
 }) {
   const scriptureSettings_ = getScriptureResourceSettings(bookId, scriptureSettings, isNewTestament,
     originalRepoUrl, currentLanguageId, currentOwner) // convert any default settings strings
@@ -47,6 +49,7 @@ export function useScriptureResources({
       ...httpConfig,
     },
     disableWordPopover: scriptureSettings_.disableWordPopover,
+    wholeBook,
   }
 
   // @ts-ignore
