@@ -67,6 +67,7 @@ export function useScriptureAlignmentEdit({
     alignerData: null,
     newAlignments: null,
     updatedVerseObjects: null,
+    unsavedChanges: null,
   })
 
   const {
@@ -78,6 +79,7 @@ export function useScriptureAlignmentEdit({
     alignerData,
     newAlignments,
     updatedVerseObjects,
+    unsavedChanges,
   } = state
 
   function setState(newState) {
@@ -138,6 +140,20 @@ export function useScriptureAlignmentEdit({
     }
   }, [verseObjects_, alignerData, newVerseText, initialVerseText, enableAlignment, originalScriptureResource?.verseObjects])
 
+  React.useEffect(() => { // update unsaved changes state when text or alignment is changed
+    let newUnsavedChanges = {};
+    if (initialVerseText !== newVerseText) {
+      newUnsavedChanges = {...newUnsavedChanges, newVerseText}
+    }
+    if (updatedVerseObjects !== null) {
+      newUnsavedChanges = {...newUnsavedChanges, newAlignedVerseObjects: {...updatedVerseObjects}}
+    }
+    if (Object.keys(newUnsavedChanges)) {
+      setState({unsavedChanges: newUnsavedChanges})
+      console.log(`Updated Unsaved Changes: ${newUnsavedChanges}`)
+    }
+  }, [newVerseText, initialVerseText, updatedVerseObjects])
+
   function onSaveEdit() {
     console.log(`onSaveEdit`)
 
@@ -147,6 +163,7 @@ export function useScriptureAlignmentEdit({
       updateVerseNum(0)
     }
     setState({
+      unsavedChanges: null,
       updatedVerseObjects: null,
       editing,
       newVerseText: null,
@@ -276,6 +293,7 @@ export function useScriptureAlignmentEdit({
       alignerData,
       editing,
       verseTextChanged,
+      unsavedChanges,
     },
   }
 }
