@@ -128,6 +128,7 @@ function ScripturePane({
                 onChange={onTextChange}
                 onBlur={onBlur}
                 style={{ height: '60%', width: '300px' }}
+                autoFocus
               />
               :
               <VerseObjects
