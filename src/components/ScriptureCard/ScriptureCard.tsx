@@ -69,12 +69,14 @@ export default function ScriptureCard({
   setSavedChanges,
 }) {
   const [state, setState_] = React.useState({
-    urlError: null,
+    currentVerseNum: 0, //TODO will be used in future when need to support multiple verses in card
     ref: appRef,
+    urlError: null,
   })
   const {
-    urlError,
+    currentVerseNum,
     ref,
+    urlError,
   } = state
 
   const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
@@ -109,12 +111,13 @@ export default function ScriptureCard({
     httpConfig,
     greekRepoUrl,
     hebrewRepoUrl,
+    wholeBook: true,
   })
 
   // @ts-ignore
   const cardResourceId = scriptureConfig?.resource?.projectId || resourceId
-  const currentVerseData_ = scriptureConfig?.versesForRef?.[0] || null // TODO add support for multiverse
-  const verseObjects_ = currentVerseData_?.verseData?.verseObjects || null
+  const currentVerseData_ = scriptureConfig?.versesForRef?.[currentVerseNum] || null
+  const initialVerseObjects = currentVerseData_?.verseData?.verseObjects || null
   // @ts-ignore
   let ref_ = scriptureConfig?.resource?.ref || appRef
   const canUseEditBranch = loggedInUser && authentication &&
@@ -229,13 +232,13 @@ export default function ScriptureCard({
 
   React.useEffect(() => { // pre-cache glosses on verse change
     const fetchGlossDataForVerse = async () => {
-      if (!disableWordPopover && verseObjects_ && fetchGlossesForVerse) {
-        await fetchGlossesForVerse(verseObjects_, languageId_)
+      if (!disableWordPopover && initialVerseObjects && fetchGlossesForVerse) {
+        await fetchGlossesForVerse(initialVerseObjects, languageId_)
       }
     }
 
     fetchGlossDataForVerse()
-  }, [ verseObjects_, disableWordPopover, languageId_, fetchGlossesForVerse ])
+  }, [ initialVerseObjects, disableWordPopover, languageId_, fetchGlossesForVerse ])
 
   const enableEdit = !usingOriginalBible
   const enableAlignment = !usingOriginalBible
@@ -247,15 +250,15 @@ export default function ScriptureCard({
       handleAlignmentClick,
       onAlignmentsChange,
       saveAlignment,
-      setEditing_,
-      setVerseChanged_,
-      onSaveEdit,
+      setEditing,
+      setVerseChanged,
+      saveEdit,
     },
     state: {
       aligned,
       alignerData,
       editing,
-      verseTextChanged,
+      saved,
       unsavedChanges,
     },
   } = useScriptureAlignmentEdit({
@@ -269,19 +272,21 @@ export default function ScriptureCard({
     scriptureConfig,
     scriptureSettings,
     startEdit,
-    verseObjects_,
+    initialVerseObjects,
   })
 
   useDeepCompareEffect(() => { // set saved changes whenever user edits verse text or alignments
-    // TODO: On save, do we try to detect if unsavedChanges is null and then call back TRUE saved changes? 
+    // TODO: On save, do we try to detect if unsavedChanges is null and then call back TRUE saved changes?
     setSavedChanges(resourceId, false)
   }, [{unsavedChanges}])
 
   function showPopover(PopoverTitle, wordDetails, positionCoord, rawData) {
-    // TODO: make show popover work
-    window.prompt(`User clicked on ${JSON.stringify(rawData.token)}`)
+    // TODO: make show popover pretty
     console.log(`showPopover`, rawData)
+    window.prompt(`User clicked on ${JSON.stringify(rawData.token)}`)
   }
+
+  // console.log(`${cardResourceId} saved: ${saved}`)
 
   return (
     <Card
@@ -303,10 +308,10 @@ export default function ScriptureCard({
       hideMarkdownToggle
       onMenuClose={onMenuClose}
       onMinimize={onMinimize ? () => onMinimize(id) : null}
-      editable={editing || verseTextChanged}
-      saved={!verseTextChanged}
-      onSaveEdit={onSaveEdit}
-      onBlur={() => setEditing_(false)}
+      editable={enableEdit || enableAlignment}
+      saved={saved}
+      onSaveEdit={saveEdit}
+      onBlur={() => setEditing(false)}
       checkingState={aligned ? 'valid' : 'invalid'}
       onCheckingStateClick={() => handleAlignmentClick()}
     >
@@ -314,7 +319,7 @@ export default function ScriptureCard({
         <div style={{ flexDirection: 'column' }}>
           <WordAligner
             verseAlignments={alignerData.alignments}
-            wordListWords={alignerData.wordBank}
+            targetWords={alignerData.wordBank}
             translate={translate}
             contextId={{ reference: reference_ }}
             targetLanguageFont={''}
@@ -361,8 +366,8 @@ export default function ScriptureCard({
           getLexiconData={getLexiconData}
           translate={translate}
           editing={editing}
-          setEditing={setEditing_}
-          setVerseChanged={setVerseChanged_}
+          setEditing={setEditing}
+          setVerseChanged={setVerseChanged}
         />
       }
     </Card>

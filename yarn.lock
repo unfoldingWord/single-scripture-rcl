@@ -10691,6 +10691,11 @@ react-icons@^3.8.0:
   dependencies:
     camelcase "^5.0.0"
 
+react-icons@^4.8.0:
+  version "4.8.0"
+  resolved "https://registry.yarnpkg.com/react-icons/-/react-icons-4.8.0.tgz#621e900caa23b912f737e41be57f27f6b2bff445"
+  integrity sha512-N6+kOLcihDiAnj5Czu637waJqSnwlMNROzVZMhfX68V/9bu9qHaMIJC4UdozWoOk57gahFCNHwVvWzm0MTzRjg==
+
 react-is@^16.13.1, react-is@^16.3.2, react-is@^16.6.3, react-is@^16.7.0, react-is@^16.8.1:
   version "16.13.1"
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-16.13.1.tgz#789729a4dc36de2999dc156dd6c1d9c18cea56a4"
@@ -12608,16 +12613,17 @@ transform-runtime@0.0.0:
   resolved "https://registry.yarnpkg.com/transform-runtime/-/transform-runtime-0.0.0.tgz#e714d9b69211dd9537939d50e3aa5788c442b85c"
   integrity sha1-5xTZtpIR3ZU3k51Q46pXiMRCuFw=
 
-translation-helps-rcl@3.3.6-alpha.3:
-  version "3.3.6-alpha.3"
-  resolved "https://registry.yarnpkg.com/translation-helps-rcl/-/translation-helps-rcl-3.3.6-alpha.3.tgz#c5e440889341676be79da0241d370c900807b5b8"
-  integrity sha512-F7BOBvsLMak2BmUJsut7lHOjYi35DQycrPYuA6FTABPPBC9HHE481lF55uUlEo1ZXyswGIJVeQJNdGDR73bJqw==
+translation-helps-rcl@3.3.6-alpha.4:
+  version "3.3.6-alpha.4"
+  resolved "https://registry.yarnpkg.com/translation-helps-rcl/-/translation-helps-rcl-3.3.6-alpha.4.tgz#e35388efc8f749a1363736fe169b8b17bde6a1de"
+  integrity sha512-D/eG8lYcZ/YTRU0YzNOJrR13dvPGbImAm/ZBbn3AwJeUDjJMpOwXiePL3B4+lr9FfwIa7vgITU1LoXko6eWwrg==
   dependencies:
     "@gwdevs/extensible-rcl" "^1.0.1"
     "@mui/styled-engine" "npm:@mui/styled-engine-sc@latest"
     axios "^0.27.2"
     deep-equal "^2.0.5"
     react-draggable "^4.4.3"
+    react-icons "^4.8.0"
     styled-components "^5.2.1"
     tsv "^0.2.0"
     use-deep-compare-effect "^1.6.1"
@@ -13514,10 +13520,10 @@ which@^2.0.1, which@^2.0.2:
   dependencies:
     isexe "^2.0.0"
 
-word-aligner-rcl@0.9.0-beta.3:
-  version "0.9.0-beta.3"
-  resolved "https://registry.yarnpkg.com/word-aligner-rcl/-/word-aligner-rcl-0.9.0-beta.3.tgz#2179d6d95cd1b520305d6ecd147395e8fe2be6f4"
-  integrity sha512-PTiOMUoCKfD+ce1RyGaToly9O5Qc9dTPJWz+6qbfurf/SqW5PToc5bWGsSVGdsWWK4t+KiswmUGW0n7bItonIw==
+word-aligner-rcl@0.9.1-beta.5:
+  version "0.9.1-beta.5"
+  resolved "https://registry.yarnpkg.com/word-aligner-rcl/-/word-aligner-rcl-0.9.1-beta.5.tgz#859d7f9625428f060215906809bc57f173b2da33"
+  integrity sha512-dS5btdc6CE7ID0n5H91FSHQKNhMoeUmDi9MSIQPDRciqAyNCyHTHYitQHaurK9zAQMhKMnqGlJwR+CTqTyP1wA==
   dependencies:
     bible-reference-range "^1.1.0"
     file-loader "^6.2.0"

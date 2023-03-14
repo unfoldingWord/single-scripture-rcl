@@ -214,7 +214,7 @@ function Component() {
   }
 
   return (
-    <div style={{ display: "flex" }}>
+    <div style={{ display: "flex", maxHeight: '600px'}}>
       <SelectionsContextProvider
         quote={"χάριν"}
         occurrence={1}

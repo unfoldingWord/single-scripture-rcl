@@ -105,11 +105,7 @@ function ScripturePane({
 
   function onBlur(event: React.ChangeEvent<HTMLTextAreaElement>) {
     // console.log(`onTextChange`, event)
-    const changed = currentVerseText !== initialVerseText
-
-    if (!changed) {
-      setEditing(false)
-    }
+    setEditing(false)
   }
 
   return (
@@ -132,6 +128,7 @@ function ScripturePane({
                 onChange={onTextChange}
                 onBlur={onBlur}
                 style={{ height: '60%', width: '300px' }}
+                autoFocus
               />
               :
               <VerseObjects

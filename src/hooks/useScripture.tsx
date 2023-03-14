@@ -1,6 +1,5 @@
 // @ts-ignore
-import { useEffect, useState } from 'react'
-import _ from 'lodash'
+import { useEffect, useMemo, useState } from 'react'
 import {
   core,
   useRsrc,
@@ -32,6 +31,8 @@ interface Props {
   resourceLink: string|undefined;
   /** optional resource object to use to build resourceLink **/
   resource: ScriptureResource|undefined;
+  /** if true then fetch the entire book */
+  wholeBook: boolean;
 }
 
 export function useScripture({
@@ -39,6 +40,7 @@ export function useScripture({
   reference,
   resource: resource_,
   resourceLink: resourceLink_,
+  wholeBook = false,
 } : Props) {
   const [initialized, setInitialized] = useState(false)
   const [bookObjects, setBookObjects] = useState(null)
@@ -63,6 +65,14 @@ export function useScripture({
   }
 
   const options = { getBibleJson: true }
+  const bookRef = useMemo(() => {
+    const bookRef = { ...reference }
+
+    if (wholeBook) {
+      delete bookRef.chapter // remove the chapter so the whole book is fetched
+    }
+    return bookRef
+  }, [reference, wholeBook])
 
   const {
     state: {
@@ -75,7 +85,7 @@ export function useScripture({
       fetchResponse,
     },
   } = useRsrc({
-    config, reference, resourceLink, options,
+    config, reference: bookRef, resourceLink, options,
   })
 
   const { title, version } = parseResourceManifest(resource)
