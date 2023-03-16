@@ -87,7 +87,21 @@ export function useScriptureAlignmentEdit({
     setState_(prevState => ({ ...prevState, ...newState }))
   }
 
-  const scriptureSettings_ = {
+  React.useEffect(() => { // check for context changes, reset edit and alignment state
+    console.log(`context changed, reset edit/alignment state variables`)
+    setState({
+      aligned: false,
+      alignerData: null,
+      editing: false,
+      initialVerseText: null,
+      newAlignments: null,
+      newVerseText: null,
+      updatedVerseObjects: null,
+      verseTextChanged: false,
+    })
+  }, [scriptureConfig?.reference])
+
+  const originalScriptureSettings_ = {
     ...scriptureSettings,
     resourceId: ORIGINAL_SOURCE,
   }
@@ -96,7 +110,7 @@ export function useScriptureAlignmentEdit({
   httpConfig = httpConfig || {}
   const bookId = scriptureConfig?.reference?.projectId
   const originalScriptureSettings = getScriptureResourceSettings(
-    bookId, scriptureSettings_, isNewTestament, originalRepoUrl,
+    bookId, originalScriptureSettings_, isNewTestament, originalRepoUrl,
   )
 
   if (!enableAlignment) { // if not enabled, then we don't fetch resource

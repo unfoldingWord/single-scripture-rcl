@@ -1,7 +1,7 @@
 {
   "name": "single-scripture-rcl",
   "description": "A React Component Library for Rendering a Single Scripture Resource.",
-  "version": "3.2.1-alpha.24",
+  "version": "3.2.1-alpha.27",
   "repository": {
     "type": "git",
     "url": "https://github.com/unfoldingWord/single-scripture-rcl.git"
@@ -90,6 +90,6 @@
     "styled-components": "^5.2.1",
     "ts-loader": "^8.0.12",
     "typescript": "^4.1.3",
-    "word-aligner-rcl": "0.9.1-beta.10"
+    "word-aligner-rcl": "/Users/blm/Development/Misc2/word-aligner-rcl/word-aligner-rcl-v0.9.1-beta.11.tgz"
   }
 }

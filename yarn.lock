@@ -13520,10 +13520,9 @@ which@^2.0.1, which@^2.0.2:
   dependencies:
     isexe "^2.0.0"
 
-word-aligner-rcl@0.9.1-beta.10:
-  version "0.9.1-beta.10"
-  resolved "https://registry.yarnpkg.com/word-aligner-rcl/-/word-aligner-rcl-0.9.1-beta.10.tgz#7b97564ab9a30be0a4f12401a1230cd73d704c6d"
-  integrity sha512-J57Q01oODu91MlkJVj4VEOYEaRD96n/lsAH6BCSFTperMqGl5sC/rL9oxphTL5g8Kj0yJufEIvMzms2i+ya/fA==
+"word-aligner-rcl@file:../../Misc2/word-aligner-rcl/word-aligner-rcl-v0.9.1-beta.11.tgz":
+  version "0.9.1-beta.11"
+  resolved "file:../../Misc2/word-aligner-rcl/word-aligner-rcl-v0.9.1-beta.11.tgz#77ca2cc80d168284dbc272913f73cd169413391d"
   dependencies:
     bible-reference-range "^1.1.0"
     file-loader "^6.2.0"

@@ -77,6 +77,7 @@ export default function ScriptureCard({
   } = state
 
   const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
+  const isNT_ = isNT(bookId)
 
   function setState(newState) {
     setState_(prevState => ({ ...prevState, ...newState }))
@@ -155,7 +156,7 @@ export default function ScriptureCard({
     if (error) { // if error was found do callback
       const resourceStatus = scriptureConfig?.resourceStatus
       const resourceLink = getResourceLink(scriptureConfig)
-      const message = getResourceMessage(resourceStatus, server, resourceLink, isNT(bookId))
+      const message = getResourceMessage(resourceStatus, server, resourceLink, isNT_)
       const isAccessError = resourceStatus[MANIFEST_NOT_LOADED_ERROR]
       onResourceError && onResourceError(message, isAccessError, resourceStatus)
     }
@@ -314,8 +315,9 @@ export default function ScriptureCard({
             targetWords={alignerData.wordBank}
             translate={translate}
             contextId={{ reference: reference_ }}
+            targetLanguage={language}
             targetLanguageFont={''}
-            sourceLanguage={isNT ? NT_ORIG_LANG : OT_ORIG_LANG}
+            sourceLanguage={isNT_ ? NT_ORIG_LANG : OT_ORIG_LANG}
             showPopover={showPopover}
             lexicons={{}}
             loadLexiconEntry={getLexiconData}
@@ -348,7 +350,7 @@ export default function ScriptureCard({
           refStyle={refStyle}
           {...scriptureConfig}
           verseObjects={currentVerseObjects}
-          isNT={isNT(bookId)}
+          isNT={isNT_}
           server={server}
           reference={reference}
           direction={direction}
