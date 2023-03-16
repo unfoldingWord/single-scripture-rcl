@@ -193,10 +193,17 @@ export function useScriptureAlignmentEdit({
       if (!alignerData) { // if word aligner not shown
         console.log(`handleAlignmentClick - toggle ON alignment`)
         const targetVerseUSFM = getCurrentVerseUsfm(updatedVerseObjects, initialVerseObjects, verseTextChanged, newVerseText)
+        const originalVerseObjects = originalScriptureResource?.verseObjects
+        let originalVerseUsfm = null
+
+        if (originalVerseObjects) {
+          originalVerseUsfm = UsfmFileConversionHelpers.convertVerseDataToUSFM(originalVerseObjects)
+        }
+
         const {
           targetWords: wordBank,
           verseAlignments: alignments,
-        } = AlignmentHelpers.parseUsfmToWordAlignerData(targetVerseUSFM, null)
+        } = AlignmentHelpers.parseUsfmToWordAlignerData(targetVerseUSFM, originalVerseUsfm)
         alignerData_ = { wordBank, alignments }
       } else { // word aligner currently shown
         console.log(`handleAlignmentClick - alignment already shown`)
