@@ -6,7 +6,7 @@ import {
   usfmHelpers,
 } from 'word-aligner-rcl'
 import * as isEqual from 'deep-equal'
-import useDeepCompareEffect from "use-deep-compare-effect";
+import useDeepCompareEffect from 'use-deep-compare-effect';
 import { ScriptureConfig, ServerConfig } from '../types'
 import { getScriptureResourceSettings } from '../utils/ScriptureSettings'
 import { ORIGINAL_SOURCE } from '../utils'
@@ -61,6 +61,8 @@ export function useScriptureAlignmentEdit({
   scriptureSettings,
   startEdit,
   initialVerseObjects,
+  getSha,
+  generateEditFilePath,
 } : Props) {
   const [state, setState_] = React.useState({
     aligned: false,
@@ -89,6 +91,8 @@ export function useScriptureAlignmentEdit({
   }
 
   const reference_ = scriptureConfig?.reference || null
+  // if the verse text is edited, updated alignments (verse objects changed), or aligner is open; then we have unsaved edits
+  const unsavedChanges = (initialVerseText !== newVerseText) || updatedVerseObjects || alignerData
 
   useDeepCompareEffect(() => { // check for context changes, reset edit and alignment state
     console.log(`reference changed ${JSON.stringify(reference_)}`)
@@ -119,6 +123,41 @@ export function useScriptureAlignmentEdit({
   const originalScriptureSettings = getScriptureResourceSettings(
     bookId, originalScriptureSettings_, isNewTestament, originalRepoUrl,
   )
+
+  //TODO:  enable save
+  // const sha = getSha({
+  //   item: scriptureConfig,
+  //   fetchResponse: scriptureConfig?.fetchResponse,
+  //   cardResourceId: bookId,
+  // })
+  //
+  // const editFilePath = generateEditFilePath({
+  //   item,
+  //   resource,
+  //   filePath,
+  //   projectId: bookId,
+  //   cardResourceId: bookId,
+  // })
+  //
+  // const {
+  //   isEditing,
+  //   onSaveEdit,
+  // } = useEdit({
+  //   sha,
+  //   owner,
+  //   content,
+  //   config: {
+  //     cache: { maxAge: 0 },
+  //     ...authentication?.config,
+  //     token: authentication?.token,
+  //     timeout: SERVER_MAX_WAIT_TIME_RETRY,
+  //   },
+  //   author: loggedInUser,
+  //   token: authentication?.token,
+  //   branch: workingResourceBranch,
+  //   filepath: editFilePath,
+  //   repo: `${languageId}_${cardResourceId}`,
+  // })
 
   if (!enableAlignment) { // if not enabled, then we don't fetch resource
     originalScriptureSettings.resourceLink = null
@@ -162,8 +201,6 @@ export function useScriptureAlignmentEdit({
       }
     }
   }, [initialVerseObjects, alignerData, newVerseText, initialVerseText, enableAlignment, originalScriptureResource?.verseObjects])
-
-  const unsavedChanges = (initialVerseText !== newVerseText) || updatedVerseObjects
 
   function saveEdit() {
     console.log(`saveEdit`)

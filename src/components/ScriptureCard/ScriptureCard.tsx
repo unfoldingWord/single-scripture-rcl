@@ -66,6 +66,8 @@ export default function ScriptureCard({
   loggedInUser,
   authentication,
   setSavedChanges,
+  getSha,
+  generateEditFilePath,
 }) {
   const [state, setState_] = React.useState({
     currentVerseNum: 0, //TODO will be used in future when need to support multiple verses in card
@@ -273,10 +275,12 @@ export default function ScriptureCard({
     scriptureSettings,
     startEdit,
     initialVerseObjects,
+    getSha,
+    generateEditFilePath,
   })
 
   React.useEffect(() => { // set saved changes whenever user edits verse text or alignments
-    setSavedChanges(resourceId, !unsavedChanges)
+    setSavedChanges && setSavedChanges(resourceId, !unsavedChanges)
   }, [unsavedChanges])
 
   function showPopover(PopoverTitle, wordDetails, positionCoord, rawData) {
@@ -440,4 +444,10 @@ ScriptureCard.propTypes = {
   loggedInUser: PropTypes.string,
   /** authentication info */
   authentication: PropTypes.object,
+  /** function to set state in app that there are unsaved changes */
+  setSavedChanges: PropTypes.func,
+  /** function to get the sha for current commit */
+  getSha: PropTypes.func,
+  /** get path for current resource */
+  generateEditFilePath: PropTypes.func,
 }
