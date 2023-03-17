@@ -1,5 +1,7 @@
 import * as React from 'react'
 import * as PropTypes from 'prop-types'
+import useDeepCompareEffect from 'use-deep-compare-effect'
+
 import {
   Card,
   useCardState,
@@ -64,6 +66,7 @@ export default function ScriptureCard({
   onMinimize,
   loggedInUser,
   authentication,
+  setSavedChanges,
 }) {
   const [state, setState_] = React.useState({
     currentVerseNum: 0, //TODO will be used in future when need to support multiple verses in card
@@ -257,6 +260,7 @@ export default function ScriptureCard({
       alignerData,
       editing,
       saved,
+      unsavedChanges,
     },
   } = useScriptureAlignmentEdit({
     enableEdit,
@@ -271,6 +275,11 @@ export default function ScriptureCard({
     startEdit,
     initialVerseObjects,
   })
+
+  useDeepCompareEffect(() => { // set saved changes whenever user edits verse text or alignments
+    // TODO: On save, do we try to detect if unsavedChanges is null and then call back TRUE saved changes?
+    setSavedChanges(resourceId, false)
+  }, [{unsavedChanges}])
 
   function showPopover(PopoverTitle, wordDetails, positionCoord, rawData) {
     // TODO: make show popover pretty
