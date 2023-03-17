@@ -6,6 +6,7 @@ import {
   usfmHelpers,
 } from 'word-aligner-rcl'
 import * as isEqual from 'deep-equal'
+import useDeepCompareEffect from "use-deep-compare-effect";
 import { ScriptureConfig, ServerConfig } from '../types'
 import { getScriptureResourceSettings } from '../utils/ScriptureSettings'
 import { ORIGINAL_SOURCE } from '../utils'
@@ -87,19 +88,25 @@ export function useScriptureAlignmentEdit({
     setState_(prevState => ({ ...prevState, ...newState }))
   }
 
-  React.useEffect(() => { // check for context changes, reset edit and alignment state
-    console.log(`context changed, reset edit/alignment state variables`)
-    setState({
-      aligned: false,
+  const reference_ = scriptureConfig?.reference || null
+
+  useDeepCompareEffect(() => { // check for context changes, reset edit and alignment state
+    console.log(`reference changed ${JSON.stringify(reference_)}`)
+    const clearState = {
+      ...state,
       alignerData: null,
       editing: false,
-      initialVerseText: null,
       newAlignments: null,
       newVerseText: null,
       updatedVerseObjects: null,
       verseTextChanged: false,
-    })
-  }, [scriptureConfig?.reference])
+    }
+
+    if (!isEqual(state, clearState)) {
+      console.log(`reference changed, reset edit/alignment state variables`)
+      setState(clearState)
+    }
+  }, [reference_])
 
   const originalScriptureSettings_ = {
     ...scriptureSettings,
@@ -108,7 +115,7 @@ export function useScriptureAlignmentEdit({
 
   // @ts-ignore
   httpConfig = httpConfig || {}
-  const bookId = scriptureConfig?.reference?.projectId
+  const bookId = reference_?.projectId
   const originalScriptureSettings = getScriptureResourceSettings(
     bookId, originalScriptureSettings_, isNewTestament, originalRepoUrl,
   )
@@ -121,8 +128,8 @@ export function useScriptureAlignmentEdit({
   const originalScriptureResource = useScriptureResources({
     bookId,
     scriptureSettings: originalScriptureSettings,
-    chapter: scriptureConfig?.reference?.chapter,
-    verse: scriptureConfig?.reference?.verse,
+    chapter: reference_?.chapter,
+    verse: reference_?.verse,
     isNewTestament,
     originalRepoUrl,
     currentLanguageId: originalScriptureSettings?.languageId,

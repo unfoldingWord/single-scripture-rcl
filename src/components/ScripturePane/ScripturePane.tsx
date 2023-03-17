@@ -100,7 +100,7 @@ function ScripturePane({
     const changed = newText !== initialVerseText
     setVerseChanged(changed, newText, initialVerseText)
     setCurrentVerseText(newText)
-    console.log(`onTextChange: new text ${changed ? 'changed' : 'unchanged'}: `, newText)
+    // console.log(`onTextChange: new text ${changed ? 'changed' : 'unchanged'}: `, newText)
   }
 
   function onBlur(event: React.ChangeEvent<HTMLTextAreaElement>) {
