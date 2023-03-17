@@ -1,6 +1,5 @@
 import * as React from 'react'
 import * as PropTypes from 'prop-types'
-import useDeepCompareEffect from 'use-deep-compare-effect'
 
 import {
   Card,
@@ -276,10 +275,9 @@ export default function ScriptureCard({
     initialVerseObjects,
   })
 
-  useDeepCompareEffect(() => { // set saved changes whenever user edits verse text or alignments
-    // TODO: On save, do we try to detect if unsavedChanges is null and then call back TRUE saved changes?
-    setSavedChanges(resourceId, false)
-  }, [{unsavedChanges}])
+  React.useEffect(() => { // set saved changes whenever user edits verse text or alignments
+    setSavedChanges(resourceId, !unsavedChanges)
+  }, [unsavedChanges])
 
   function showPopover(PopoverTitle, wordDetails, positionCoord, rawData) {
     // TODO: make show popover pretty
