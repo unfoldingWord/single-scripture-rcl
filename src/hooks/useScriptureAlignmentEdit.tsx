@@ -89,7 +89,21 @@ export function useScriptureAlignmentEdit({
     setState_(prevState => ({ ...prevState, ...newState }))
   }
 
-  const scriptureSettings_ = {
+  React.useEffect(() => { // check for context changes, reset edit and alignment state
+    console.log(`context changed, reset edit/alignment state variables`)
+    setState({
+      aligned: false,
+      alignerData: null,
+      editing: false,
+      initialVerseText: null,
+      newAlignments: null,
+      newVerseText: null,
+      updatedVerseObjects: null,
+      verseTextChanged: false,
+    })
+  }, [scriptureConfig?.reference])
+
+  const originalScriptureSettings_ = {
     ...scriptureSettings,
     resourceId: ORIGINAL_SOURCE,
   }
@@ -98,7 +112,7 @@ export function useScriptureAlignmentEdit({
   httpConfig = httpConfig || {}
   const bookId = scriptureConfig?.reference?.projectId
   const originalScriptureSettings = getScriptureResourceSettings(
-    bookId, scriptureSettings_, isNewTestament, originalRepoUrl,
+    bookId, originalScriptureSettings_, isNewTestament, originalRepoUrl,
   )
 
   if (!enableAlignment) { // if not enabled, then we don't fetch resource
@@ -210,10 +224,17 @@ export function useScriptureAlignmentEdit({
       if (!alignerData) { // if word aligner not shown
         console.log(`handleAlignmentClick - toggle ON alignment`)
         const targetVerseUSFM = getCurrentVerseUsfm(updatedVerseObjects, initialVerseObjects, verseTextChanged, newVerseText)
+        const originalVerseObjects = originalScriptureResource?.verseObjects
+        let originalVerseUsfm = null
+
+        if (originalVerseObjects) {
+          originalVerseUsfm = UsfmFileConversionHelpers.convertVerseDataToUSFM(originalVerseObjects)
+        }
+
         const {
           targetWords: wordBank,
           verseAlignments: alignments,
-        } = AlignmentHelpers.parseUsfmToWordAlignerData(targetVerseUSFM, null)
+        } = AlignmentHelpers.parseUsfmToWordAlignerData(targetVerseUSFM, originalVerseUsfm)
         alignerData_ = { wordBank, alignments }
       } else { // word aligner currently shown
         console.log(`handleAlignmentClick - alignment already shown`)
