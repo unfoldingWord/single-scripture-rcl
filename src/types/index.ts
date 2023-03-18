@@ -41,5 +41,6 @@ export interface ScriptureConfig {
   resourceLink: string;
   config: ServerConfig;
   disableWordPopover?: boolean;
+  reloadResource: Function;
 }
 

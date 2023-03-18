@@ -84,6 +84,7 @@ export function useScripture({
       loadingContent,
       fetchResponse,
     },
+    actions: { reloadResource },
   } = useRsrc({
     config, reference: bookRef, resourceLink, options,
   })
@@ -184,5 +185,6 @@ export function useScripture({
     getVersesForRef,
     versesForRef,
     updateVerse,
+    reloadResource,
   }
 }

@@ -10,7 +10,7 @@ import useDeepCompareEffect from 'use-deep-compare-effect'
 import { useEdit } from 'gitea-react-toolkit'
 import { ScriptureConfig, ServerConfig } from '../types'
 import { getScriptureResourceSettings } from '../utils/ScriptureSettings'
-import { ORIGINAL_SOURCE } from '../utils'
+import { delay, ORIGINAL_SOURCE } from '../utils'
 import useScriptureResources from './useScriptureResources'
 
 interface StartEdit {
@@ -79,6 +79,8 @@ export function useScriptureAlignmentEdit({
     newVerseText: null,
     updatedVerseObjects: null,
     verseTextChanged: false,
+    saveContent: null,
+    startedSave: true,
   })
 
   const {
@@ -90,6 +92,8 @@ export function useScriptureAlignmentEdit({
     newVerseText,
     updatedVerseObjects,
     verseTextChanged,
+    saveContent,
+    startedSave,
   } = state
 
   function setState(newState) {
@@ -142,10 +146,10 @@ export function useScriptureAlignmentEdit({
   }
 
   const filepath = getBookName()
-  const saveContent = null // new usfm
 
   // TODO:  enable save
   const {
+    editResponse,
     error,
     isEditing,
     isError,
@@ -212,7 +216,7 @@ export function useScriptureAlignmentEdit({
   }, [initialVerseObjects, alignerData, newVerseText, initialVerseText, enableAlignment, originalScriptureResource?.verseObjects])
 
   function saveEdit() {
-    console.log(`saveEdit`)
+    console.log(`saveEdit - started`)
     let updatedVerseObjects_
 
     if (newAlignments) { // if unsaved alignment changes, apply them
@@ -225,17 +229,45 @@ export function useScriptureAlignmentEdit({
     }
 
     if (updatedVerseObjects_) {
-      updateVerseNum(currentVerseNum, updatedVerseObjects_)
+      // updateVerseNum(currentVerseNum, updatedVerseObjects_)
       //TODO add save to user branch
-    }
+      const newUsfm = UsfmFileConversionHelpers.convertVerseDataToUSFM(updatedVerseObjects_)
 
-    setState({
-      updatedVerseObjects: null,
-      editing: false,
-      newVerseText: null,
-      alignerData: null,
-    })
+      setState({
+        saveContent: newUsfm,
+      })
+
+      delay(100).then(() => {
+        console.log(`saveEdit - calling onSaveEdit()`)
+        onSaveEdit()
+        delay(100).then(() => {
+          console.log(`saveEdit - waiting for completion`)
+          setState({ startedSave: true })
+        })
+      })
+    }
   }
+
+  React.useEffect(() => {
+    if (startedSave) {
+      console.error(`detected save start`)
+
+      if (isError) {
+        console.error(`save scripture edits failed`, error)
+        setState({ startedSave: false })
+      } else if (editResponse) {
+        console.error(`save scripture edits success`)
+        setState({
+          updatedVerseObjects: null,
+          editing: false,
+          newVerseText: null,
+          alignerData: null,
+          startedSave: false,
+        })
+        scriptureConfig?.reloadResource() // trigger data refetch
+      }
+    }
+  }, [startedSave, editResponse, isError, error])
 
   function updateVerseNum(index, newVerseObjects = initialVerseObjects) {
     // @ts-ignore
