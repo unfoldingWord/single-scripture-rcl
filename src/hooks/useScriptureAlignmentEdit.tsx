@@ -6,7 +6,8 @@ import {
   usfmHelpers,
 } from 'word-aligner-rcl'
 import * as isEqual from 'deep-equal'
-import useDeepCompareEffect from 'use-deep-compare-effect';
+import useDeepCompareEffect from 'use-deep-compare-effect'
+import { useEdit } from 'gitea-react-toolkit'
 import { ScriptureConfig, ServerConfig } from '../types'
 import { getScriptureResourceSettings } from '../utils/ScriptureSettings'
 import { ORIGINAL_SOURCE } from '../utils'
@@ -17,17 +18,20 @@ interface StartEdit {
 }
 
 interface Props {
+  authentication: { config: object, token: string },
   currentVerseNum: number,
   enableEdit: boolean,
   enableAlignment: boolean,
   httpConfig: ServerConfig,
+  initialVerseObjects: [],
   isNewTestament: boolean,
+  loggedInUser: string,
   originalLanguageOwner: string,
   originalRepoUrl: string,
   scriptureConfig: ScriptureConfig,
   scriptureSettings: { },
+  setSavedChanges: Function,
   startEdit: StartEdit,
-  initialVerseObjects: [],
 }
 
 function isUsfmAligned(targetVerseUSFM, originalVerseObjects) {
@@ -50,19 +54,19 @@ function getCurrentVerseUsfm(updatedVerseObjects, initialVerseObjects, verseText
 }
 
 export function useScriptureAlignmentEdit({
+  authentication,
   currentVerseNum,
   enableEdit,
   enableAlignment,
   httpConfig,
+  initialVerseObjects,
   isNewTestament,
+  loggedInUser,
   originalLanguageOwner,
   originalRepoUrl,
   scriptureConfig,
   scriptureSettings,
   startEdit,
-  initialVerseObjects,
-  getSha,
-  generateEditFilePath,
 } : Props) {
   const [state, setState_] = React.useState({
     aligned: false,
@@ -124,40 +128,43 @@ export function useScriptureAlignmentEdit({
     bookId, originalScriptureSettings_, isNewTestament, originalRepoUrl,
   )
 
-  //TODO:  enable save
-  // const sha = getSha({
-  //   item: scriptureConfig,
-  //   fetchResponse: scriptureConfig?.fetchResponse,
-  //   cardResourceId: bookId,
-  // })
-  //
-  // const editFilePath = generateEditFilePath({
-  //   item,
-  //   resource,
-  //   filePath,
-  //   projectId: bookId,
-  //   cardResourceId: bookId,
-  // })
-  //
-  // const {
-  //   isEditing,
-  //   onSaveEdit,
-  // } = useEdit({
-  //   sha,
-  //   owner,
-  //   content,
-  //   config: {
-  //     cache: { maxAge: 0 },
-  //     ...authentication?.config,
-  //     token: authentication?.token,
-  //     timeout: SERVER_MAX_WAIT_TIME_RETRY,
-  //   },
-  //   author: loggedInUser,
-  //   token: authentication?.token,
-  //   branch: workingResourceBranch,
-  //   filepath: editFilePath,
-  //   repo: `${languageId}_${cardResourceId}`,
-  // })
+  // @ts-ignore
+  const sha = scriptureConfig?.fetchResponse?.data?.sha || null
+  const owner = scriptureConfig?.resource?.owner
+  const repo = `${scriptureConfig?.resource?.languageId}_${scriptureConfig?.resource?.projectId}`
+  const branch = scriptureConfig?.resource?.ref || scriptureConfig?.resource?.branch
+
+  function getBookName() {
+    const bookCaps = scriptureConfig?.reference?.projectId ? scriptureConfig.reference.projectId.toUpperCase() : ''
+    return `57-${bookCaps}.usfm` //TODO generate
+  }
+
+  const filepath = getBookName()
+  const saveContent = null // new usfm
+
+  // TODO:  enable save
+  const {
+    error,
+    isEditing,
+    isError,
+    onSaveEdit,
+  } = useEdit({
+    sha,
+    owner,
+    content: saveContent,
+    config: {
+      cache: { maxAge: 0 },
+      ...authentication?.config,
+      token: authentication?.token,
+      // @ts-ignore
+      timeout: httpConfig?.serverTimeOut || httpConfig?.timeout || 5000,
+    },
+    author: loggedInUser,
+    token: authentication?.token,
+    branch,
+    filepath,
+    repo,
+  })
 
   if (!enableAlignment) { // if not enabled, then we don't fetch resource
     originalScriptureSettings.resourceLink = null

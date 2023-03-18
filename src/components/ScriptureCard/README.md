@@ -54,8 +54,16 @@ function translate(key) {
   return key
 }
 
-const EnglishExample = {
+const common = {
   reference,
+  translate,
+  getLexiconData,
+  getSha: () => null,
+  generateEditFilePath: () => null,
+}
+
+const EnglishExample = {
+  ...common,
   appRef: 'master',
   isNT: () => true,
   resource: {
@@ -64,13 +72,11 @@ const EnglishExample = {
     languageId: "en",
     resourceId: TARGET_LITERAL
   },
-  getLanguage: () => ({ direction: 'ltr'}),
-  translate,
-  getLexiconData,
+  getLanguage: () => ({direction: 'ltr'}),
 }
 
 const HebrewExample = {
-  reference,
+  ...common,
   appRef: 'master',
   isNT: () => false,
   resource: {
@@ -79,13 +85,11 @@ const HebrewExample = {
     languageId: "hbo",
     resourceId: ORIGINAL_SOURCE
   },
-  getLanguage: () => ({ direction: 'rtl'}),
-  translate,
-  getLexiconData,
+  getLanguage: () => ({direction: 'rtl'}),
 }
 
 const GreekExample = {
-  reference,
+  ...common,
   appRef: 'master',
   isNT: () => true,
   resource: {
@@ -94,13 +98,11 @@ const GreekExample = {
     languageId: "el-x-koine",
     resourceId: ORIGINAL_SOURCE
   },
-  getLanguage: () => ({ direction: 'ltr'}),
-  translate,
-  getLexiconData,
+  getLanguage: () => ({direction: 'ltr'}),
 }
 
 const EnglishUSTExample = {
-  reference,
+  ...common,
   appRef: 'master',
   isNT: () => true,
   resource: {
@@ -110,9 +112,7 @@ const EnglishUSTExample = {
     owner: "unfoldingWord",
     originalLanguageOwner: "unfoldingWord",
   },
-  getLanguage: () => ({ direction: 'ltr'}),
-  translate,
-  getLexiconData,
+  getLanguage: () => ({direction: 'ltr'}),
 };
 
 const greekScripture = GreekExample;
@@ -214,7 +214,7 @@ function Component() {
   }
 
   return (
-    <div style={{ display: "flex", maxHeight: '600px'}}>
+    <div style={{display: "flex", maxHeight: '600px'}}>
       <SelectionsContextProvider
         quote={"χάριν"}
         occurrence={1}
