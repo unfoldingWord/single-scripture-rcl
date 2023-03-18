@@ -32,6 +32,7 @@ interface Props {
   scriptureSettings: { },
   setSavedChanges: Function,
   startEdit: StartEdit,
+  bookIndex: string,
 }
 
 function isUsfmAligned(targetVerseUSFM, originalVerseObjects) {
@@ -67,6 +68,7 @@ export function useScriptureAlignmentEdit({
   scriptureConfig,
   scriptureSettings,
   startEdit,
+  bookIndex,
 } : Props) {
   const [state, setState_] = React.useState({
     aligned: false,
@@ -136,7 +138,7 @@ export function useScriptureAlignmentEdit({
 
   function getBookName() {
     const bookCaps = scriptureConfig?.reference?.projectId ? scriptureConfig.reference.projectId.toUpperCase() : ''
-    return `57-${bookCaps}.usfm` //TODO generate
+    return `${bookIndex}-${bookCaps}.usfm`
   }
 
   const filepath = getBookName()

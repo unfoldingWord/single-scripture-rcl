@@ -66,6 +66,7 @@ export default function ScriptureCard({
   loggedInUser,
   authentication,
   setSavedChanges,
+  bookIndex,
 }) {
   const [state, setState_] = React.useState({
     currentVerseNum: 0, //TODO will be used in future when need to support multiple verses in card
@@ -276,6 +277,7 @@ export default function ScriptureCard({
     scriptureConfig,
     scriptureSettings,
     startEdit,
+    bookIndex,
   })
 
   React.useEffect(() => { // set saved changes whenever user edits verse text or alignments
@@ -445,4 +447,6 @@ ScriptureCard.propTypes = {
   authentication: PropTypes.object,
   /** function to set state in app that there are unsaved changes */
   setSavedChanges: PropTypes.func,
+  /** index for current book (e.g. '01' for 'gen')*/
+  bookIndex: PropTypes.string,
 }
