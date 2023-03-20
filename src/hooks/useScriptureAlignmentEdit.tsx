@@ -8,6 +8,7 @@ import {
 import * as isEqual from 'deep-equal'
 import useDeepCompareEffect from 'use-deep-compare-effect'
 import { useEdit } from 'gitea-react-toolkit'
+import { core } from 'scripture-resources-rcl'
 import usfmjs from 'usfm-js'
 import { ScriptureConfig, ServerConfig } from '../types'
 import { getScriptureResourceSettings } from '../utils/ScriptureSettings'
@@ -106,8 +107,6 @@ export function useScriptureAlignmentEdit({
   }
 
   const reference_ = scriptureConfig?.reference || null
-  // if the verse text is edited, updated alignments (verse objects changed), or aligner is open; then we have unsaved edits
-  const unsavedChanges = (initialVerseText !== newVerseText) || updatedVerseObjects || alignerData
 
   useDeepCompareEffect(() => { // check for context changes, reset edit and alignment state
     console.log(`reference changed ${JSON.stringify(reference_)}`)
@@ -226,8 +225,31 @@ export function useScriptureAlignmentEdit({
     }
   }, [initialVerseObjects, alignerData, newVerseText, initialVerseText, enableAlignment, originalScriptureResource?.verseObjects])
 
-  function saveEdit() {
-    console.log(`saveEdit - started`)
+  /**
+   * search chapter or verse chunk to line that starts with findItem
+   * @param {number|string} findItem
+   * @param {array[string]} chunks
+   */
+  function findRefInArray(findItem, chunks) {
+    const ref_ = findItem + ''
+    const refLen = ref_.length
+    const index = chunks.findIndex((chunk, idx) => {
+      if (idx > 0) {
+        if (chunk.substring(0, refLen) === ref_) {
+          const nextChar = chunk[ref_]
+
+          if ((nextChar > '9') || (nextChar < '0')) {
+            return true
+          }
+        }
+      }
+      return false
+    })
+    return index
+  }
+
+  function saveChangesToCloud() {
+    console.log(`saveChangesToCloud - started`)
     let updatedVerseObjects_
 
     if (newAlignments) { // if unsaved alignment changes, apply them
@@ -235,19 +257,51 @@ export function useScriptureAlignmentEdit({
     } else if (verseTextChanged && newVerseText) {
       const currentVerseObjects_ = updatedVerseObjects || initialVerseObjects
       const { targetVerseText, targetVerseObjects } = AlignmentHelpers.updateAlignmentsToTargetVerse(currentVerseObjects_, newVerseText)
-      console.log(`saveEdit() - new text:`, targetVerseText)
+      // console.log(`saveChangesToCloud() - new text:`, targetVerseText.substring(0,100))
       updatedVerseObjects_ = targetVerseObjects
+    } else { // only alignment changes to upload
+      updatedVerseObjects_ = updatedVerseObjects || initialVerseObjects
     }
 
     if (updatedVerseObjects_) {
-      const newBookJson = updateVerseNum(currentVerseNum, updatedVerseObjects_)
-      const newUsfm = usfmjs.toUSFM(newBookJson, { forcedNewLines: true })
+      let newUsfm
+      // @ts-ignore
+      const ref = scriptureConfig?.versesForRef?.[currentVerseNum]
+      // @ts-ignore
+      const originalUsfm = core.getResponseData(scriptureConfig?.fetchResponse)
+
+      if (originalUsfm) {
+        const chapterChunks = originalUsfm?.split('\\c ')
+        const chapterIndex = findRefInArray(ref?.chapter, chapterChunks)
+
+        if (chapterIndex >= 0) {
+          const currentChapter = chapterChunks[chapterIndex]
+          const verseChunks = currentChapter.split('\\v ')
+          const verseIndex = findRefInArray(ref?.verse, verseChunks)
+
+          if (verseIndex >= 0) {
+            const newVerseUsfm = UsfmFileConversionHelpers.convertVerseDataToUSFM(updatedVerseObjects_)
+            const oldVerse = verseChunks[verseIndex]
+            const verseNumLen = (ref?.verse + '').length
+            verseChunks[verseIndex] = oldVerse.substring(0, verseNumLen + 1) + newVerseUsfm
+            const newChapter = verseChunks.join('\\v ')
+            chapterChunks[chapterIndex] = newChapter
+            newUsfm = chapterChunks.join('\\c ')
+          }
+        }
+      }
+
+      if (!newUsfm) {
+        const newBookJson = updateVerseNum(currentVerseNum, updatedVerseObjects_)
+        newUsfm = usfmjs.toUSFM(newBookJson, { forcedNewLines: true })
+      }
+      console.log(`saveChangesToCloud() - saving new USFM: ${newUsfm.substring(0, 100)}...`)
       setState({ saveContent: newUsfm, startSave: true })
     }
   }
 
   React.useEffect(() => {
-    const saveEdit = async () => {
+    const _saveEdit = async () => { // begin uploading new USFM
       let branch = (workingResourceBranch !== 'master') ? workingResourceBranch : undefined
 
       if (!branch) {
@@ -256,7 +310,7 @@ export function useScriptureAlignmentEdit({
 
       await onSaveEdit(branch).then((success) => { // push changed to server
         if (success) {
-          console.log(`save scripture edits success`)
+          console.log(`saveChangesToCloud() - save scripture edits success`)
           setState({
             updatedVerseObjects: null,
             editing: false,
@@ -266,18 +320,18 @@ export function useScriptureAlignmentEdit({
             verseTextChanged: false,
             initialVerseText: null,
           })
-          console.info('Reloading resource')
+          console.info('saveChangesToCloud() - Reloading resource')
           scriptureConfig?.reloadResource()
         } else {
-          console.error('saving changed scripture failed')
+          console.error('saveChangesToCloud() - saving changed scripture failed')
           setState({ startSave: false })
         }
       })
     }
 
     if (startSave) {
-      console.log(`saveEdit - calling onSaveEdit()`)
-      saveEdit()
+      console.log(`saveChangesToCloud - calling _saveEdit()`)
+      _saveEdit()
     }
   }, [startSave])
 
@@ -300,10 +354,10 @@ export function useScriptureAlignmentEdit({
     return null
   }
 
-  function handleAlignmentClick() {
+  async function handleAlignmentClick() {
     if (enableAlignment) {
       let alignerData_ = null
-      startEditBranch()
+      await startEditBranch()
 
       if (!alignerData) { // if word aligner not shown
         console.log(`handleAlignmentClick - toggle ON alignment`)
@@ -342,7 +396,6 @@ export function useScriptureAlignmentEdit({
 
     if (newAlignments) {
       const alignedVerseObjects = updateVerseWithNewAlignments()
-      updateVerseNum(currentVerseNum, alignedVerseObjects)
 
       setState({
         alignerData: null,
@@ -365,9 +418,11 @@ export function useScriptureAlignmentEdit({
     setState({ alignerData: null, aligned })
   }
 
-  function setEditing(editing_) {
+  async function setEditing(editing_) {
     if (enableEdit) {
-      (editing_ && !editing) && startEditBranch()
+      if (editing_ && !editing) {
+        await startEditBranch()
+      }
 
       if (editing_ !== editing) {
         setState({ editing: editing_ })
@@ -396,9 +451,10 @@ export function useScriptureAlignmentEdit({
     return initialVerseObjects
   }, [updatedVerseObjects, initialVerseObjects, verseTextChanged, newVerseText])
 
-  const saved = React.useMemo( () => // if verse has been edited or alignment changed, then generate new verseObjects to display in ScripturePane
-    !verseTextChanged && (!updatedVerseObjects || isEqual(initialVerseObjects, updatedVerseObjects))
-  , [updatedVerseObjects, initialVerseObjects, verseTextChanged])
+  const unsavedChanges = React.useMemo( () => { // if verse has been edited or alignment changed, then indicate we have unsaved changes
+    const changed = verseTextChanged || (updatedVerseObjects && !isEqual(initialVerseObjects, updatedVerseObjects))
+    return changed
+  }, [updatedVerseObjects, initialVerseObjects, verseTextChanged])
 
   function onAlignmentsChange(results) {
     console.log(`onAlignmentsChange() - alignment changed, results`, results) // merge alignments into target verse and convert to USFM
@@ -417,14 +473,13 @@ export function useScriptureAlignmentEdit({
       saveAlignment,
       setEditing,
       setVerseChanged,
-      saveChangesToCloud: saveEdit,
+      saveChangesToCloud,
     },
     state: {
       aligned,
       alignerData,
       editing,
       verseTextChanged,
-      saved,
       unsavedChanges,
     },
   }

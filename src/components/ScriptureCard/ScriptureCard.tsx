@@ -271,7 +271,6 @@ export default function ScriptureCard({
       aligned,
       alignerData,
       editing,
-      saved,
       unsavedChanges,
     },
   } = useScriptureAlignmentEdit({
@@ -294,17 +293,16 @@ export default function ScriptureCard({
     currentVerseNum,
   })
 
-  React.useEffect(() => { // set saved changes whenever user edits verse text or alignments
-    setSavedChanges && setSavedChanges(resourceId, !unsavedChanges)
-  }, [unsavedChanges])
+  React.useEffect(() => { // set saved changes whenever user edits verse text or alignments or if alignments are open
+    const unsavedChanges_ = unsavedChanges || alignerData
+    setSavedChanges && setSavedChanges(resourceId, !unsavedChanges_)
+  }, [unsavedChanges, alignerData])
 
   function showPopover(PopoverTitle, wordDetails, positionCoord, rawData) {
     // TODO: make show popover pretty
     console.log(`showPopover`, rawData)
     window.prompt(`User clicked on ${JSON.stringify(rawData.token)}`)
   }
-
-  // console.log(`${cardResourceId} saved: ${saved}`)
 
   return (
     <Card
@@ -327,7 +325,7 @@ export default function ScriptureCard({
       onMenuClose={onMenuClose}
       onMinimize={onMinimize ? () => onMinimize(id) : null}
       editable={enableEdit || enableAlignment}
-      saved={saved}
+      saved={!unsavedChanges}
       onSaveEdit={saveChangesToCloud}
       onBlur={() => setEditing(false)}
       checkingState={aligned ? 'valid' : 'invalid'}
