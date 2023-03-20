@@ -8,9 +8,10 @@ import {
 import * as isEqual from 'deep-equal'
 import useDeepCompareEffect from 'use-deep-compare-effect'
 import { useEdit } from 'gitea-react-toolkit'
+import usfmjs from 'usfm-js'
 import { ScriptureConfig, ServerConfig } from '../types'
 import { getScriptureResourceSettings } from '../utils/ScriptureSettings'
-import { delay, ORIGINAL_SOURCE } from '../utils'
+import { ORIGINAL_SOURCE } from '../utils'
 import useScriptureResources from './useScriptureResources'
 
 interface StartEdit {
@@ -31,8 +32,9 @@ interface Props {
   scriptureConfig: ScriptureConfig,
   scriptureSettings: { },
   setSavedChanges: Function,
-  startEdit: StartEdit,
+  startEditBranch: StartEdit,
   bookIndex: string,
+  workingResourceBranch: string,
 }
 
 function isUsfmAligned(targetVerseUSFM, originalVerseObjects) {
@@ -67,8 +69,9 @@ export function useScriptureAlignmentEdit({
   originalRepoUrl,
   scriptureConfig,
   scriptureSettings,
-  startEdit,
+  startEditBranch,
   bookIndex,
+  workingResourceBranch,
 } : Props) {
   const [state, setState_] = React.useState({
     aligned: false,
@@ -80,7 +83,7 @@ export function useScriptureAlignmentEdit({
     updatedVerseObjects: null,
     verseTextChanged: false,
     saveContent: null,
-    startedSave: true,
+    startSave: false,
   })
 
   const {
@@ -93,7 +96,7 @@ export function useScriptureAlignmentEdit({
     updatedVerseObjects,
     verseTextChanged,
     saveContent,
-    startedSave,
+    startSave,
   } = state
 
   function setState(newState) {
@@ -138,7 +141,6 @@ export function useScriptureAlignmentEdit({
   const sha = scriptureConfig?.fetchResponse?.data?.sha || null
   const owner = scriptureConfig?.resource?.owner
   const repo = `${scriptureConfig?.resource?.languageId}_${scriptureConfig?.resource?.projectId}`
-  const branch = scriptureConfig?.resource?.ref || scriptureConfig?.resource?.branch
 
   function getBookName() {
     const bookCaps = scriptureConfig?.reference?.projectId ? scriptureConfig.reference.projectId.toUpperCase() : ''
@@ -167,7 +169,7 @@ export function useScriptureAlignmentEdit({
     },
     author: loggedInUser,
     token: authentication?.token,
-    branch,
+    branch: workingResourceBranch,
     filepath,
     repo,
   })
@@ -229,45 +231,40 @@ export function useScriptureAlignmentEdit({
     }
 
     if (updatedVerseObjects_) {
-      // updateVerseNum(currentVerseNum, updatedVerseObjects_)
-      //TODO add save to user branch
-      const newUsfm = UsfmFileConversionHelpers.convertVerseDataToUSFM(updatedVerseObjects_)
-
-      setState({
-        saveContent: newUsfm,
-      })
-
-      delay(100).then(() => {
-        console.log(`saveEdit - calling onSaveEdit()`)
-        onSaveEdit()
-        delay(100).then(() => {
-          console.log(`saveEdit - waiting for completion`)
-          setState({ startedSave: true })
-        })
-      })
+      const newBookJson = updateVerseNum(currentVerseNum, updatedVerseObjects_)
+      const newUsfm = usfmjs.toUSFM(newBookJson, { forcedNewLines: true })
+      setState({ saveContent: newUsfm, startSave: true })
     }
   }
 
   React.useEffect(() => {
-    if (startedSave) {
-      console.error(`detected save start`)
+    if (startSave) {
+      console.log(`saveEdit - calling onSaveEdit()`)
+      onSaveEdit()
+    }
+  }, [startSave])
+
+  React.useEffect(() => {
+    if (startSave) {
+      console.log(`detected save start`)
 
       if (isError) {
         console.error(`save scripture edits failed`, error)
-        setState({ startedSave: false })
+        setState({ startSave: false })
       } else if (editResponse) {
-        console.error(`save scripture edits success`)
+        console.log(`save scripture edits success`)
         setState({
           updatedVerseObjects: null,
           editing: false,
           newVerseText: null,
           alignerData: null,
-          startedSave: false,
+          startSave: false,
+          verseTextChanged: false,
         })
         scriptureConfig?.reloadResource() // trigger data refetch
       }
     }
-  }, [startedSave, editResponse, isError, error])
+  }, [startSave, editResponse, isError, error])
 
   function updateVerseNum(index, newVerseObjects = initialVerseObjects) {
     // @ts-ignore
@@ -283,13 +280,15 @@ export function useScriptureAlignmentEdit({
       }
 
       // @ts-ignore
-      targetVerseObjects_ && scriptureConfig?.updateVerse(ref.chapter, ref.verse, { verseObjects: targetVerseObjects_ })
+      return targetVerseObjects_ && scriptureConfig?.updateVerse(ref.chapter, ref.verse, { verseObjects: targetVerseObjects_ })
     }
+    return null
   }
 
   function handleAlignmentClick() {
     if (enableAlignment) {
       let alignerData_ = null
+      startEditBranch()
 
       if (!alignerData) { // if word aligner not shown
         console.log(`handleAlignmentClick - toggle ON alignment`)
@@ -353,7 +352,7 @@ export function useScriptureAlignmentEdit({
 
   function setEditing(editing_) {
     if (enableEdit) {
-      (editing_ && !editing) && startEdit()
+      (editing_ && !editing) && startEditBranch()
 
       if (editing_ !== editing) {
         setState({ editing: editing_ })
@@ -403,7 +402,7 @@ export function useScriptureAlignmentEdit({
       saveAlignment,
       setEditing,
       setVerseChanged,
-      saveEdit,
+      saveChangesToCloud: saveEdit,
     },
     state: {
       aligned,

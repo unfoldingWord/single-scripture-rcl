@@ -28,6 +28,10 @@ export function useScriptureResources({
   appRef = 'master',
   wholeBook = false,
 }) {
+  if (appRef !== scriptureSettings.ref) {
+    scriptureSettings = { ...scriptureSettings, ref: appRef }
+  }
+
   const scriptureSettings_ = getScriptureResourceSettings(bookId, scriptureSettings, isNewTestament,
     originalRepoUrl, currentLanguageId, currentOwner) // convert any default settings strings
 

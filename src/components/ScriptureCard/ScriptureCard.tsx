@@ -127,7 +127,7 @@ export default function ScriptureCard({
 
   const {
     state: { workingResourceBranch },
-    actions: { startEdit },
+    actions: { startEdit: startEditBranch },
   } = useUserBranch({
     owner,
     server,
@@ -253,7 +253,7 @@ export default function ScriptureCard({
       saveAlignment,
       setEditing,
       setVerseChanged,
-      saveEdit,
+      saveChangesToCloud,
     },
     state: {
       aligned,
@@ -276,8 +276,10 @@ export default function ScriptureCard({
     // @ts-ignore
     scriptureConfig,
     scriptureSettings,
-    startEdit,
+    startEditBranch,
     bookIndex,
+    workingResourceBranch: ref,
+    currentVerseNum,
   })
 
   React.useEffect(() => { // set saved changes whenever user edits verse text or alignments
@@ -314,7 +316,7 @@ export default function ScriptureCard({
       onMinimize={onMinimize ? () => onMinimize(id) : null}
       editable={enableEdit || enableAlignment}
       saved={saved}
-      onSaveEdit={saveEdit}
+      onSaveEdit={saveChangesToCloud}
       onBlur={() => setEditing(false)}
       checkingState={aligned ? 'valid' : 'invalid'}
       onCheckingStateClick={() => handleAlignmentClick()}

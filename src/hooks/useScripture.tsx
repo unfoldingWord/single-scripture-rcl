@@ -138,15 +138,16 @@ export function useScripture({
 
   function updateVerse(chapter, verse, verseData) {
     if (bookObjects) {
-      const bookObjects_ = { ...bookObjects } // shallow cope
+      const bookObjects_ = { ...bookObjects } // shallow copy
 
       if (bookObjects_?.chapters) {
-        bookObjects_.chapters = { ...bookObjects_.chapters } // shallow copy
+        bookObjects_.chapters = { ...bookObjects_.chapters } // shallow copy chapters
 
         if (bookObjects_.chapters[chapter]) {
-          bookObjects_.chapters[chapter] = { ...bookObjects_.chapters[chapter] } // shallow copy
+          bookObjects_.chapters[chapter] = { ...bookObjects_.chapters[chapter] } // shallow copy verses
           bookObjects_.chapters[chapter][verse] = verseData
           setBookObjects(bookObjects_)
+          return bookObjects_
         }
       }
     }
