@@ -72,11 +72,13 @@ export default function ScriptureCard({
     currentVerseNum: 0, //TODO will be used in future when need to support multiple verses in card
     ref: appRef,
     urlError: null,
+    usingUserBranch: false,
   })
   const {
     currentVerseNum,
     ref,
     urlError,
+    usingUserBranch,
   } = state
 
   const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
@@ -84,6 +86,10 @@ export default function ScriptureCard({
 
   function setState(newState) {
     setState_(prevState => ({ ...prevState, ...newState }))
+  }
+
+  if (usingUserBranch) {
+    httpConfig = { ...httpConfig, cache: { maxAge: 0 } } // disable http caching
   }
 
   const {
@@ -126,7 +132,7 @@ export default function ScriptureCard({
     ((ref_ === 'master') || (ref_.substring(0, loggedInUser.length) === loggedInUser) ) // not tag
 
   const {
-    state: { workingResourceBranch },
+    state: { workingResourceBranch, usingUserBranch: usingUserBranch_ },
     actions: { startEdit: startEditBranch },
   } = useUserBranch({
     owner,
@@ -144,6 +150,12 @@ export default function ScriptureCard({
   const workingRef = canUseEditBranch ? workingResourceBranch : appRef
   const reference_ = { bookId, chapter, verse }
   let scriptureTitle
+
+  React.useEffect(() => { // select correct working ref - could be master, user branch, or release
+    if (usingUserBranch_ !== usingUserBranch) {
+      setState({ usingUserBranch: usingUserBranch_ })
+    }
+  }, [usingUserBranch_, usingUserBranch])
 
   React.useEffect(() => { // select correct working ref - could be master, user branch, or release
     let workingRef_ = workingRef || appRef

@@ -15,7 +15,7 @@ import { ORIGINAL_SOURCE } from '../utils'
 import useScriptureResources from './useScriptureResources'
 
 interface StartEdit {
-  (): Promise<void>;
+  (): Promise<string>;
 }
 
 interface Props {
@@ -84,6 +84,7 @@ export function useScriptureAlignmentEdit({
     verseTextChanged: false,
     saveContent: null,
     startSave: false,
+    sha: null,
   })
 
   const {
@@ -97,6 +98,7 @@ export function useScriptureAlignmentEdit({
     verseTextChanged,
     saveContent,
     startSave,
+    sha,
   } = state
 
   function setState(newState) {
@@ -138,9 +140,16 @@ export function useScriptureAlignmentEdit({
   )
 
   // @ts-ignore
-  const sha = scriptureConfig?.fetchResponse?.data?.sha || null
+  const fetchResp_ = scriptureConfig?.fetchResponse
   const owner = scriptureConfig?.resource?.owner
   const repo = `${scriptureConfig?.resource?.languageId}_${scriptureConfig?.resource?.projectId}`
+
+  React.useEffect(() => { // get the sha from last scripture download
+    const sha = fetchResp_?.data?.sha || null
+    console.log(`for ${JSON.stringify(reference_)} new sha is ${sha}`)
+    setState({ sha })
+    // @ts-ignore
+  }, [fetchResp_])
 
   function getBookName() {
     const bookCaps = scriptureConfig?.reference?.projectId ? scriptureConfig.reference.projectId.toUpperCase() : ''
@@ -238,33 +247,39 @@ export function useScriptureAlignmentEdit({
   }
 
   React.useEffect(() => {
+    const saveEdit = async () => {
+      let branch = (workingResourceBranch !== 'master') ? workingResourceBranch : undefined
+
+      if (!branch) {
+        branch = await startEditBranch() // make sure user branch exists and get name
+      }
+
+      await onSaveEdit(branch).then((success) => { // push changed to server
+        if (success) {
+          console.log(`save scripture edits success`)
+          setState({
+            updatedVerseObjects: null,
+            editing: false,
+            newVerseText: null,
+            alignerData: null,
+            startSave: false,
+            verseTextChanged: false,
+            initialVerseText: null,
+          })
+          console.info('Reloading resource')
+          scriptureConfig?.reloadResource()
+        } else {
+          console.error('saving changed scripture failed')
+          setState({ startSave: false })
+        }
+      })
+    }
+
     if (startSave) {
       console.log(`saveEdit - calling onSaveEdit()`)
-      onSaveEdit()
+      saveEdit()
     }
   }, [startSave])
-
-  React.useEffect(() => {
-    if (startSave) {
-      console.log(`detected save start`)
-
-      if (isError) {
-        console.error(`save scripture edits failed`, error)
-        setState({ startSave: false })
-      } else if (editResponse) {
-        console.log(`save scripture edits success`)
-        setState({
-          updatedVerseObjects: null,
-          editing: false,
-          newVerseText: null,
-          alignerData: null,
-          startSave: false,
-          verseTextChanged: false,
-        })
-        scriptureConfig?.reloadResource() // trigger data refetch
-      }
-    }
-  }, [startSave, editResponse, isError, error])
 
   function updateVerseNum(index, newVerseObjects = initialVerseObjects) {
     // @ts-ignore
