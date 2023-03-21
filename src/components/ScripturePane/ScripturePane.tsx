@@ -82,7 +82,6 @@ function ScripturePane({
   setVerseChanged,
 } : Props) {
   const [initialVerseText, setInitialVerseText] = React.useState(null)
-  const [currentVerseText, setCurrentVerseText] = React.useState(null)
   const resourceMsg = getResourceMessage(resourceStatus, server, resourceLink, isNT)
   const { chapter, verse } = reference
   direction = direction || 'ltr'
@@ -118,7 +117,6 @@ function ScripturePane({
     const newText = event?.target?.value
     const changed = newText !== initialVerseText
     setVerseChanged(changed, newText, initialVerseText)
-    setCurrentVerseText(newText)
     // console.log(`onTextChange: new text ${changed ? 'changed' : 'unchanged'}: `, newText)
   }
 

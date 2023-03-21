@@ -1,5 +1,6 @@
 import * as React from 'react'
 import * as PropTypes from 'prop-types'
+import { RxLink2, RxLinkBreak2 } from 'react-icons/rx'
 
 import {
   Card,
@@ -304,6 +305,26 @@ export default function ScriptureCard({
     window.prompt(`User clicked on ${JSON.stringify(rawData.token)}`)
   }
 
+  const checkingState = aligned ? 'valid' : 'invalid'
+  const titleText = checkingState === 'valid' ? 'Alignment is Valid' : 'Alignment is Invalid';
+  const onRenderToolbar = ({ items }) => [
+    ...items,
+    <IconButton
+      className={classes.margin}
+      key='checking-button'
+      onClick={() => handleAlignmentClick()}
+      title={titleText}
+      aria-label={titleText}
+      style={{ cursor: 'pointer' }}
+    >
+      {checkingState === 'valid' ? (
+        <RxLink2 id='valid_icon' color='#BBB' />
+      ) : (
+        <RxLinkBreak2 id='invalid_icon' color='#000' />
+      )}
+    </IconButton>,
+  ]
+
   return (
     <Card
       id={`scripture_card_${cardNum}`}
@@ -328,8 +349,7 @@ export default function ScriptureCard({
       saved={!unsavedChanges}
       onSaveEdit={saveChangesToCloud}
       onBlur={() => setEditing(false)}
-      checkingState={aligned ? 'valid' : 'invalid'}
-      onCheckingStateClick={() => handleAlignmentClick()}
+      onRenderToolbar={onRenderToolbar}
     >
       {alignerData ?
         <div style={{ flexDirection: 'column' }}>
