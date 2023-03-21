@@ -55,6 +55,14 @@ const MessageStyle = {
   fontWeight: 'bold',
 }
 
+const TextAreaStyle = {
+  height: '60%',
+  width: '100%',
+  minWidth: '220px',
+  fontSize: '16px',
+}
+
+
 function ScripturePane({
   reference,
   refStyle,
@@ -87,6 +95,17 @@ function ScripturePane({
   contentStyle = contentStyle || {
     fontFamily: 'Noto Sans',
     fontSize: '100%',
+  }
+
+  // dynamically adjust font size
+  const calculatedFontSize = React.useMemo(() => (
+    parseFloat(TextAreaStyle.fontSize) * fontSize / 100 + 'px'
+  ), [fontSize])
+
+  const textAreaStyle = {
+    ...contentStyle,
+    ...TextAreaStyle,
+    fontSize: calculatedFontSize,
   }
 
   useDeepCompareEffect(() => {
@@ -127,7 +146,7 @@ function ScripturePane({
                 defaultValue={initialVerseText}
                 onChange={onTextChange}
                 onBlur={onBlur}
-                style={{ height: '60%', width: '100%' }}
+                style={textAreaStyle}
                 autoFocus
               />
               :
