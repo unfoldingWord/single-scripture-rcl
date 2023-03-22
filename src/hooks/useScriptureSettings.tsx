@@ -99,6 +99,7 @@ export function useScriptureSettings({
   httpConfig,
   greekRepoUrl,
   hebrewRepoUrl,
+  wholeBook = false,
 }) {
   const isNewTestament = isNT(bookId)
   const scriptureDefaultSettings = getScriptureObject({
@@ -157,6 +158,7 @@ export function useScriptureSettings({
     currentOwner: owner,
     httpConfig,
     appRef,
+    wholeBook,
   })
 
   /**
@@ -307,9 +309,11 @@ export function useScriptureSettings({
   }
 
   return {
+    isNewTestament,
     scriptureConfig,
     setScripture,
     scriptureVersionHist,
+    scriptureSettings,
   }
 }
 

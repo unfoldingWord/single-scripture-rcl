@@ -109,10 +109,11 @@ export function splitUrl(originalRepoUrl) {
  * @param {string} currentLanguageId - optional over-ride for transient case where language in scripture settings have not yet updated
  * @param {string} currentOwner - optional over-ride for transient case where owner in scripture settings have not yet updated
  */
-export function getScriptureResourceSettings(bookId, scriptureSettings_, isNewTestament,
-                                             originalRepoUrl=null,
-                                             currentLanguageId=null,
-                                             currentOwner=null,
+export function getScriptureResourceSettings(
+  bookId, scriptureSettings_, isNewTestament,
+  originalRepoUrl=null,
+  currentLanguageId=null,
+  currentOwner=null,
 ) {
   const scriptureSettings = { ...scriptureSettings_ }
   scriptureSettings.disableWordPopover = DISABLE_WORD_POPOVER

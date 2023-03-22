@@ -1,11 +1,18 @@
 import * as React from 'react'
 import * as PropTypes from 'prop-types'
+import { RxLink2, RxLinkBreak2 } from 'react-icons/rx'
+
 import {
   Card,
   useCardState,
+  useUserBranch,
   ERROR_STATE,
   MANIFEST_NOT_LOADED_ERROR,
 } from 'translation-helps-rcl'
+import { WordAligner } from 'word-aligner-rcl'
+import CheckOutlinedIcon from '@mui/icons-material/CheckOutlined'
+import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined'
+import { IconButton } from '@mui/material'
 import { ScripturePane, ScriptureSelector } from '..'
 import { useScriptureSettings } from '../../hooks/useScriptureSettings'
 import {
@@ -15,6 +22,12 @@ import {
   isOriginalBible,
 } from '../../utils/ScriptureSettings'
 import { Title } from '../ScripturePane/styled'
+import {
+  NT_ORIG_LANG,
+  ORIGINAL_SOURCE,
+  OT_ORIG_LANG,
+} from '../../utils'
+import { useScriptureAlignmentEdit } from '../../hooks/useScriptureAlignmentEdit'
 
 const KEY_FONT_SIZE_BASE = 'scripturePaneFontSize_'
 const label = 'Version'
@@ -51,12 +64,40 @@ export default function ScriptureCard({
   fetchGlossesForVerse,
   translate,
   onMinimize,
+  loggedInUser,
+  authentication,
+  setSavedChanges,
+  bookIndex,
 }) {
-  const [urlError, setUrlError] = React.useState(null)
-  const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
+  const [state, setState_] = React.useState({
+    currentVerseNum: 0, //TODO will be used in future when need to support multiple verses in card
+    ref: appRef,
+    urlError: null,
+    usingUserBranch: false,
+  })
   const {
+    currentVerseNum,
+    ref,
+    urlError,
+    usingUserBranch,
+  } = state
+
+  const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
+  const isNT_ = isNT(bookId)
+
+  function setState(newState) {
+    setState_(prevState => ({ ...prevState, ...newState }))
+  }
+
+  if (usingUserBranch) {
+    httpConfig = { ...httpConfig, cache: { maxAge: 0 } } // disable http caching
+  }
+
+  const {
+    isNewTestament,
     scriptureConfig,
     setScripture,
+    scriptureSettings,
     scriptureVersionHist,
   } = useScriptureSettings({
     isNT,
@@ -64,7 +105,7 @@ export default function ScriptureCard({
     verse,
     owner,
     bookId,
-    appRef,
+    appRef: ref,
     server,
     cardNum,
     chapter,
@@ -74,25 +115,68 @@ export default function ScriptureCard({
     useUserLocalStorage,
     disableWordPopover,
     originalLanguageOwner,
-    setUrlError,
+    setUrlError: (error) => setState({ urlError: error }),
     httpConfig,
     greekRepoUrl,
     hebrewRepoUrl,
+    wholeBook: true,
   })
 
+  // @ts-ignore
+  const cardResourceId = scriptureConfig?.resource?.projectId || resourceId
+  const currentVerseData_ = scriptureConfig?.versesForRef?.[currentVerseNum] || null
+  const initialVerseObjects = currentVerseData_?.verseData?.verseObjects || null
+  // @ts-ignore
+  let ref_ = scriptureConfig?.resource?.ref || appRef
+  const canUseEditBranch = loggedInUser && authentication &&
+    (resourceId !== ORIGINAL_SOURCE) &&
+    ((ref_ === 'master') || (ref_.substring(0, loggedInUser.length) === loggedInUser) ) // not tag
+
+  const {
+    state: { workingResourceBranch, usingUserBranch: usingUserBranch_ },
+    actions: { startEdit: startEditBranch },
+  } = useUserBranch({
+    owner,
+    server,
+    appRef,
+    languageId,
+    cardId: id,
+    loggedInUser: canUseEditBranch ? loggedInUser : null,
+    authentication: canUseEditBranch ? authentication : null,
+    cardResourceId,
+    onResourceError,
+    useUserLocalStorage,
+  })
+
+  const workingRef = canUseEditBranch ? workingResourceBranch : appRef
+  const reference_ = { bookId, chapter, verse }
   let scriptureTitle
 
-  React.useEffect(() => {
+  React.useEffect(() => { // select correct working ref - could be master, user branch, or release
+    if (usingUserBranch_ !== usingUserBranch) {
+      setState({ usingUserBranch: usingUserBranch_ })
+    }
+  }, [usingUserBranch_, usingUserBranch])
+
+  React.useEffect(() => { // select correct working ref - could be master, user branch, or release
+    let workingRef_ = workingRef || appRef
+
+    if (ref !== workingRef_) {
+      setState({ ref: workingRef_ })
+    }
+  }, [workingRef, ref, appRef])
+
+  React.useEffect(() => { // update display status if error
     const error = scriptureConfig?.resourceStatus?.[ERROR_STATE]
 
     if (error) { // if error was found do callback
       const resourceStatus = scriptureConfig?.resourceStatus
       const resourceLink = getResourceLink(scriptureConfig)
-      const message = getResourceMessage(resourceStatus, server, resourceLink, isNT(bookId))
+      const message = getResourceMessage(resourceStatus, server, resourceLink, isNT_)
       const isAccessError = resourceStatus[MANIFEST_NOT_LOADED_ERROR]
       onResourceError && onResourceError(message, isAccessError, resourceStatus)
     }
-  }, [scriptureConfig?.resourceStatus?.[ERROR_STATE]])
+  }, [scriptureConfig?.resourceStatus?.[ERROR_STATE], onResourceError])
 
   if (scriptureConfig.title && scriptureConfig.version) {
     scriptureTitle = `${scriptureConfig.title} v${scriptureConfig.version}`
@@ -115,7 +199,7 @@ export default function ScriptureCard({
 
   function onMenuClose() {
     // console.log(`onMenuClose()`)
-    setUrlError(null) // clear any error messages
+    setState({ urlError: null })
   }
 
   // @ts-ignore
@@ -142,32 +226,104 @@ export default function ScriptureCard({
     },
   } = useCardState({ items })
 
-  const refStyle = {
+  const refStyle = React.useMemo(() => ({
     fontFamily: 'Noto Sans',
     fontSize: `${Math.round(scaledFontSize * 0.9)}%`,
-  }
+  }), [scaledFontSize])
 
-  const contentStyle = {
+  const contentStyle = React.useMemo(() => ({
     fontFamily: 'Noto Sans',
     fontSize: `${scaledFontSize}%`,
-  }
+  }), [scaledFontSize])
 
   const scriptureLabel = <Title>{scriptureTitle}</Title>
   let disableWordPopover_ = disableWordPopover
+  const usingOriginalBible = isOriginalBible(scriptureConfig['resource']?.projectId)
 
   if (disableWordPopover === undefined) { // if not specified, then determine if original language resource
-    disableWordPopover_ = !isOriginalBible(scriptureConfig['resource']?.projectId)
+    disableWordPopover_ = !usingOriginalBible
   }
 
-  React.useEffect(() => {
+  React.useEffect(() => { // pre-cache glosses on verse change
     const fetchGlossDataForVerse = async () => {
-      if (!disableWordPopover && scriptureConfig?.verseObjects?.length && fetchGlossesForVerse) {
-        await fetchGlossesForVerse(scriptureConfig?.verseObjects, languageId_)
+      if (!disableWordPopover && initialVerseObjects && fetchGlossesForVerse) {
+        await fetchGlossesForVerse(initialVerseObjects, languageId_)
       }
     }
 
     fetchGlossDataForVerse()
-  }, [scriptureConfig?.verseObjects])
+  }, [ initialVerseObjects, disableWordPopover, languageId_, fetchGlossesForVerse ])
+
+  const enableEdit = !usingOriginalBible
+  const enableAlignment = !usingOriginalBible
+  const originalRepoUrl = isNewTestament ? greekRepoUrl : hebrewRepoUrl
+  const {
+    actions: {
+      cancelAlignment,
+      currentVerseObjects,
+      handleAlignmentClick,
+      onAlignmentsChange,
+      saveAlignment,
+      setEditing,
+      setVerseChanged,
+      saveChangesToCloud,
+    },
+    state: {
+      aligned,
+      alignerData,
+      editing,
+      unsavedChanges,
+    },
+  } = useScriptureAlignmentEdit({
+    authentication: canUseEditBranch ? authentication : null,
+    enableEdit,
+    enableAlignment,
+    httpConfig,
+    initialVerseObjects,
+    isNewTestament,
+    // @ts-ignore
+    loggedInUser: canUseEditBranch ? loggedInUser : null,
+    originalLanguageOwner,
+    originalRepoUrl,
+    // @ts-ignore
+    scriptureConfig,
+    scriptureSettings,
+    startEditBranch,
+    bookIndex,
+    workingResourceBranch: ref,
+    currentVerseNum,
+  })
+
+  React.useEffect(() => { // set saved changes whenever user edits verse text or alignments or if alignments are open
+    const unsavedChanges_ = unsavedChanges || alignerData
+    setSavedChanges && setSavedChanges(resourceId, !unsavedChanges_)
+  }, [unsavedChanges, alignerData])
+
+  function showPopover(PopoverTitle, wordDetails, positionCoord, rawData) {
+    // TODO: make show popover pretty
+    console.log(`showPopover`, rawData)
+    window.prompt(`User clicked on ${JSON.stringify(rawData.token)}`)
+  }
+
+  const checkingState = aligned ? 'valid' : 'invalid'
+  const titleText = checkingState === 'valid' ? 'Alignment is Valid' : 'Alignment is Invalid'
+  const onRenderToolbar = ({ items }) => [
+    ...items,
+    <IconButton
+      className={classes.margin}
+      key='checking-button'
+      onClick={() => handleAlignmentClick()}
+      title={titleText}
+      aria-label={titleText}
+      style={{ cursor: 'pointer' }}
+    >
+      {checkingState === 'valid' ? (
+        <RxLink2 id='valid_icon' color='#BBB' />
+      ) : (
+        <RxLinkBreak2 id='invalid_icon' color='#000' />
+      )}
+    </IconButton>,
+  ]
 
   return (
     <Card
@@ -189,26 +345,75 @@ export default function ScriptureCard({
       hideMarkdownToggle
       onMenuClose={onMenuClose}
       onMinimize={onMinimize ? () => onMinimize(id) : null}
+      editable={enableEdit || enableAlignment}
+      saved={!unsavedChanges}
+      onSaveEdit={saveChangesToCloud}
+      onBlur={() => setEditing(false)}
+      onRenderToolbar={onRenderToolbar}
     >
-      <ScripturePane
-        refStyle={refStyle}
-        {...scriptureConfig}
-        isNT={isNT(bookId)}
-        server={server}
-        reference={reference}
-        direction={direction}
-        contentStyle={contentStyle}
-        fontSize={fontSize}
-        disableWordPopover={disableWordPopover_}
-        getLexiconData={getLexiconData}
-        translate={translate}
-      />
+      {alignerData ?
+        <div style={{ flexDirection: 'column' }}>
+          <WordAligner
+            style={{ maxHeight: '450px', overflowY: 'auto' }}
+            verseAlignments={alignerData.alignments}
+            targetWords={alignerData.wordBank}
+            translate={translate}
+            contextId={{ reference: reference_ }}
+            targetLanguage={language}
+            targetLanguageFont={''}
+            sourceLanguage={isNT_ ? NT_ORIG_LANG : OT_ORIG_LANG}
+            showPopover={showPopover}
+            lexicons={{}}
+            loadLexiconEntry={getLexiconData}
+            onChange={(results) => onAlignmentsChange(results)}
+          />
+          <br />
+          <div style={{ width: '100%' }}>
+            <IconButton
+              disabled={false}
+              className={classes.margin}
+              key='alignment-save'
+              onClick={() => saveAlignment()}
+              aria-label={'Alignment Save'}
+            >
+              <CheckOutlinedIcon id='alignment-save-icon' htmlColor='#000' />
+            </IconButton>
+            <IconButton
+              disabled={false}
+              className={classes.margin}
+              key='alignment-cancel'
+              onClick={() => cancelAlignment()}
+              aria-label={'Alignment Cancel'}
+            >
+              <CancelOutlinedIcon id='alignment-cancel-icon' htmlColor='#000' />
+            </IconButton>
+          </div>
+        </div>
+        :
+        <ScripturePane
+          refStyle={refStyle}
+          {...scriptureConfig}
+          verseObjects={currentVerseObjects}
+          isNT={isNT_}
+          server={server}
+          reference={reference}
+          direction={direction}
+          contentStyle={contentStyle}
+          fontSize={fontSize}
+          disableWordPopover={disableWordPopover_}
+          getLexiconData={getLexiconData}
+          translate={translate}
+          editing={editing}
+          setEditing={setEditing}
+          setVerseChanged={setVerseChanged}
+        />
+      }
     </Card>
   )
 }
 
 ScriptureCard.propTypes = {
-  /** identifier to use for card */
+  /** html identifier to use for card */
   id: PropTypes.string,
   /** method to determine if NT or OT */
   isNT: PropTypes.func.isRequired,
@@ -268,4 +473,12 @@ ScriptureCard.propTypes = {
   translate: PropTypes.func,
   /** function to minimize the card (optional) */
   onMinimize: PropTypes.func,
+  /** user-name */
+  loggedInUser: PropTypes.string,
+  /** authentication info */
+  authentication: PropTypes.object,
+  /** function to set state in app that there are unsaved changes */
+  setSavedChanges: PropTypes.func,
+  /** index for current book (e.g. '01' for 'gen')*/
+  bookIndex: PropTypes.string,
 }

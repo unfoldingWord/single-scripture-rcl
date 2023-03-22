@@ -1,5 +1,5 @@
 // @ts-ignore
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   core,
   useRsrc,
@@ -13,6 +13,7 @@ import {
   MANIFEST_NOT_LOADED_ERROR,
   SCRIPTURE_NOT_LOADED_ERROR,
 } from 'translation-helps-rcl'
+import { getVerses } from 'bible-reference-range'
 import { getResourceLink } from '../utils'
 import {
   ServerConfig,
@@ -30,6 +31,8 @@ interface Props {
   resourceLink: string|undefined;
   /** optional resource object to use to build resourceLink **/
   resource: ScriptureResource|undefined;
+  /** if true then fetch the entire book */
+  wholeBook: boolean;
 }
 
 export function useScripture({
@@ -37,8 +40,11 @@ export function useScripture({
   reference,
   resource: resource_,
   resourceLink: resourceLink_,
+  wholeBook = false,
 } : Props) {
   const [initialized, setInitialized] = useState(false)
+  const [bookObjects, setBookObjects] = useState(null)
+  const [versesForRef, setVersesForRef] = useState(null)
   let resourceLink = resourceLink_
 
   if (!resourceLink_ && resource_) {
@@ -59,6 +65,14 @@ export function useScripture({
   }
 
   const options = { getBibleJson: true }
+  const bookRef = useMemo(() => {
+    const bookRef = { ...reference }
+
+    if (wholeBook) {
+      delete bookRef.chapter // remove the chapter so the whole book is fetched
+    }
+    return bookRef
+  }, [reference, wholeBook])
 
   const {
     state: {
@@ -70,8 +84,9 @@ export function useScripture({
       loadingContent,
       fetchResponse,
     },
+    actions: { reloadResource },
   } = useRsrc({
-    config, reference, resourceLink, options,
+    config, reference: bookRef, resourceLink, options,
   })
 
   const { title, version } = parseResourceManifest(resource)
@@ -102,6 +117,57 @@ export function useScripture({
     }
   }, [loading])
 
+  function getVersesForRef(ref, content_ = bookObjects) {
+    if (content_) {
+      let verses = getVerses(content_.chapters, ref)
+
+      if (languageId === 'el-x-koine' || languageId === 'hbo') {
+        verses = verses.map(verse => {
+          if (verse.verseObjects) {
+            const verseObjects_ = core.occurrenceInjectVerseObjects(verse.verseObjects)
+            verse.verseObjects = verseObjects_
+          }
+          return verse
+        })
+      }
+
+      return verses
+    }
+    return null
+  }
+
+  function updateVerse(chapter, verse, verseData) {
+    if (bookObjects) {
+      const bookObjects_ = { ...bookObjects } // shallow copy
+
+      if (bookObjects_?.chapters) {
+        bookObjects_.chapters = { ...bookObjects_.chapters } // shallow copy chapters
+
+        if (bookObjects_.chapters[chapter]) {
+          bookObjects_.chapters[chapter] = { ...bookObjects_.chapters[chapter] } // shallow copy verses
+          bookObjects_.chapters[chapter][verse] = verseData
+          setBookObjects(bookObjects_)
+          return bookObjects_
+        }
+      }
+    }
+    return null
+  }
+
+  useEffect(() => {
+    if (bookObjects) {
+      const ref = `${reference.chapter}:${reference.verse}`
+      const versesForRef = getVersesForRef(ref, bookObjects)
+      setVersesForRef(versesForRef)
+    } else {
+      setVersesForRef(null)
+    }
+  }, [bookObjects])
+
+  useEffect(() => {
+    setBookObjects(content)
+  }, [content])
+
   if (languageId === 'el-x-koine' || languageId === 'hbo') {
     verseObjects = core.occurrenceInjectVerseObjects(verseObjects)
   }
@@ -113,7 +179,13 @@ export function useScripture({
     resourceLink,
     matchedVerse,
     verseObjects,
+    bookObjects,
     resourceStatus,
     fetchResponse,
+    setBookObjects,
+    getVersesForRef,
+    versesForRef,
+    updateVerse,
+    reloadResource,
   }
 }

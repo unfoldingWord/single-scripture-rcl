@@ -1,4 +1,5 @@
 ```js
+import { useState } from 'react'
 import { Card, useCardState } from "translation-helps-rcl";
 import { makeStyles } from "@material-ui/core/styles";
 import { ScripturePane, useScripture } from "../.."
@@ -84,6 +85,8 @@ function Component() {
     items,
   })
 
+  const [editing, setEditing] = useState(false)
+
   const scriptureConfig = useScripture({
     ...scripture, config
   });
@@ -96,6 +99,11 @@ function Component() {
   const contentStyle = {
     fontFamily: "Noto Sans",
     fontSize: `${fontSize}%`,
+  }
+
+  function setEditing_(state) {
+    console.log(`setEditing(${state})`)
+    setEditing(state)
   }
 
   return (
@@ -119,6 +127,8 @@ function Component() {
         {...scriptureConfig}
         direction={scripture.direction}
         server={config.server}
+        editing={editing}
+        setEditing={setEditing_}
       />
     </Card>
   );
