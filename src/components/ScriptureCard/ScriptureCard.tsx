@@ -306,7 +306,7 @@ export default function ScriptureCard({
   }
 
   const checkingState = aligned ? 'valid' : 'invalid'
-  const titleText = checkingState === 'valid' ? 'Alignment is Valid' : 'Alignment is Invalid';
+  const titleText = checkingState === 'valid' ? 'Alignment is Valid' : 'Alignment is Invalid'
   const onRenderToolbar = ({ items }) => [
     ...items,
     <IconButton

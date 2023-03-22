@@ -451,7 +451,7 @@ export function useScriptureAlignmentEdit({
     return initialVerseObjects
   }, [updatedVerseObjects, initialVerseObjects, verseTextChanged, newVerseText])
 
-  const unsavedChanges = React.useMemo( () => { // if verse has been edited or alignment changed, then indicate we have unsaved changes
+  const unsavedChanges:boolean = React.useMemo( () => { // if verse has been edited or alignment changed, then indicate we have unsaved changes
     const changed = verseTextChanged || (updatedVerseObjects && !isEqual(initialVerseObjects, updatedVerseObjects))
     return changed
   }, [updatedVerseObjects, initialVerseObjects, verseTextChanged])

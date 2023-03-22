@@ -62,7 +62,6 @@ const TextAreaStyle = {
   fontSize: '16px',
 }
 
-
 function ScripturePane({
   reference,
   refStyle,
@@ -113,15 +112,12 @@ function ScripturePane({
   }, [{ verseObjects }])
 
   function onTextChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
-    // console.log(`onTextChange`, event)
     const newText = event?.target?.value
     const changed = newText !== initialVerseText
     setVerseChanged(changed, newText, initialVerseText)
-    // console.log(`onTextChange: new text ${changed ? 'changed' : 'unchanged'}: `, newText)
   }
 
   function onBlur(event: React.ChangeEvent<HTMLTextAreaElement>) {
-    // console.log(`onTextChange`, event)
     setEditing(false)
   }
 
