@@ -89,7 +89,8 @@ function ScripturePane({
           <span style={refStyle}> {chapter}:{verse}&nbsp;</span>
           <span style={contentStyle}>
             <VerseObjects
-              verseObjects={verseObjects}
+              verseKey={`${reference.chapter}:${reference.verse}`}
+              verseObjects={verseObjects || []}
               disableWordPopover={disableWordPopover}
               getLexiconData={getLexiconData}
               translate={translate}
