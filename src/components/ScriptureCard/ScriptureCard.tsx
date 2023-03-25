@@ -51,6 +51,7 @@ export default function ScriptureCard({
   fetchGlossesForVerse,
   translate,
   onMinimize,
+  addVerseRange,
 }) {
   const [urlError, setUrlError] = React.useState(null)
   const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
@@ -169,6 +170,18 @@ export default function ScriptureCard({
     fetchGlossDataForVerse()
   }, [scriptureConfig?.verseObjects])
 
+  React.useEffect(() => {
+    // check for verse range
+    const _verse = scriptureConfig?.matchedVerse
+
+    if (addVerseRange && (typeof _verse === 'string')) {
+      // @ts-ignore
+      if (_verse.includes('-')) {
+        addVerseRange(`${scriptureConfig?.reference?.chapter}:${_verse}`)
+      }
+    }
+  }, [scriptureConfig?.matchedVerse])
+
   return (
     <Card
       id={`scripture_card_${cardNum}`}
@@ -268,4 +281,6 @@ ScriptureCard.propTypes = {
   translate: PropTypes.func,
   /** function to minimize the card (optional) */
   onMinimize: PropTypes.func,
+  /** callback to indicate that we are using a verse range here */
+  addVerseRange: PropTypes.func,
 }
