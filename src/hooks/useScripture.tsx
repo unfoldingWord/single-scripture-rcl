@@ -14,7 +14,7 @@ import {
   SCRIPTURE_NOT_LOADED_ERROR,
 } from 'translation-helps-rcl'
 import { getVerses } from 'bible-reference-range'
-import { getResourceLink } from '../utils'
+import { cleanupVerseObjects, getResourceLink } from '../utils/ScriptureSettings'
 import {
   ServerConfig,
   ScriptureResource,
@@ -123,9 +123,10 @@ export function useScripture({
 
       if (languageId === 'el-x-koine' || languageId === 'hbo') {
         verses = verses.map(verse => {
-          if (verse.verseObjects) {
-            const verseObjects_ = core.occurrenceInjectVerseObjects(verse.verseObjects)
-            verse.verseObjects = verseObjects_
+          if ( verse?.verseData?.verseObjects) {
+            let verseObjects_ = core.occurrenceInjectVerseObjects( verse.verseData.verseObjects)
+            verseObjects_ = cleanupVerseObjects(verseObjects_)
+            verse.verseData.verseObjects = verseObjects_
           }
           return verse
         })
@@ -170,6 +171,7 @@ export function useScripture({
 
   if (languageId === 'el-x-koine' || languageId === 'hbo') {
     verseObjects = core.occurrenceInjectVerseObjects(verseObjects)
+    verseObjects = cleanupVerseObjects(verseObjects)
   }
 
   return {

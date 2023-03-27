@@ -145,7 +145,8 @@ function ScripturePane({
               />
               :
               <VerseObjects
-                verseObjects={verseObjects}
+                verseKey={`${reference.chapter}:${reference.verse}`}
+                verseObjects={verseObjects || []}
                 disableWordPopover={disableWordPopover}
                 getLexiconData={getLexiconData}
                 translate={translate}

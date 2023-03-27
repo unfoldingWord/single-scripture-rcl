@@ -68,6 +68,7 @@ export default function ScriptureCard({
   authentication,
   setSavedChanges,
   bookIndex,
+  addVerseRange,
 }) {
   const [state, setState_] = React.useState({
     currentVerseNum: 0, //TODO will be used in future when need to support multiple verses in card
@@ -325,6 +326,18 @@ export default function ScriptureCard({
     </IconButton>,
   ]
 
+  React.useEffect(() => {
+    // check for verse range
+    const _verse = scriptureConfig?.matchedVerse
+
+    if (addVerseRange && (typeof _verse === 'string')) {
+      // @ts-ignore
+      if (_verse.includes('-')) {
+        addVerseRange(`${scriptureConfig?.reference?.chapter}:${_verse}`)
+      }
+    }
+  }, [scriptureConfig?.matchedVerse])
+
   return (
     <Card
       id={`scripture_card_${cardNum}`}
@@ -481,4 +494,6 @@ ScriptureCard.propTypes = {
   setSavedChanges: PropTypes.func,
   /** index for current book (e.g. '01' for 'gen')*/
   bookIndex: PropTypes.string,
+  /** callback to indicate that we are using a verse range here */
+  addVerseRange: PropTypes.func,
 }
