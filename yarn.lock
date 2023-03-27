@@ -13563,6 +13563,20 @@ word-aligner@1.0.1:
     string-punctuation-tokenizer "2.0.0"
     transform-runtime "0.0.0"
 
+word-aligner@^1.0.0:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/word-aligner/-/word-aligner-1.0.2.tgz#7b47a913421337c44b340b424b420cb5ce3ac945"
+  integrity sha512-alc0TltIlBhFB2kEG3tvWVeH/FdD4i0h/fBAJ1kDdlcHcNW4wdbYDGriCW7ikDQYicKtvCJBIG6II8IXjbHTww==
+  dependencies:
+    babel-runtime "^6.26.0"
+    fs-extra "6.0.1"
+    lodash "^4.17.11"
+    path "0.12.7"
+    path-extra "^4.2.1"
+    rimraf "^2.6.2"
+    string-punctuation-tokenizer "2.0.0"
+    transform-runtime "0.0.0"
+
 word-wrap@^1.2.3, word-wrap@~1.2.3:
   version "1.2.3"
   resolved "https://registry.yarnpkg.com/word-wrap/-/word-wrap-1.2.3.tgz#610636f6b1f703891bd34771ccb17fb93b47079c"
