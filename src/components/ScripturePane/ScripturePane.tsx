@@ -1,5 +1,7 @@
 import * as React from 'react'
+import useDeepCompareEffect from 'use-deep-compare-effect'
 import { VerseObjects } from 'scripture-resources-rcl'
+import { UsfmFileConversionHelpers } from 'word-aligner-rcl'
 import { ScriptureReference, VerseObjectsType } from '../../types'
 import { getResourceMessage } from '../../utils'
 import { Container, Content } from './styled'
@@ -31,6 +33,12 @@ interface Props {
   getLexiconData: Function;
   /** optional function for localization */
   translate: Function;
+  /** true if in edit mode */
+  editing: boolean;
+  /** callback to set edit mode */
+  setEditing: Function;
+  /** callback to set that verse has changed */
+  setVerseChanged: Function;
 }
 
 const MessageStyle = {
@@ -47,6 +55,12 @@ const MessageStyle = {
   fontWeight: 'bold',
 }
 
+const TextAreaStyle = {
+  height: '60%',
+  width: '100%',
+  minWidth: '220px',
+  fontSize: '16px',
+}
 
 function ScripturePane({
   reference,
@@ -62,7 +76,11 @@ function ScripturePane({
   fontSize,
   getLexiconData,
   translate,
+  editing,
+  setEditing,
+  setVerseChanged,
 } : Props) {
+  const [initialVerseText, setInitialVerseText] = React.useState(null)
   const resourceMsg = getResourceMessage(resourceStatus, server, resourceLink, isNT)
   const { chapter, verse } = reference
   direction = direction || 'ltr'
@@ -77,6 +95,32 @@ function ScripturePane({
     fontSize: '100%',
   }
 
+  // dynamically adjust font size
+  const calculatedFontSize = React.useMemo(() => (
+    parseFloat(TextAreaStyle.fontSize) * fontSize / 100 + 'px'
+  ), [fontSize])
+
+  const textAreaStyle = {
+    ...contentStyle,
+    ...TextAreaStyle,
+    fontSize: calculatedFontSize,
+  }
+
+  useDeepCompareEffect(() => {
+    const verseText = UsfmFileConversionHelpers.getUsfmForVerseContent({ verseObjects })
+    setInitialVerseText(verseText)
+  }, [{ verseObjects }])
+
+  function onTextChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
+    const newText = event?.target?.value
+    const changed = newText !== initialVerseText
+    setVerseChanged(changed, newText, initialVerseText)
+  }
+
+  function onBlur(event: React.ChangeEvent<HTMLTextAreaElement>) {
+    setEditing(false)
+  }
+
   return (
     <Container style={{ direction, width: '100%', height: '100%' }}>
       {resourceMsg ?
@@ -87,14 +131,26 @@ function ScripturePane({
         :
         <Content>
           <span style={refStyle}> {chapter}:{verse}&nbsp;</span>
-          <span style={contentStyle}>
-            <VerseObjects
-              verseKey={`${reference.chapter}:${reference.verse}`}
-              verseObjects={verseObjects || []}
-              disableWordPopover={disableWordPopover}
-              getLexiconData={getLexiconData}
-              translate={translate}
-            />
+          <span style={contentStyle} onClick={() => {
+            setEditing && setEditing(true)
+          }}
+          >
+            {editing ?
+              <textarea
+                defaultValue={initialVerseText}
+                onChange={onTextChange}
+                onBlur={onBlur}
+                style={textAreaStyle}
+                autoFocus
+              />
+              :
+              <VerseObjects
+                verseObjects={verseObjects}
+                disableWordPopover={disableWordPopover}
+                getLexiconData={getLexiconData}
+                translate={translate}
+              />
+            }
           </span>
         </Content>
       }

@@ -34,3 +34,13 @@ export interface VerseObjectType {
 export interface VerseObjectsType {
   [index: number]: VerseObjectType;
 }
+
+export interface ScriptureConfig {
+  reference: ScriptureReference;
+  resource: ScriptureResource;
+  resourceLink: string;
+  config: ServerConfig;
+  disableWordPopover?: boolean;
+  reloadResource: Function;
+}
+
