@@ -40,7 +40,7 @@ export function useScripture({
 } : Props) {
   const [initialized, setInitialized] = useState(false)
   const { languageId } = resource_ || {}
-  const singleVerse = reference && (reference.verse != null)
+  const singleVerse = !bcvQuery
 
   let resourceLink = resourceLink_
   let matchedVerse = reference && reference.verse
@@ -64,8 +64,6 @@ export function useScripture({
   }
 
   const curQuery = bcvQuery || {
-    resourceLink,
-    server: config.server,
     book: {
       [reference.projectId] : {
         ch:
@@ -73,6 +71,8 @@ export function useScripture({
       },
     },
   }
+
+  const server = config.server
 
   const {
     state: {
@@ -82,7 +82,7 @@ export function useScripture({
       loadingContent,
       fetchResponse,
     },
-  } = useBcvQuery( curQuery, config)
+  } = useBcvQuery(server, resourceLink, curQuery, config)
   // errorCode - ToDo: Check the error code and convert to suitable code in resourceStatus
 
   const { title, version } = parseResourceManifest(resultTree)

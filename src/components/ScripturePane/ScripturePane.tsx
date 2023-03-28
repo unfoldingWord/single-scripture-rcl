@@ -86,7 +86,7 @@ function ScripturePane({
   return (
     <Container
       style={{
-        direction, width: '100%', height: '100%' 
+        direction, width: '100%', height: '100%',
       }}
     >
       {resourceMsg ?
