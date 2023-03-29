@@ -33,6 +33,14 @@ const KEY_FONT_SIZE_BASE = 'scripturePaneFontSize_'
 const label = 'Version'
 const style = { marginTop: '16px', width: '500px' }
 
+function initializeVerseNumber(verse) {
+  let initialVerse = verse
+  if (typeof verse === 'string' && verse.includes('-')) {
+    initialVerse = verse.charAt(0)
+  }
+  return initialVerse
+}
+
 export default function ScriptureCard({
   id,
   isNT,
@@ -71,7 +79,7 @@ export default function ScriptureCard({
   addVerseRange,
 }) {
   const [state, setState_] = React.useState({
-    currentVerseNum: 0, //TODO will be used in future when need to support multiple verses in card
+    currentVerseNum: initializeVerseNumber(verse),
     ref: appRef,
     urlError: null,
     usingUserBranch: false,
@@ -125,8 +133,16 @@ export default function ScriptureCard({
 
   // @ts-ignore
   const cardResourceId = scriptureConfig?.resource?.projectId || resourceId
-  const currentVerseData_ = scriptureConfig?.versesForRef?.[currentVerseNum] || null
+
+  function getVerseDataFromScripConfig(scriptureConfig, verseNum) {
+    return scriptureConfig?.versesForRef?.find(
+      verseRef => verseRef.verse === verseNum
+    )
+  }
+
+  const currentVerseData_ = getVerseDataFromScripConfig(scriptureConfig, currentVerseNum) || null
   const initialVerseObjects = currentVerseData_?.verseData?.verseObjects || null
+
   // @ts-ignore
   let ref_ = scriptureConfig?.resource?.ref || appRef
   const canUseEditBranch = loggedInUser && authentication &&
