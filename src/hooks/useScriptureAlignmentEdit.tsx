@@ -10,7 +10,11 @@ import useDeepCompareEffect from 'use-deep-compare-effect'
 import { useEdit } from 'gitea-react-toolkit'
 import { core } from 'scripture-resources-rcl'
 import usfmjs from 'usfm-js'
-import { ScriptureConfig, ServerConfig } from '../types'
+import {
+  ScriptureConfig,
+  ScriptureReference,
+  ServerConfig,
+} from '../types'
 import { getScriptureResourceSettings } from '../utils/ScriptureSettings'
 import { ORIGINAL_SOURCE } from '../utils'
 import useScriptureResources from './useScriptureResources'
@@ -57,6 +61,8 @@ interface Props {
   sourceLanguage: string,
   // title to show in alignment
   title: string,
+  // reference for verse selected for alignment
+  currentVerseRef: ScriptureReference,
 }
 
 /**
@@ -93,7 +99,9 @@ function getCurrentVerseUsfm(updatedVerseObjects, initialVerseObjects, verseText
 // manage verse edit and alignment states
 export function useScriptureAlignmentEdit({
   authentication,
+  bookIndex,
   currentVerseNum,
+  currentVerseRef,
   enableEdit,
   enableAlignment,
   httpConfig,
@@ -104,12 +112,11 @@ export function useScriptureAlignmentEdit({
   originalRepoUrl,
   scriptureConfig,
   scriptureSettings,
-  startEditBranch,
-  bookIndex,
-  workingResourceBranch,
-  targetLanguage,
   sourceLanguage,
+  startEditBranch,
+  targetLanguage,
   title,
+  workingResourceBranch,
 } : Props) {
   const [state, setState_] = React.useState({
     aligned: false,
@@ -145,7 +152,7 @@ export function useScriptureAlignmentEdit({
     setState_(prevState => ({ ...prevState, ...newState }))
   }
 
-  const reference_ = scriptureConfig?.reference || null
+  const reference_ = currentVerseRef || scriptureConfig?.reference || null
 
   useDeepCompareEffect(() => { // check for context changes, reset edit and alignment state
     console.log(`reference changed ${JSON.stringify(reference_)}`)
@@ -231,13 +238,28 @@ export function useScriptureAlignmentEdit({
     httpConfig,
   })
 
+  const originalVerseObjects = React.useMemo(() => { // get the original language verseObjects
+    if (originalScriptureResource?.versesForRef?.length > 1) { // if multiple verses, then append them together
+      const verseObjects = []
+
+      for (const verseReference of originalScriptureResource?.versesForRef) {
+        const origVerseObjects = verseReference?.verseData?.verseObjects
+
+        if (origVerseObjects) {
+          Array.prototype.push.apply(verseObjects, origVerseObjects)
+        }
+      }
+      return verseObjects
+    }
+    return originalScriptureResource?.verseObjects
+  }, [originalScriptureResource?.verseObjects, originalScriptureResource?.versesForRef])
+
   React.useEffect(() => { // update alignment status when aligner is hidden
     const notEmpty = !!initialVerseObjects
     let aligned_ = false
 
     if (!alignerData) { // skip if aligner is being shown
       if (notEmpty) { // skip if empty
-        const originalVerseObjects = originalScriptureResource?.verseObjects
         const currentVerseObjects_ = updatedVerseObjects || initialVerseObjects
 
         if (!enableAlignment) {
@@ -255,7 +277,7 @@ export function useScriptureAlignmentEdit({
         setState({ aligned: aligned_ })
       }
     }
-  }, [initialVerseObjects, alignerData, newVerseText, initialVerseText, enableAlignment, originalScriptureResource?.verseObjects])
+  }, [initialVerseObjects, alignerData, newVerseText, initialVerseText, enableAlignment, originalVerseObjects])
 
   /**
    * search chapter or verse chunk to line that starts with findItem
@@ -401,7 +423,6 @@ export function useScriptureAlignmentEdit({
       if (!alignerData) { // if word aligner not shown
         console.log(`handleAlignmentClick - toggle ON alignment`)
         const targetVerseUSFM = getCurrentVerseUsfm(updatedVerseObjects, initialVerseObjects, verseTextChanged, newVerseText)
-        const originalVerseObjects = originalScriptureResource?.verseObjects
         let originalVerseUsfm = null
 
         if (originalVerseObjects) {
@@ -544,6 +565,7 @@ export function useScriptureAlignmentEdit({
     state: {
       aligned,
       alignerData,
+      currentVerseRef,
       doingSave: saveInitiated,
       editing,
       sourceLanguage,

@@ -211,9 +211,10 @@ export default function ScriptureCard({
   const isHebrew = (languageId_ === 'hbo')
   const fontFactor = isHebrew ? 1.4 : 1 // we automatically scale up font size for Hebrew
   const scaledFontSize = fontSize * fontFactor
+  const currentVerseStr = currentVerseData_?.verse.toString()
 
-  if (scriptureConfig.matchedVerse) { // support verse ranges
-    reference.verse = scriptureConfig.matchedVerse
+  if (currentVerseStr && (currentVerseStr !== reference.verse)) { // support for verse span
+    reference.verse = currentVerseStr
   }
 
   const items = null
@@ -259,6 +260,7 @@ export default function ScriptureCard({
   const originalRepoUrl = isNewTestament ? greekRepoUrl : hebrewRepoUrl
   const _scriptureAlignmentEdit = useScriptureAlignmentEdit({
     authentication: canUseEditBranch ? authentication : null,
+    currentVerseRef: reference,
     enableEdit,
     enableAlignment,
     httpConfig,
@@ -333,7 +335,7 @@ export default function ScriptureCard({
 
   React.useEffect(() => {
     // check for verse range
-    const _verse = scriptureConfig?.matchedVerse
+    const _verse = reference.verse
 
     if (addVerseRange && (typeof _verse === 'string')) {
       // @ts-ignore
@@ -341,7 +343,7 @@ export default function ScriptureCard({
         addVerseRange(`${scriptureConfig?.reference?.chapter}:${_verse}`)
       }
     }
-  }, [scriptureConfig?.matchedVerse])
+  }, [reference.verse])
 
   return (
     <Card
