@@ -9,9 +9,6 @@ import {
   ERROR_STATE,
   MANIFEST_NOT_LOADED_ERROR,
 } from 'translation-helps-rcl'
-import { WordAligner } from 'word-aligner-rcl'
-import CheckOutlinedIcon from '@mui/icons-material/CheckOutlined'
-import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined'
 import { IconButton } from '@mui/material'
 import { ScripturePane, ScriptureSelector } from '..'
 import { useScriptureSettings } from '../../hooks/useScriptureSettings'
@@ -69,18 +66,21 @@ export default function ScriptureCard({
   setSavedChanges,
   bookIndex,
   addVerseRange,
+  setWordAlignerStatus,
 }) {
   const [state, setState_] = React.useState({
     currentVerseNum: 0, //TODO will be used in future when need to support multiple verses in card
     ref: appRef,
     urlError: null,
     usingUserBranch: false,
+    doingAlignment: false,
   })
   const {
     currentVerseNum,
     ref,
     urlError,
     usingUserBranch,
+    doingAlignment,
   } = state
 
   const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
@@ -150,7 +150,6 @@ export default function ScriptureCard({
   })
 
   const workingRef = canUseEditBranch ? workingResourceBranch : appRef
-  const reference_ = { bookId, chapter, verse }
   let scriptureTitle
 
   React.useEffect(() => { // select correct working ref - could be master, user branch, or release
@@ -258,24 +257,7 @@ export default function ScriptureCard({
   const enableEdit = !usingOriginalBible
   const enableAlignment = !usingOriginalBible
   const originalRepoUrl = isNewTestament ? greekRepoUrl : hebrewRepoUrl
-  const {
-    actions: {
-      cancelAlignment,
-      currentVerseObjects,
-      handleAlignmentClick,
-      onAlignmentsChange,
-      saveAlignment,
-      setEditing,
-      setVerseChanged,
-      saveChangesToCloud,
-    },
-    state: {
-      aligned,
-      alignerData,
-      editing,
-      unsavedChanges,
-    },
-  } = useScriptureAlignmentEdit({
+  const _scriptureAlignmentEdit = useScriptureAlignmentEdit({
     authentication: canUseEditBranch ? authentication : null,
     enableEdit,
     enableAlignment,
@@ -293,18 +275,40 @@ export default function ScriptureCard({
     bookIndex,
     workingResourceBranch: ref,
     currentVerseNum,
+    targetLanguage: language,
+    sourceLanguage: isNT_ ? NT_ORIG_LANG : OT_ORIG_LANG,
+    title: scriptureTitle,
   })
+  const {
+    actions: {
+      currentVerseObjects,
+      handleAlignmentClick,
+      setEditing,
+      setVerseChanged,
+      saveChangesToCloud,
+    },
+    state: {
+      aligned,
+      alignerData,
+      editing,
+      unsavedChanges,
+    },
+  } = _scriptureAlignmentEdit
+
+  React.useEffect(() => {
+    if (_scriptureAlignmentEdit?.state?.alignerData && !doingAlignment) {
+      setWordAlignerStatus(_scriptureAlignmentEdit)
+      setState({ doingAlignment: true })
+    } else if (doingAlignment) {
+      setWordAlignerStatus(_scriptureAlignmentEdit)
+      setState({ doingAlignment: false })
+    }
+  }, [_scriptureAlignmentEdit?.state?.alignerData])
 
   React.useEffect(() => { // set saved changes whenever user edits verse text or alignments or if alignments are open
     const unsavedChanges_ = unsavedChanges || alignerData
     setSavedChanges && setSavedChanges(resourceId, !unsavedChanges_)
   }, [unsavedChanges, alignerData])
-
-  function showPopover(PopoverTitle, wordDetails, positionCoord, rawData) {
-    // TODO: make show popover pretty
-    console.log(`showPopover`, rawData)
-    window.prompt(`User clicked on ${JSON.stringify(rawData.token)}`)
-  }
 
   const checkingState = aligned ? 'valid' : 'invalid'
   const titleText = checkingState === 'valid' ? 'Alignment is Valid' : 'Alignment is Invalid'
@@ -364,63 +368,23 @@ export default function ScriptureCard({
       onBlur={() => setEditing(false)}
       onRenderToolbar={onRenderToolbar}
     >
-      {alignerData ?
-        <div style={{ flexDirection: 'column' }}>
-          <WordAligner
-            style={{ maxHeight: '450px', overflowY: 'auto' }}
-            verseAlignments={alignerData.alignments}
-            targetWords={alignerData.wordBank}
-            translate={translate}
-            contextId={{ reference: reference_ }}
-            targetLanguage={language}
-            targetLanguageFont={''}
-            sourceLanguage={isNT_ ? NT_ORIG_LANG : OT_ORIG_LANG}
-            showPopover={showPopover}
-            lexicons={{}}
-            loadLexiconEntry={getLexiconData}
-            onChange={(results) => onAlignmentsChange(results)}
-          />
-          <br />
-          <div style={{ width: '100%' }}>
-            <IconButton
-              disabled={false}
-              className={classes.margin}
-              key='alignment-save'
-              onClick={() => saveAlignment()}
-              aria-label={'Alignment Save'}
-            >
-              <CheckOutlinedIcon id='alignment-save-icon' htmlColor='#000' />
-            </IconButton>
-            <IconButton
-              disabled={false}
-              className={classes.margin}
-              key='alignment-cancel'
-              onClick={() => cancelAlignment()}
-              aria-label={'Alignment Cancel'}
-            >
-              <CancelOutlinedIcon id='alignment-cancel-icon' htmlColor='#000' />
-            </IconButton>
-          </div>
-        </div>
-        :
-        <ScripturePane
-          refStyle={refStyle}
-          {...scriptureConfig}
-          verseObjects={currentVerseObjects}
-          isNT={isNT_}
-          server={server}
-          reference={reference}
-          direction={direction}
-          contentStyle={contentStyle}
-          fontSize={fontSize}
-          disableWordPopover={disableWordPopover_}
-          getLexiconData={getLexiconData}
-          translate={translate}
-          editing={editing}
-          setEditing={setEditing}
-          setVerseChanged={setVerseChanged}
-        />
-      }
+      <ScripturePane
+        refStyle={refStyle}
+        {...scriptureConfig}
+        verseObjects={currentVerseObjects}
+        isNT={isNT_}
+        server={server}
+        reference={reference}
+        direction={direction}
+        contentStyle={contentStyle}
+        fontSize={fontSize}
+        disableWordPopover={disableWordPopover_}
+        getLexiconData={getLexiconData}
+        translate={translate}
+        editing={editing}
+        setEditing={setEditing}
+        setVerseChanged={setVerseChanged}
+      />
     </Card>
   )
 }
@@ -496,4 +460,6 @@ ScriptureCard.propTypes = {
   bookIndex: PropTypes.string,
   /** callback to indicate that we are using a verse range here */
   addVerseRange: PropTypes.func,
+  /** callback to update word aligner state */
+  setWordAlignerStatus: PropTypes.func,
 }

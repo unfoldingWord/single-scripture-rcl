@@ -20,30 +20,63 @@ interface StartEdit {
 }
 
 interface Props {
+  // user login info
   authentication: { config: object, token: string },
+  // current verse selected from initialVerseObjects[]
   currentVerseNum: number,
+  // if true then editing is allowed
   enableEdit: boolean,
+  // if true then alignment is allowed
   enableAlignment: boolean,
+  // configuration to use for http communication
   httpConfig: ServerConfig,
+  // array of each verse for in reference range
   initialVerseObjects: [],
   isNewTestament: boolean,
+  // user name of logged in user
   loggedInUser: string,
+  // owner to use when fetching original language resources
   originalLanguageOwner: string,
+  // url for the original language repo
   originalRepoUrl: string,
+  // details about the current scripture loaded
   scriptureConfig: ScriptureConfig,
+  // settings to be used for scripture
   scriptureSettings: { },
+  // callback to save current verse edit and alignment changes
   setSavedChanges: Function,
+  // callback to create a user branch for saving edit data
   startEditBranch: StartEdit,
+  // index to use for book (e.g. `01` for `GEN`)
   bookIndex: string,
+  // branch name currently being used (e.g. `master` or user branch)
   workingResourceBranch: string,
+  // current target language
+  targetLanguage: object,
+  // source language
+  sourceLanguage: string,
+  // title to show in alignment
+  title: string,
 }
 
+/**
+ * determines if alignment is complete based on target USFM and original language verse objects
+ * @param {string} targetVerseUSFM
+ * @param {object[]} originalVerseObjects
+ */
 function isUsfmAligned(targetVerseUSFM, originalVerseObjects) {
   originalVerseObjects = originalVerseObjects?.length ? originalVerseObjects : null // make sure not passing empty Array
   const { alignments, wordBank } = AlignmentHelpers.extractAlignmentsFromTargetVerse(targetVerseUSFM, originalVerseObjects)
   return AlignmentHelpers.areAlgnmentsComplete(wordBank, alignments)
 }
 
+/**
+ * get the updated USFM for target verse from the updated verse objects and latest text
+ * @param {object[]} updatedVerseObjects
+ * @param {object[]} initialVerseObjects
+ * @param {boolean} verseTextChanged
+ * @param {string} newVerseText
+ */
 function getCurrentVerseUsfm(updatedVerseObjects, initialVerseObjects, verseTextChanged: boolean, newVerseText) {
   let targetVerseUSFM = null
   const currentVerseObjects_ = updatedVerseObjects || initialVerseObjects
@@ -57,6 +90,7 @@ function getCurrentVerseUsfm(updatedVerseObjects, initialVerseObjects, verseText
   return targetVerseUSFM
 }
 
+// manage verse edit and alignment states
 export function useScriptureAlignmentEdit({
   authentication,
   currentVerseNum,
@@ -73,6 +107,9 @@ export function useScriptureAlignmentEdit({
   startEditBranch,
   bookIndex,
   workingResourceBranch,
+  targetLanguage,
+  sourceLanguage,
+  title,
 } : Props) {
   const [state, setState_] = React.useState({
     aligned: false,
@@ -138,7 +175,6 @@ export function useScriptureAlignmentEdit({
     bookId, originalScriptureSettings_, isNewTestament, originalRepoUrl,
   )
 
-  // @ts-ignore
   const fetchResp_ = scriptureConfig?.fetchResponse
   const owner = scriptureConfig?.resource?.owner
   const repo = `${scriptureConfig?.resource?.languageId}_${scriptureConfig?.resource?.projectId}`
@@ -157,14 +193,8 @@ export function useScriptureAlignmentEdit({
 
   const filepath = getBookName()
 
-  // TODO:  enable save
-  const {
-    editResponse,
-    error,
-    isEditing,
-    isError,
-    onSaveEdit,
-  } = useEdit({
+  // keep track of verse edit state
+  const { onSaveEdit } = useEdit({
     sha,
     owner,
     content: saveContent,
@@ -186,7 +216,7 @@ export function useScriptureAlignmentEdit({
     originalScriptureSettings.resourceLink = null
   }
 
-  // get original language for alignment
+  // get original language for this alignment
   const originalScriptureResource = useScriptureResources({
     bookId,
     scriptureSettings: originalScriptureSettings,
@@ -228,7 +258,7 @@ export function useScriptureAlignmentEdit({
   /**
    * search chapter or verse chunk to line that starts with findItem
    * @param {number|string} findItem
-   * @param {array[string]} chunks
+   * @param {string[]} chunks
    */
   function findRefInArray(findItem, chunks) {
     const ref_ = findItem + ''
@@ -256,8 +286,7 @@ export function useScriptureAlignmentEdit({
       updatedVerseObjects_ = updateVerseWithNewAlignments()
     } else if (verseTextChanged && newVerseText) {
       const currentVerseObjects_ = updatedVerseObjects || initialVerseObjects
-      const { targetVerseText, targetVerseObjects } = AlignmentHelpers.updateAlignmentsToTargetVerse(currentVerseObjects_, newVerseText)
-      // console.log(`saveChangesToCloud() - new text:`, targetVerseText.substring(0,100))
+      const { targetVerseObjects } = AlignmentHelpers.updateAlignmentsToTargetVerse(currentVerseObjects_, newVerseText)
       updatedVerseObjects_ = targetVerseObjects
     } else { // only alignment changes to upload
       updatedVerseObjects_ = updatedVerseObjects || initialVerseObjects
@@ -265,9 +294,7 @@ export function useScriptureAlignmentEdit({
 
     if (updatedVerseObjects_) {
       let newUsfm
-      // @ts-ignore
       const ref = scriptureConfig?.versesForRef?.[currentVerseNum]
-      // @ts-ignore
       const originalUsfm = core.getResponseData(scriptureConfig?.fetchResponse)
 
       if (originalUsfm) {
@@ -300,7 +327,7 @@ export function useScriptureAlignmentEdit({
     }
   }
 
-  React.useEffect(() => {
+  React.useEffect(() => { // when startSave is true, save edits to user branch and then clear startSave
     const _saveEdit = async () => { // begin uploading new USFM
       let branch = (workingResourceBranch !== 'master') ? workingResourceBranch : undefined
 
@@ -335,6 +362,11 @@ export function useScriptureAlignmentEdit({
     }
   }, [startSave])
 
+  /**
+   * used to save new verse objects to bible
+   * @param {number} index
+   * @param {objects[]} newVerseObjects
+   */
   function updateVerseNum(index, newVerseObjects = initialVerseObjects) {
     // @ts-ignore
     const ref = scriptureConfig?.versesForRef?.[index]
@@ -354,6 +386,9 @@ export function useScriptureAlignmentEdit({
     return null
   }
 
+  /**
+   * callback for when user clicked on alignment button - will show if not already shown
+   */
   async function handleAlignmentClick() {
     if (enableAlignment) {
       let alignerData_ = null
@@ -383,24 +418,32 @@ export function useScriptureAlignmentEdit({
     }
   }
 
-  function updateVerseWithNewAlignments() {
+  /**
+   * get updated verse objects after alignments changed
+   * @param {object} _newAlignments - results of aligner
+   */
+  function updateVerseWithNewAlignments(_newAlignments = newAlignments) {
     const currentVerseObjects_ = updatedVerseObjects || initialVerseObjects
     const targetVerseText = newVerseText || UsfmFileConversionHelpers.convertVerseDataToUSFM(currentVerseObjects_)
-    const verseUsfm = AlignmentHelpers.addAlignmentsToVerseUSFM(newAlignments.targetWords, newAlignments.verseAlignments, targetVerseText)
+    const verseUsfm = AlignmentHelpers.addAlignmentsToVerseUSFM(_newAlignments.targetWords, _newAlignments.verseAlignments, targetVerseText)
     const alignedVerseObjects = usfmHelpers.usfmVerseToJson(verseUsfm)
     return alignedVerseObjects
   }
 
-  function saveAlignment() {
-    console.log(`saveAlignment()`)
+  /**
+   * callback for when user clicked on button to save current alignments in word aligner.  Generates new verse content and saves in state. Closes aligner display
+   * @param {object} _newAlignments - results of aligner
+   */
+  function saveAlignment(_newAlignments = newAlignments) {
+    console.log(`saveAlignment() - newAlignments`, _newAlignments)
 
-    if (newAlignments) {
-      const alignedVerseObjects = updateVerseWithNewAlignments()
-
+    if (_newAlignments) {
+      const alignedVerseObjects = updateVerseWithNewAlignments(_newAlignments)
+      console.log(`saveAlignment() - alignedVerseObjects`, alignedVerseObjects)
       setState({
-        alignerData: null,
         editing: false,
         newAlignments: null,
+        alignerData: null,
         updatedVerseObjects: alignedVerseObjects,
       })
     } else {
@@ -411,6 +454,9 @@ export function useScriptureAlignmentEdit({
     }
   }
 
+  /**
+   * callback for when user clicked on button to cancel work in word aligner.  Calculates and displays current alignment valid state. Closes aligner display
+   */
   function cancelAlignment() {
     console.log(`cancelAlignment()`)
     const targetVerseUSFM = getCurrentVerseUsfm(updatedVerseObjects, initialVerseObjects, verseTextChanged, newVerseText)
@@ -418,6 +464,10 @@ export function useScriptureAlignmentEdit({
     setState({ alignerData: null, aligned })
   }
 
+  /**
+   * callback for button to set editing state
+   * @param {boolean} editing_ - if true, editor is shown, otherwise editor is hidden
+   */
   async function setEditing(editing_) {
     if (enableEdit) {
       if (editing_ && !editing) {
@@ -430,6 +480,12 @@ export function useScriptureAlignmentEdit({
     }
   }
 
+  /**
+   * callback from the edit onChange event to update edit state variables
+   * @param {boolean} changed - true if the newVerseText is different than the initialVerseText
+   * @param {string} newVerseText - current changed verse text
+   * @param {string} initialVerseText - initial verse text
+   */
   function setVerseChanged(changed, newVerseText, initialVerseText) {
     const { targetVerseText } = AlignmentHelpers.updateAlignmentsToTargetVerse(initialVerseObjects, newVerseText)
     const aligned = isUsfmAligned(targetVerseText, originalScriptureResource?.verseObjects)
@@ -456,12 +512,18 @@ export function useScriptureAlignmentEdit({
     return changed
   }, [updatedVerseObjects, initialVerseObjects, verseTextChanged])
 
+  /**
+   * callback for when alignments are being changed
+   * @param {object} results
+   * @return {boolean} true if alignment is complete
+   */
   function onAlignmentsChange(results) {
     console.log(`onAlignmentsChange() - alignment changed, results`, results) // merge alignments into target verse and convert to USFM
     const { targetWords, verseAlignments } = results
     const alignmentComplete = AlignmentHelpers.areAlgnmentsComplete(targetWords, verseAlignments)
     console.log(`Alignments are ${alignmentComplete ? 'COMPLETE!' : 'incomplete'}`)
     setState({ newAlignments: results, aligned: alignmentComplete })
+    return alignmentComplete
   }
 
   return {
@@ -479,8 +541,12 @@ export function useScriptureAlignmentEdit({
       aligned,
       alignerData,
       editing,
-      verseTextChanged,
+      sourceLanguage,
+      targetLanguage,
       unsavedChanges,
+      verseTextChanged,
+      reference: reference_,
+      title,
     },
   }
 }
