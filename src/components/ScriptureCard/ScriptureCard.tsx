@@ -290,6 +290,7 @@ export default function ScriptureCard({
     state: {
       aligned,
       alignerData,
+      doingSave,
       editing,
       unsavedChanges,
     },
@@ -363,7 +364,7 @@ export default function ScriptureCard({
       onMenuClose={onMenuClose}
       onMinimize={onMinimize ? () => onMinimize(id) : null}
       editable={enableEdit || enableAlignment}
-      saved={!unsavedChanges}
+      saved={doingSave || !unsavedChanges}
       onSaveEdit={saveChangesToCloud}
       onBlur={() => setEditing(false)}
       onRenderToolbar={onRenderToolbar}
@@ -384,6 +385,7 @@ export default function ScriptureCard({
         editing={editing}
         setEditing={setEditing}
         setVerseChanged={setVerseChanged}
+        saving={doingSave}
       />
     </Card>
   )

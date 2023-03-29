@@ -122,6 +122,7 @@ export function useScriptureAlignmentEdit({
     verseTextChanged: false,
     saveContent: null,
     startSave: false,
+    saveInitiated: false,
     sha: null,
   })
 
@@ -136,6 +137,7 @@ export function useScriptureAlignmentEdit({
     verseTextChanged,
     saveContent,
     startSave,
+    saveInitiated,
     sha,
   } = state
 
@@ -281,6 +283,7 @@ export function useScriptureAlignmentEdit({
   function saveChangesToCloud() {
     console.log(`saveChangesToCloud - started`)
     let updatedVerseObjects_
+    setState({ saveInitiated: true })
 
     if (newAlignments) { // if unsaved alignment changes, apply them
       updatedVerseObjects_ = updateVerseWithNewAlignments()
@@ -327,7 +330,7 @@ export function useScriptureAlignmentEdit({
     }
   }
 
-  React.useEffect(() => { // when startSave is true, save edits to user branch and then clear startSave
+  React.useEffect(() => { // when startSave goes true, save edits to user branch and then clear startSave
     const _saveEdit = async () => { // begin uploading new USFM
       let branch = (workingResourceBranch !== 'master') ? workingResourceBranch : undefined
 
@@ -346,12 +349,13 @@ export function useScriptureAlignmentEdit({
             startSave: false,
             verseTextChanged: false,
             initialVerseText: null,
+            saveInitiated: false,
           })
           console.info('saveChangesToCloud() - Reloading resource')
           scriptureConfig?.reloadResource()
         } else {
           console.error('saveChangesToCloud() - saving changed scripture failed')
-          setState({ startSave: false })
+          setState({ startSave: false, saveInitiated: false })
         }
       })
     }
@@ -540,6 +544,7 @@ export function useScriptureAlignmentEdit({
     state: {
       aligned,
       alignerData,
+      doingSave: saveInitiated,
       editing,
       sourceLanguage,
       targetLanguage,

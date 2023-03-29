@@ -39,6 +39,8 @@ interface Props {
   setEditing: Function;
   /** callback to set that verse has changed */
   setVerseChanged: Function;
+  /** true if currently saving updated text and alignments */
+  saving: boolean;
 }
 
 const MessageStyle = {
@@ -79,9 +81,10 @@ function ScripturePane({
   editing,
   setEditing,
   setVerseChanged,
+  saving,
 } : Props) {
   const [initialVerseText, setInitialVerseText] = React.useState(null)
-  const resourceMsg = getResourceMessage(resourceStatus, server, resourceLink, isNT)
+  const resourceMsg = saving ? 'Saving Changes...' : getResourceMessage(resourceStatus, server, resourceLink, isNT)
   const { chapter, verse } = reference
   direction = direction || 'ltr'
 
