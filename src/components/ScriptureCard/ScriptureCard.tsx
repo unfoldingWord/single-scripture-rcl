@@ -10,6 +10,8 @@ import {
   MANIFEST_NOT_LOADED_ERROR,
 } from 'translation-helps-rcl'
 import { WordAligner } from 'word-aligner-rcl'
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
 import CheckOutlinedIcon from '@mui/icons-material/CheckOutlined'
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined'
 import { IconButton } from '@mui/material'
@@ -36,9 +38,20 @@ const style = { marginTop: '16px', width: '500px' }
 function initializeVerseNumber(verse) {
   let initialVerse = verse
   if (typeof verse === 'string' && verse.includes('-')) {
-    initialVerse = verse.charAt(0)
+    initialVerse = parseInt(verse.charAt(0))
   }
   return initialVerse
+}
+
+function getVerseDataFromScripConfig(scriptureConfig, verseNum) {
+  return scriptureConfig?.versesForRef?.find(
+    verseRef => verseRef.verse === verseNum
+  )
+}
+
+function getVerseObjectsForVerse(scriptureConfig, currentVerseNum) {
+  const currentVerseData = getVerseDataFromScripConfig(scriptureConfig, currentVerseNum) || null
+  return currentVerseData?.verseData?.verseObjects || null
 }
 
 export default function ScriptureCard({
@@ -131,17 +144,10 @@ export default function ScriptureCard({
     wholeBook: true,
   })
 
+  const currentVerseObjects = getVerseObjectsForVerse(scriptureConfig, currentVerseNum)
+
   // @ts-ignore
   const cardResourceId = scriptureConfig?.resource?.projectId || resourceId
-
-  function getVerseDataFromScripConfig(scriptureConfig, verseNum) {
-    return scriptureConfig?.versesForRef?.find(
-      verseRef => verseRef.verse === verseNum
-    )
-  }
-
-  const currentVerseData_ = getVerseDataFromScripConfig(scriptureConfig, currentVerseNum) || null
-  const initialVerseObjects = currentVerseData_?.verseData?.verseObjects || null
 
   // @ts-ignore
   let ref_ = scriptureConfig?.resource?.ref || appRef
@@ -263,13 +269,13 @@ export default function ScriptureCard({
 
   React.useEffect(() => { // pre-cache glosses on verse change
     const fetchGlossDataForVerse = async () => {
-      if (!disableWordPopover && initialVerseObjects && fetchGlossesForVerse) {
-        await fetchGlossesForVerse(initialVerseObjects, languageId_)
+      if (!disableWordPopover && currentVerseObjects && fetchGlossesForVerse) {
+        await fetchGlossesForVerse(currentVerseObjects, languageId_)
       }
     }
 
     fetchGlossDataForVerse()
-  }, [ initialVerseObjects, disableWordPopover, languageId_, fetchGlossesForVerse ])
+  }, [ currentVerseObjects, disableWordPopover, languageId_, fetchGlossesForVerse ])
 
   const enableEdit = !usingOriginalBible
   const enableAlignment = !usingOriginalBible
@@ -277,7 +283,7 @@ export default function ScriptureCard({
   const {
     actions: {
       cancelAlignment,
-      currentVerseObjects,
+      editedVerseObjects,
       handleAlignmentClick,
       onAlignmentsChange,
       saveAlignment,
@@ -296,7 +302,7 @@ export default function ScriptureCard({
     enableEdit,
     enableAlignment,
     httpConfig,
-    initialVerseObjects,
+    initialVerseObjects: currentVerseObjects,
     isNewTestament,
     // @ts-ignore
     loggedInUser: canUseEditBranch ? loggedInUser : null,
@@ -353,6 +359,16 @@ export default function ScriptureCard({
       }
     }
   }, [scriptureConfig?.matchedVerse])
+
+  const handleTabChange = (event, newVerse) => {
+    setState({currentVerseNum: newVerse})
+  }
+
+  const VerseTabs = scriptureConfig?.versesForRef?.map(({verse}, index) => {
+    return (
+      <Tab value={verse} label={verse} id={`tab-${index}`} />
+    )
+  })
 
   return (
     <Card
@@ -419,23 +435,31 @@ export default function ScriptureCard({
           </div>
         </div>
         :
-        <ScripturePane
-          refStyle={refStyle}
-          {...scriptureConfig}
-          verseObjects={currentVerseObjects}
-          isNT={isNT_}
-          server={server}
-          reference={reference}
-          direction={direction}
-          contentStyle={contentStyle}
-          fontSize={fontSize}
-          disableWordPopover={disableWordPopover_}
-          getLexiconData={getLexiconData}
-          translate={translate}
-          editing={editing}
-          setEditing={setEditing}
-          setVerseChanged={setVerseChanged}
-        />
+        <div>
+          <Tabs
+            variant="scrollable"
+            value={currentVerseNum}
+            onChange={handleTabChange}>
+            {VerseTabs}
+          </Tabs>
+          <ScripturePane
+            refStyle={refStyle}
+            {...scriptureConfig}
+            verseObjects={editedVerseObjects}
+            isNT={isNT_}
+            server={server}
+            reference={{...reference, verse: currentVerseNum}}
+            direction={direction}
+            contentStyle={contentStyle}
+            fontSize={fontSize}
+            disableWordPopover={disableWordPopover_}
+            getLexiconData={getLexiconData}
+            translate={translate}
+            editing={editing}
+            setEditing={setEditing}
+            setVerseChanged={setVerseChanged}
+          />
+        </div>
       }
     </Card>
   )

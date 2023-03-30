@@ -442,7 +442,7 @@ export function useScriptureAlignmentEdit({
     })
   }
 
-  const currentVerseObjects = React.useMemo( () => { // if verse has been edited or alignment changed, then generate new verseObjects to display in ScripturePane
+  const editedVerseObjects = React.useMemo( () => { // if verse has been edited or alignment changed, then generate new verseObjects to display in ScripturePane
     if (initialVerseObjects) {
       const targetVerseUSFM = getCurrentVerseUsfm(updatedVerseObjects, initialVerseObjects, verseTextChanged, newVerseText)
       const currentVerseObjects_ = usfmHelpers.usfmVerseToJson(targetVerseUSFM)
@@ -467,7 +467,7 @@ export function useScriptureAlignmentEdit({
   return {
     actions: {
       cancelAlignment,
-      currentVerseObjects,
+      editedVerseObjects,
       handleAlignmentClick,
       onAlignmentsChange,
       saveAlignment,
