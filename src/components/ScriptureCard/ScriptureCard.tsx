@@ -18,6 +18,7 @@ import { IconButton } from '@mui/material'
 import { ScripturePane, ScriptureSelector } from '..'
 import { useScriptureSettings } from '../../hooks/useScriptureSettings'
 import {
+  getVerseDataFromScripConfig,
   getResourceLink,
   getResourceMessage,
   getScriptureVersionSettings,
@@ -41,12 +42,6 @@ function initializeVerseNumber(verse) {
     initialVerse = parseInt(verse.charAt(0))
   }
   return initialVerse
-}
-
-function getVerseDataFromScripConfig(scriptureConfig, verseNum) {
-  return scriptureConfig?.versesForRef?.find(
-    verseRef => verseRef.verse === verseNum
-  )
 }
 
 function getVerseObjectsForVerse(scriptureConfig, currentVerseNum) {
