@@ -10,8 +10,6 @@ import {
   MANIFEST_NOT_LOADED_ERROR,
 } from 'translation-helps-rcl'
 import { WordAligner } from 'word-aligner-rcl'
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
 import CheckOutlinedIcon from '@mui/icons-material/CheckOutlined'
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined'
 import { IconButton } from '@mui/material'
@@ -355,13 +353,29 @@ export default function ScriptureCard({
     }
   }, [scriptureConfig?.matchedVerse])
 
-  const handleTabChange = (event, newVerse) => {
-    setState({currentVerseNum: newVerse})
-  }
 
-  const VerseTabs = scriptureConfig?.versesForRef?.map(({verse}, index) => {
+  const renderedScripturePanes = scriptureConfig?.versesForRef?.map(({verse}, index) => {
+    const mappedVerseObjects = getVerseObjectsForVerse(scriptureConfig, verse)
+
     return (
-      <Tab value={verse} label={verse} id={`tab-${index}`} />
+      <ScripturePane
+        key={index}
+        refStyle={refStyle}
+        {...scriptureConfig}
+        verseObjects={mappedVerseObjects}
+        isNT={isNT_}
+        server={server}
+        reference={{...reference, verse}}
+        direction={direction}
+        contentStyle={contentStyle}
+        fontSize={fontSize}
+        disableWordPopover={disableWordPopover_}
+        getLexiconData={getLexiconData}
+        translate={translate}
+        editing={editing}
+        setEditing={setEditing}
+        setVerseChanged={setVerseChanged}
+      />
     )
   })
 
@@ -430,30 +444,8 @@ export default function ScriptureCard({
           </div>
         </div>
         :
-        <div>
-          <Tabs
-            variant="scrollable"
-            value={currentVerseNum}
-            onChange={handleTabChange}>
-            {VerseTabs}
-          </Tabs>
-          <ScripturePane
-            refStyle={refStyle}
-            {...scriptureConfig}
-            verseObjects={editedVerseObjects}
-            isNT={isNT_}
-            server={server}
-            reference={{...reference, verse: currentVerseNum}}
-            direction={direction}
-            contentStyle={contentStyle}
-            fontSize={fontSize}
-            disableWordPopover={disableWordPopover_}
-            getLexiconData={getLexiconData}
-            translate={translate}
-            editing={editing}
-            setEditing={setEditing}
-            setVerseChanged={setVerseChanged}
-          />
+        <div id="scripture-pane-list">
+          {renderedScripturePanes}
         </div>
       }
     </Card>
