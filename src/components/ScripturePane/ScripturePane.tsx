@@ -3,8 +3,9 @@ import useDeepCompareEffect from 'use-deep-compare-effect'
 import { VerseObjects } from 'scripture-resources-rcl'
 import { UsfmFileConversionHelpers } from 'word-aligner-rcl'
 import { ScriptureReference, VerseObjectsType } from '../../types'
-import { getResourceMessage } from '../../utils'
+import {getResourceMessage, NT_ORIG_LANG, OT_ORIG_LANG} from '../../utils'
 import { Container, Content } from './styled'
+import {ScriptureALignmentEditProps, useScriptureAlignmentEdit} from "../../hooks/useScriptureAlignmentEdit";
 
 interface Props {
   /** current reference **/
@@ -33,14 +34,12 @@ interface Props {
   getLexiconData: Function;
   /** optional function for localization */
   translate: Function;
-  /** true if in edit mode */
-  editing: boolean;
-  /** callback to set edit mode */
-  setEditing: Function;
-  /** callback to set that verse has changed */
-  setVerseChanged: Function;
   /** true if currently saving updated text and alignments */
   saving: boolean;
+  // initialization for useScriptureAlignmentEdit
+  scriptureAlignmentEditConfig: ScriptureALignmentEditProps,
+  // index number for this scripture pane
+  currentIndex: number,
 }
 
 const MessageStyle = {
@@ -68,8 +67,8 @@ function ScripturePane({
   reference,
   refStyle,
   direction,
+  currentIndex,
   contentStyle,
-  verseObjects,
   disableWordPopover,
   resourceStatus,
   resourceLink,
@@ -78,11 +77,23 @@ function ScripturePane({
   fontSize,
   getLexiconData,
   translate,
-  editing,
-  setEditing,
-  setVerseChanged,
   saving,
+  scriptureAlignmentEditConfig,
+  setSavedChanges,
 } : Props) {
+  const [state, setState_] = React.useState({
+    urlError: null,
+    doingAlignment: false,
+  })
+  const {
+    urlError,
+    doingAlignment,
+  } = state
+
+  function setState(newState) {
+    setState_(prevState => ({ ...prevState, ...newState }))
+  }
+
   const [initialVerseText, setInitialVerseText] = React.useState(null)
   const resourceMsg = saving ? 'Saving Changes...' : getResourceMessage(resourceStatus, server, resourceLink, isNT)
   const { chapter, verse } = reference
@@ -98,6 +109,39 @@ function ScripturePane({
     fontSize: '100%',
   }
 
+  const _scriptureAlignmentEdit = useScriptureAlignmentEdit(scriptureAlignmentEditConfig)
+  const {
+    actions: {
+      currentVerseObjects,
+      handleAlignmentClick,
+      setEditing,
+      setVerseChanged,
+      saveChangesToCloud,
+    },
+    state: {
+      aligned,
+      alignerData,
+      doingSave,
+      editing,
+      unsavedChanges,
+    },
+  } = _scriptureAlignmentEdit
+
+  React.useEffect(() => {
+    if (alignerData && !doingAlignment) {
+      // TODO: setWordAlignerStatus(_scriptureAlignmentEdit)
+      setState({ doingAlignment: true })
+    } else if (doingAlignment) {
+      // TODO: setWordAlignerStatus(_scriptureAlignmentEdit)
+      setState({ doingAlignment: false })
+    }
+  }, [_scriptureAlignmentEdit?.state?.alignerData])
+
+  React.useEffect(() => { // set saved changes whenever user edits verse text or alignments or if alignments are open
+    const unsavedChanges_ = unsavedChanges || alignerData
+    setSavedChanges && setSavedChanges(currentIndex, !unsavedChanges_, saveChangesToCloud)
+  }, [unsavedChanges, alignerData])
+
   // dynamically adjust font size
   const calculatedFontSize = React.useMemo(() => (
     parseFloat(TextAreaStyle.fontSize) * fontSize / 100 + 'px'
@@ -110,9 +154,9 @@ function ScripturePane({
   }
 
   useDeepCompareEffect(() => {
-    const verseText = UsfmFileConversionHelpers.getUsfmForVerseContent({ verseObjects })
+    const verseText = UsfmFileConversionHelpers.getUsfmForVerseContent({ currentVerseObjects })
     setInitialVerseText(verseText)
-  }, [{ verseObjects }])
+  }, [{ reference, currentVerseObjects }])
 
   function onTextChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
     const newText = event?.target?.value
@@ -149,7 +193,7 @@ function ScripturePane({
               :
               <VerseObjects
                 verseKey={`${reference.chapter}:${reference.verse}`}
-                verseObjects={verseObjects || []}
+                verseObjects={currentVerseObjects || []}
                 disableWordPopover={disableWordPopover}
                 getLexiconData={getLexiconData}
                 translate={translate}

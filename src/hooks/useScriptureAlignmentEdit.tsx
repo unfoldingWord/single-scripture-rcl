@@ -7,9 +7,6 @@ import {
 } from 'word-aligner-rcl'
 import * as isEqual from 'deep-equal'
 import useDeepCompareEffect from 'use-deep-compare-effect'
-import { useEdit } from 'gitea-react-toolkit'
-import { core } from 'scripture-resources-rcl'
-import usfmjs from 'usfm-js'
 import {
   ScriptureConfig,
   ScriptureReference,
@@ -23,7 +20,7 @@ interface StartEdit {
   (): Promise<string>;
 }
 
-interface Props {
+export interface ScriptureALignmentEditProps {
   // user login info
   authentication: { config: object, token: string },
   // current verse selected from initialVerseObjects[]
@@ -117,7 +114,7 @@ export function useScriptureAlignmentEdit({
   targetLanguage,
   title,
   workingResourceBranch,
-} : Props) {
+} : ScriptureALignmentEditProps) {
   const [state, setState_] = React.useState({
     aligned: false,
     alignerData: null,
@@ -195,32 +192,6 @@ export function useScriptureAlignmentEdit({
     // @ts-ignore
   }, [fetchResp_])
 
-  function getBookName() {
-    const bookCaps = scriptureConfig?.reference?.projectId ? scriptureConfig.reference.projectId.toUpperCase() : ''
-    return `${bookIndex}-${bookCaps}.usfm`
-  }
-
-  const filepath = getBookName()
-
-  // keep track of verse edit state
-  const { onSaveEdit } = useEdit({
-    sha,
-    owner,
-    content: saveContent,
-    config: {
-      cache: { maxAge: 0 },
-      ...authentication?.config,
-      token: authentication?.token,
-      // @ts-ignore
-      timeout: httpConfig?.serverTimeOut || httpConfig?.timeout || 5000,
-    },
-    author: loggedInUser,
-    token: authentication?.token,
-    branch: workingResourceBranch,
-    filepath,
-    repo,
-  })
-
   if (!enableAlignment) { // if not enabled, then we don't fetch resource
     originalScriptureSettings.resourceLink = null
   }
@@ -279,29 +250,6 @@ export function useScriptureAlignmentEdit({
     }
   }, [initialVerseObjects, alignerData, newVerseText, initialVerseText, enableAlignment, originalVerseObjects])
 
-  /**
-   * search chapter or verse chunk to line that starts with findItem
-   * @param {number|string} findItem
-   * @param {string[]} chunks
-   */
-  function findRefInArray(findItem, chunks) {
-    const ref_ = findItem + ''
-    const refLen = ref_.length
-    const index = chunks.findIndex((chunk, idx) => {
-      if (idx > 0) {
-        if (chunk.substring(0, refLen) === ref_) {
-          const nextChar = chunk[ref_]
-
-          if ((nextChar > '9') || (nextChar < '0')) {
-            return true
-          }
-        }
-      }
-      return false
-    })
-    return index
-  }
-
   function saveChangesToCloud() {
     console.log(`saveChangesToCloud - started`)
     let updatedVerseObjects_
@@ -318,98 +266,15 @@ export function useScriptureAlignmentEdit({
     }
 
     if (updatedVerseObjects_) {
-      let newUsfm
       const ref = scriptureConfig?.versesForRef?.[currentVerseNum]
-      const originalUsfm = core.getResponseData(scriptureConfig?.fetchResponse)
-
-      if (originalUsfm) {
-        const chapterChunks = originalUsfm?.split('\\c ')
-        const chapterIndex = findRefInArray(ref?.chapter, chapterChunks)
-
-        if (chapterIndex >= 0) {
-          const currentChapter = chapterChunks[chapterIndex]
-          const verseChunks = currentChapter.split('\\v ')
-          const verseIndex = findRefInArray(ref?.verse, verseChunks)
-
-          if (verseIndex >= 0) {
-            const newVerseUsfm = UsfmFileConversionHelpers.convertVerseDataToUSFM(updatedVerseObjects_)
-            const oldVerse = verseChunks[verseIndex]
-            const verseNumLen = (ref?.verse + '').length
-            verseChunks[verseIndex] = oldVerse.substring(0, verseNumLen + 1) + newVerseUsfm
-            const newChapter = verseChunks.join('\\v ')
-            chapterChunks[chapterIndex] = newChapter
-            newUsfm = chapterChunks.join('\\c ')
-          }
-        }
+      return {
+        newVerseText,
+        ref,
+        updatedVerseObjects: updatedVerseObjects_,
       }
-
-      if (!newUsfm) {
-        const newBookJson = updateVerseNum(currentVerseNum, updatedVerseObjects_)
-        newUsfm = usfmjs.toUSFM(newBookJson, { forcedNewLines: true })
-      }
-      console.log(`saveChangesToCloud() - saving new USFM: ${newUsfm.substring(0, 100)}...`)
-      setState({ saveContent: newUsfm, startSave: true })
-    }
-  }
-
-  React.useEffect(() => { // when startSave goes true, save edits to user branch and then clear startSave
-    const _saveEdit = async () => { // begin uploading new USFM
-      let branch = (workingResourceBranch !== 'master') ? workingResourceBranch : undefined
-
-      if (!branch) {
-        branch = await startEditBranch() // make sure user branch exists and get name
-      }
-
-      await onSaveEdit(branch).then((success) => { // push changed to server
-        if (success) {
-          console.log(`saveChangesToCloud() - save scripture edits success`)
-          setState({
-            updatedVerseObjects: null,
-            editing: false,
-            newVerseText: null,
-            alignerData: null,
-            startSave: false,
-            verseTextChanged: false,
-            initialVerseText: null,
-            saveInitiated: false,
-          })
-          console.info('saveChangesToCloud() - Reloading resource')
-          scriptureConfig?.reloadResource()
-        } else {
-          console.error('saveChangesToCloud() - saving changed scripture failed')
-          setState({ startSave: false, saveInitiated: false })
-        }
-      })
     }
 
-    if (startSave) {
-      console.log(`saveChangesToCloud - calling _saveEdit()`)
-      _saveEdit()
-    }
-  }, [startSave])
-
-  /**
-   * used to save new verse objects to bible
-   * @param {number} index
-   * @param {objects[]} newVerseObjects
-   */
-  function updateVerseNum(index, newVerseObjects = initialVerseObjects) {
-    // @ts-ignore
-    const ref = scriptureConfig?.versesForRef?.[index]
-    let targetVerseObjects_ = null
-
-    if (ref) {
-      if (newVerseText) {
-        const { targetVerseObjects } = AlignmentHelpers.updateAlignmentsToTargetVerse(newVerseObjects, newVerseText)
-        targetVerseObjects_ = targetVerseObjects
-      } else {
-        targetVerseObjects_ = newVerseObjects
-      }
-
-      // @ts-ignore
-      return targetVerseObjects_ && scriptureConfig?.updateVerse(ref.chapter, ref.verse, { verseObjects: targetVerseObjects_ })
-    }
-    return null
+    return {}
   }
 
   /**
