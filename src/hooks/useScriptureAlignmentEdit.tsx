@@ -11,7 +11,10 @@ import { useEdit } from 'gitea-react-toolkit'
 import { core } from 'scripture-resources-rcl'
 import usfmjs from 'usfm-js'
 import { ScriptureConfig, ServerConfig } from '../types'
-import { getScriptureResourceSettings } from '../utils/ScriptureSettings'
+import {
+  getScriptureResourceSettings,
+  getVerseDataFromScripConfig
+} from '../utils/ScriptureSettings'
 import { ORIGINAL_SOURCE } from '../utils'
 import useScriptureResources from './useScriptureResources'
 
@@ -266,7 +269,8 @@ export function useScriptureAlignmentEdit({
     if (updatedVerseObjects_) {
       let newUsfm
       // @ts-ignore
-      const ref = scriptureConfig?.versesForRef?.[currentVerseNum]
+      const ref = getVerseDataFromScripConfig(scriptureConfig, currentVerseNum)
+
       // @ts-ignore
       const originalUsfm = core.getResponseData(scriptureConfig?.fetchResponse)
 
@@ -335,9 +339,9 @@ export function useScriptureAlignmentEdit({
     }
   }, [startSave])
 
-  function updateVerseNum(index, newVerseObjects = initialVerseObjects) {
+  function updateVerseNum(verseNum, newVerseObjects = initialVerseObjects) {
     // @ts-ignore
-    const ref = scriptureConfig?.versesForRef?.[index]
+    const ref = getVerseDataFromScripConfig(scriptureConfig, verseNum)
     let targetVerseObjects_ = null
 
     if (ref) {
@@ -418,6 +422,7 @@ export function useScriptureAlignmentEdit({
     setState({ alignerData: null, aligned })
   }
 
+  // TODO: Change this function to take currentVerseNum to set editing verse
   async function setEditing(editing_) {
     if (enableEdit) {
       if (editing_ && !editing) {
@@ -442,7 +447,7 @@ export function useScriptureAlignmentEdit({
     })
   }
 
-  const currentVerseObjects = React.useMemo( () => { // if verse has been edited or alignment changed, then generate new verseObjects to display in ScripturePane
+  const editedVerseObjects = React.useMemo( () => { // if verse has been edited or alignment changed, then generate new verseObjects to display in ScripturePane
     if (initialVerseObjects) {
       const targetVerseUSFM = getCurrentVerseUsfm(updatedVerseObjects, initialVerseObjects, verseTextChanged, newVerseText)
       const currentVerseObjects_ = usfmHelpers.usfmVerseToJson(targetVerseUSFM)
@@ -467,7 +472,7 @@ export function useScriptureAlignmentEdit({
   return {
     actions: {
       cancelAlignment,
-      currentVerseObjects,
+      editedVerseObjects,
       handleAlignmentClick,
       onAlignmentsChange,
       saveAlignment,

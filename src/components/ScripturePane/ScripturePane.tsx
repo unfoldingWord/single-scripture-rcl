@@ -122,7 +122,7 @@ function ScripturePane({
   }
 
   return (
-    <Container style={{ direction, width: '100%', height: '100%' }}>
+    <Container style={{ direction, width: '100%', paddingBottom: '0.5em'}}>
       {resourceMsg ?
         // @ts-ignore
         <div style={MessageStyle}>
