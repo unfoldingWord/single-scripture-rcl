@@ -117,6 +117,7 @@ export function useScriptureAlignmentEdit({
     aligned: false,
     alignerData: null,
     editing: false,
+    reference: null,
     newAlignments: null,
     newVerseText: null,
     updatedVerseObjects: null,
@@ -129,6 +130,7 @@ export function useScriptureAlignmentEdit({
     editing,
     newAlignments,
     newVerseText,
+    reference,
     updatedVerseObjects,
     verseTextChanged,
   } = state
@@ -137,15 +139,15 @@ export function useScriptureAlignmentEdit({
     setState_(prevState => ({ ...prevState, ...newState }))
   }
 
-  const reference_ = scriptureConfig?.reference || null
+  const _reference = scriptureConfig?.reference || null
 
-  React.useEffect(() => { // check for context changes, reset edit and alignment state
-    console.log(`reference changed ${JSON.stringify(reference_)}`)
-
+  function clearChanges() {
+    console.log(`clearChanges() - ${JSON.stringify(_reference)}`)
     const clearState = {
       ...state,
       alignerData: null,
       editing: false,
+      reference: _reference,
       newAlignments: null,
       newVerseText: null,
       updatedVerseObjects: null,
@@ -156,7 +158,14 @@ export function useScriptureAlignmentEdit({
       console.log(`reference changed, reset edit/alignment state variables`)
       setState(clearState)
     }
-  }, [reference_])
+  }
+
+  React.useEffect(() => { // check for context changes, reset edit and alignment state
+    if (!isEqual(reference, _reference)) {
+      console.log(`reference changed ${JSON.stringify(_reference)}`)
+      clearChanges()
+    }
+  }, [scriptureConfig?.reference])
 
   const originalScriptureSettings_ = {
     ...scriptureSettings,
@@ -165,7 +174,7 @@ export function useScriptureAlignmentEdit({
 
   // @ts-ignore
   httpConfig = httpConfig || {}
-  const bookId = reference_?.projectId
+  const bookId = _reference?.projectId
   const originalScriptureSettings = getScriptureResourceSettings(
     bookId, originalScriptureSettings_, isNewTestament, originalRepoUrl,
   )
@@ -178,8 +187,8 @@ export function useScriptureAlignmentEdit({
   const originalScriptureResource = useScriptureResources({
     bookId,
     scriptureSettings: originalScriptureSettings,
-    chapter: reference_?.chapter,
-    verse: reference_?.verse,
+    chapter: _reference?.chapter,
+    verse: _reference?.verse,
     isNewTestament,
     originalRepoUrl,
     currentLanguageId: originalScriptureSettings?.languageId,
@@ -351,15 +360,15 @@ export function useScriptureAlignmentEdit({
    * callback from the edit onChange event to update edit state variables
    * @param {boolean} changed - true if the newVerseText is different than the initialVerseText
    * @param {string} newVerseText - current changed verse text
-   * @param {string} initialVerseText - initial verse text
+   * @param {string} _initialVerseText - initial verse text
    */
-  function setVerseChanged(changed, newVerseText, initialVerseText) {
+  function setVerseChanged(changed, newVerseText, _initialVerseText) {
     const { targetVerseText } = AlignmentHelpers.updateAlignmentsToTargetVerse(initialVerseObjects, newVerseText)
     const aligned = isUsfmAligned(targetVerseText, originalScriptureResource?.verseObjects)
+    const _changed = newVerseText !== initialVerseText
 
     setState({
-      verseTextChanged: changed,
-      initialVerseText,
+      verseTextChanged: _changed,
       newVerseText,
       aligned,
     })
@@ -381,7 +390,7 @@ export function useScriptureAlignmentEdit({
 
   React.useEffect(() => { // set saved changes whenever user edits verse text or alignments or if alignments are open
     const unsavedChanges_ = unsavedChanges || alignerData
-    setSavedChanges && setSavedChanges(currentIndex, !unsavedChanges_, getChanges)
+    setSavedChanges && setSavedChanges(currentIndex, !unsavedChanges_, getChanges, clearChanges)
   }, [unsavedChanges, alignerData])
 
   /**
@@ -401,7 +410,6 @@ export function useScriptureAlignmentEdit({
   return {
     actions: {
       cancelAlignment,
-      currentVerseObjects,
       getChanges,
       handleAlignmentClick,
       onAlignmentsChange,
@@ -412,14 +420,16 @@ export function useScriptureAlignmentEdit({
     state: {
       aligned,
       alignerData,
+      currentVerseObjects,
       editing,
       initialVerseText,
+      initialVerseObjects,
       newVerseText,
       sourceLanguage,
       targetLanguage,
       unsavedChanges,
       verseTextChanged,
-      reference: reference_,
+      reference: _reference,
       title,
     },
   }

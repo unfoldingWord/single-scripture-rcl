@@ -122,7 +122,6 @@ function ScripturePane({
   const _scriptureAlignmentEdit = useScriptureAlignmentEdit(_scriptureAlignmentEditConfig)
   const {
     actions: {
-      currentVerseObjects,
       handleAlignmentClick,
       setEditing,
       setVerseChanged,
@@ -130,8 +129,11 @@ function ScripturePane({
     state: {
       aligned,
       alignerData,
+      currentVerseObjects,
+      initialVerseObjects,
       editing,
       unsavedChanges,
+      newVerseText,
     },
   } = _scriptureAlignmentEdit
 
@@ -157,9 +159,9 @@ function ScripturePane({
   }
 
   useDeepCompareEffect(() => {
-    const verseText = UsfmFileConversionHelpers.getUsfmForVerseContent({ verseObjects: currentVerseObjects })
+    const verseText = UsfmFileConversionHelpers.getUsfmForVerseContent({ verseObjects: initialVerseObjects })
     setInitialVerseText(verseText)
-  }, [{ reference, currentVerseObjects }])
+  }, [{ reference, initialVerseObjects }])
 
   function onTextChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
     const newText = event?.target?.value
@@ -190,7 +192,7 @@ function ScripturePane({
           >
             {editing ?
               <textarea
-                defaultValue={initialVerseText}
+                defaultValue={newVerseText || initialVerseText}
                 onChange={onTextChange}
                 onBlur={onBlur}
                 style={textAreaStyle}

@@ -70,13 +70,15 @@ export default function ScriptureCard({
   setWordAlignerStatus,
 }) {
   const [state, setState_] = React.useState({
+    haveUnsavedChanges: false,
     ref: appRef,
     saveContent: null,
     sha: null,
     startSave: false,
     urlError: null,
     usingUserBranch: false,
-    unsavedChanges: {},
+    unsavedChangesList: {},
+    versesForRef: null,
   })
   const {
     ref,
@@ -85,7 +87,9 @@ export default function ScriptureCard({
     startSave,
     urlError,
     usingUserBranch,
-    unsavedChanges,
+    unsavedChangesList,
+    haveUnsavedChanges,
+    versesForRef,
   } = state
 
   const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
@@ -133,11 +137,13 @@ export default function ScriptureCard({
   const repo = `${scriptureConfig?.resource?.languageId}_${scriptureConfig?.resource?.projectId}`
   const reference_ = scriptureConfig?.reference || null
 
-  React.useEffect(() => { // get the sha from last scripture download
-    const sha = fetchResp_?.data?.sha || null
-    console.log(`for ${JSON.stringify(reference_)} new sha is ${sha}`)
-    setState({ sha })
-    // @ts-ignore
+  React.useEffect(() => { // get the _sha from last scripture download
+    const _sha = fetchResp_?.data?.sha || null
+    console.log(`for ${JSON.stringify(reference_)} new sha is ${_sha}`)
+
+    if (_sha !== sha) {
+      setState({ sha: _sha })
+    }
   }, [fetchResp_])
 
   // @ts-ignore
@@ -191,7 +197,7 @@ export default function ScriptureCard({
       const isAccessError = resourceStatus[MANIFEST_NOT_LOADED_ERROR]
       onResourceError && onResourceError(message, isAccessError, resourceStatus)
     }
-  }, [scriptureConfig?.resourceStatus?.[ERROR_STATE], onResourceError])
+  }, [scriptureConfig?.resourceStatus?.[ERROR_STATE]])
 
   if (scriptureConfig.title && scriptureConfig.version) {
     scriptureTitle = `${scriptureConfig.title} v${scriptureConfig.version}`
@@ -257,18 +263,22 @@ export default function ScriptureCard({
 
   React.useEffect(() => { // pre-cache glosses on verse change
     const fetchGlossDataForVerse = async () => {
-      for (const verseRef of scriptureConfig?.versesForRef || []) {
-        const verseObjects = verseRef?.verseData?.verseObjects
+      let verseObjects = []
 
-        if (!disableWordPopover && verseObjects && fetchGlossesForVerse) {
-          // eslint-disable-next-line no-await-in-loop
-          await fetchGlossesForVerse(verseObjects, languageId_)
-        }
+      // get verse objects of all the verses
+      for (const verseRef of scriptureConfig?.versesForRef || []) {
+        const _verseObjects = verseRef?.verseData?.verseObjects
+        verseObjects = verseObjects.concat(_verseObjects)
+      }
+
+      if (!disableWordPopover && verseObjects?.length && fetchGlossesForVerse) {
+        // eslint-disable-next-line no-await-in-loop
+        await fetchGlossesForVerse(verseObjects, languageId_)
       }
     }
 
     fetchGlossDataForVerse()
-  }, [ scriptureConfig?.versesForRef, disableWordPopover, languageId_, fetchGlossesForVerse ])
+  }, [ versesForRef, languageId_ ])
 
   const enableEdit = !usingOriginalBible
   const enableAlignment = !usingOriginalBible
@@ -296,25 +306,36 @@ export default function ScriptureCard({
     workingResourceBranch: ref,
   }
 
-  function _setSavedChanges(currentVerse, state, onSaveToCloud = null) {
-    const _unsavedChanges = { ...unsavedChanges }
+  /**
+   * this gets called whenever a scripture pane has a change in save state
+   * @param {number} currentIndex
+   * @param {boolean} saved
+   * @param {function} getChanges - will be called whenever user clicks save button
+   * @param {function} clearChanges - will be called whenever save has completed
+   */
+  function _setSavedChanges(currentIndex, saved, getChanges = null, clearChanges = null) {
+    const _unsavedChangesList = { ...unsavedChangesList }
 
-    if (state) {
-      if (!_unsavedChanges.hasOwnProperty(currentVerse)) {
-        _unsavedChanges[currentVerse] = onSaveToCloud
+    if (saved) {
+      if (_unsavedChangesList.hasOwnProperty(currentIndex)) {
+        delete _unsavedChangesList[currentIndex]
       }
     } else {
-      if (_unsavedChanges.hasOwnProperty(currentVerse)) {
-        delete _unsavedChanges[currentVerse]
+      if (!_unsavedChangesList.hasOwnProperty(currentIndex)) {
+        _unsavedChangesList[currentIndex] = { getChanges, clearChanges }
       }
     }
 
-    if (!isEqual(_unsavedChanges, unsavedChanges)) {
-      setState({ unsavedChanges: _unsavedChanges })
+    const _haveUnsavedChanges = !!Object.keys(_unsavedChangesList).length
+
+    if (haveUnsavedChanges != _haveUnsavedChanges) {
+      setSavedChanges && setSavedChanges(resourceId, !_haveUnsavedChanges)
+      setState({ haveUnsavedChanges: _haveUnsavedChanges })
     }
 
-    const haveUnsavedChanges = Object.keys(unsavedChanges).length
-    setSavedChanges && setSavedChanges(!haveUnsavedChanges)
+    if (!isEqual(_unsavedChangesList, unsavedChangesList)) {
+      setState({ unsavedChangesList: _unsavedChangesList })
+    }
   }
 
   /**
@@ -378,20 +399,23 @@ export default function ScriptureCard({
         if (success) {
           console.log(`saveChangesToCloud() - save scripture edits success`)
           setState({
-            updatedVerseObjects: null,
-            editing: false,
-            newVerseText: null,
-            alignerData: null,
             startSave: false,
-            verseTextChanged: false,
-            initialVerseText: null,
-            saveInitiated: false,
           })
+
+          const unsavedCardIndices = Object.keys(unsavedChangesList)
+
+          if (unsavedCardIndices?.length) {
+            for (const cardIndex of unsavedCardIndices) {
+              const { clearChanges } = unsavedChangesList[cardIndex]
+              clearChanges && clearChanges()
+            }
+          }
+
           console.info('saveChangesToCloud() - Reloading resource')
           scriptureConfig?.reloadResource()
         } else {
           console.error('saveChangesToCloud() - saving changed scripture failed')
-          setState({ startSave: false, saveInitiated: false })
+          setState({ startSave: false })
         }
       })
     }
@@ -407,23 +431,22 @@ export default function ScriptureCard({
    * for each unsaved change, call into versePane to get latest changes for verse to save
    */
   function saveChangesToCloud() {
-    const keys = Object.keys(unsavedChanges)
+    const unsavedCardIndices = Object.keys(unsavedChangesList)
 
-    if (keys?.length) {
-      setState({ doingSave: true })
+    if (unsavedCardIndices?.length) {
       const originalUsfm = core.getResponseData(scriptureConfig?.fetchResponse)
       let updatedBibleUsfm = originalUsfm
 
-      for (const index of keys) {
-        const onSaveToCloud = unsavedChanges[index]
+      for (const cardIndex of unsavedCardIndices) {
+        const { getChanges } = unsavedChangesList[cardIndex]
 
-        if (onSaveToCloud) {
+        if (getChanges) {
           let newUsfm
           const {
             newVerseText,
             ref,
             updatedVerseObjects,
-          } = onSaveToCloud()
+          } = getChanges()
 
           if (updatedVerseObjects && updatedBibleUsfm) { // just replace verse
             const chapterChunks = updatedBibleUsfm?.split('\\c ')
@@ -469,26 +492,6 @@ export default function ScriptureCard({
     }
   }
 
-  // const checkingState = aligned ? 'valid' : 'invalid'
-  // const titleText = checkingState === 'valid' ? 'Alignment is Valid' : 'Alignment is Invalid'
-  // const onRenderToolbar = ({ items }) => [
-  //   ...items,
-  //   <IconButton
-  //     className={classes.margin}
-  //     key='checking-button'
-  //     onClick={() => handleAlignmentClick()}
-  //     title={titleText}
-  //     aria-label={titleText}
-  //     style={{ cursor: 'pointer' }}
-  //   >
-  //     {checkingState === 'valid' ? (
-  //       <RxLink2 id='valid_icon' color='#BBB' />
-  //     ) : (
-  //       <RxLinkBreak2 id='invalid_icon' color='#000' />
-  //     )}
-  //   </IconButton>,
-  // ]
-
   React.useEffect(() => {
     // check for verse range
     const _verse = reference.verse
@@ -501,14 +504,22 @@ export default function ScriptureCard({
     }
   }, [reference.verse])
 
+  React.useEffect(() => {
+    if (!isEqual(versesForRef, scriptureConfig?.versesForRef)) {
+      setState({ versesForRef: scriptureConfig?.versesForRef })
+    }
+  }, [scriptureConfig?.versesForRef])
 
-  const renderedScripturePanes = scriptureConfig?.versesForRef?.map((currentVerseData_, index) => {
-    const initialVerseObjects = currentVerseData_?.verseData?.verseObjects || null
+  const renderedScripturePanes = versesForRef?.map((_currentVerseData, index) => {
+    const initialVerseObjects = _currentVerseData?.verseData?.verseObjects || null
     const _scriptureAlignmentEditConfig = {
       ...scriptureAlignmentEditConfig,
       currentIndex: index,
       initialVerseObjects,
     }
+
+    // @ts-ignore
+    const { chapter, verse } = _currentVerseData || {}
 
     return (
       <ScripturePane
@@ -522,7 +533,11 @@ export default function ScriptureCard({
         isNT={isNT_}
         key={index}
         refStyle={refStyle}
-        reference={{ ...reference, verse }}
+        reference={{
+          ...reference,
+          chapter,
+          verse,
+        }}
         saving={startSave}
         // @ts-ignore
         scriptureAlignmentEditConfig={_scriptureAlignmentEditConfig}
@@ -554,7 +569,7 @@ export default function ScriptureCard({
       onMenuClose={onMenuClose}
       onMinimize={onMinimize ? () => onMinimize(id) : null}
       editable={enableEdit || enableAlignment}
-      saved={startSave || !Object.keys(unsavedChanges).length}
+      saved={startSave || !haveUnsavedChanges}
       onSaveEdit={saveChangesToCloud}
     >
       <div id="scripture-pane-list">
