@@ -17,6 +17,7 @@ import * as isEqual from 'deep-equal'
 import { ScripturePane, ScriptureSelector } from '..'
 import { useScriptureSettings } from '../../hooks/useScriptureSettings'
 import {
+  getVerseDataFromScripConfig,
   getResourceLink,
   getResourceMessage,
   getScriptureVersionSettings,
@@ -130,8 +131,6 @@ export default function ScriptureCard({
 
   // @ts-ignore
   const cardResourceId = scriptureConfig?.resource?.projectId || resourceId
-  const currentVerseData_ = scriptureConfig?.versesForRef?.[currentVerseNum] || null
-  const initialVerseObjects = currentVerseData_?.verseData?.verseObjects || null
   // @ts-ignore
   let ref_ = scriptureConfig?.resource?.ref || appRef
   const canUseEditBranch = loggedInUser && authentication &&
@@ -499,6 +498,32 @@ export default function ScriptureCard({
     }
   }, [reference.verse])
 
+
+  const renderedScripturePanes = scriptureConfig?.versesForRef?.map(({verse}, index) => {
+    const mappedVerseObjects = getVerseObjectsForVerse(scriptureConfig, verse)
+
+    return (
+      <ScripturePane
+        key={index}
+        refStyle={refStyle}
+        {...scriptureConfig}
+        verseObjects={mappedVerseObjects}
+        isNT={isNT_}
+        server={server}
+        reference={{...reference, verse}}
+        direction={direction}
+        contentStyle={contentStyle}
+        fontSize={fontSize}
+        disableWordPopover={disableWordPopover_}
+        getLexiconData={getLexiconData}
+        translate={translate}
+        editing={editing}
+        setEditing={setEditing}
+        setVerseChanged={setVerseChanged}
+      />
+    )
+  })
+
   return (
     <Card
       id={`scripture_card_${cardNum}`}
@@ -540,6 +565,10 @@ export default function ScriptureCard({
         scriptureAlignmentEditConfig={scriptureAlignmentEditConfig}
         setSavedChanges={(saved, onSaveToCloud) => _setSavedChanges(0, saved, onSaveToCloud)}
       />
+        <div id="scripture-pane-list">
+          {renderedScripturePanes}
+        </div>
+      }
     </Card>
   )
 }

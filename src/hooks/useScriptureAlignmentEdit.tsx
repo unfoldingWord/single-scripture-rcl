@@ -33,6 +33,7 @@ export interface ScriptureALignmentEditProps {
   httpConfig: ServerConfig,
   // array of each verse for in reference range
   initialVerseObjects: [],
+  // flag that we are working on NT book
   isNewTestament: boolean,
   // user name of logged in user
   loggedInUser: string,
@@ -96,9 +97,7 @@ function getCurrentVerseUsfm(updatedVerseObjects, initialVerseObjects, verseText
 // manage verse edit and alignment states
 export function useScriptureAlignmentEdit({
   authentication,
-  bookIndex,
   currentVerseNum,
-  currentVerseRef,
   enableEdit,
   enableAlignment,
   httpConfig,
@@ -126,7 +125,6 @@ export function useScriptureAlignmentEdit({
     verseTextChanged: false,
     saveContent: null,
     startSave: false,
-    saveInitiated: false,
     sha: null,
   })
 
@@ -141,7 +139,6 @@ export function useScriptureAlignmentEdit({
     verseTextChanged,
     saveContent,
     startSave,
-    saveInitiated,
     sha,
   } = state
 
@@ -149,7 +146,7 @@ export function useScriptureAlignmentEdit({
     setState_(prevState => ({ ...prevState, ...newState }))
   }
 
-  const reference_ = currentVerseRef || scriptureConfig?.reference || null
+  const reference_ = scriptureConfig?.reference || null
 
   useDeepCompareEffect(() => { // check for context changes, reset edit and alignment state
     console.log(`reference changed ${JSON.stringify(reference_)}`)
@@ -253,7 +250,6 @@ export function useScriptureAlignmentEdit({
   function saveChangesToCloud() {
     console.log(`saveChangesToCloud - started`)
     let updatedVerseObjects_
-    setState({ saveInitiated: true })
 
     if (newAlignments) { // if unsaved alignment changes, apply them
       updatedVerseObjects_ = updateVerseWithNewAlignments()
@@ -331,9 +327,9 @@ export function useScriptureAlignmentEdit({
       const alignedVerseObjects = updateVerseWithNewAlignments(_newAlignments)
       console.log(`saveAlignment() - alignedVerseObjects`, alignedVerseObjects)
       setState({
+        alignerData: null,
         editing: false,
         newAlignments: null,
-        alignerData: null,
         updatedVerseObjects: alignedVerseObjects,
       })
     } else {
@@ -431,7 +427,6 @@ export function useScriptureAlignmentEdit({
       aligned,
       alignerData,
       currentVerseRef,
-      doingSave: saveInitiated,
       editing,
       sourceLanguage,
       targetLanguage,

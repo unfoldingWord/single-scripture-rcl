@@ -62,6 +62,17 @@ export function getScriptureObject({
 }
 
 /**
+ * return verse data given a scripture config and verse number
+ * @param scriptureConfig
+ * @param verseNum
+ */
+export function getVerseDataFromScripConfig(scriptureConfig, verseNum) {
+  return scriptureConfig?.versesForRef?.find(
+    verseRef => verseRef.verse === verseNum
+  )
+}
+
+/**
  * return true if resource is an original language bible
  * @param resourceId
  */

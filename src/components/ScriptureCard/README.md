@@ -133,6 +133,7 @@ const useStyles = makeStyles({
   },
   children: {
     display: "flex",
+    maxHeight: '400px !important'
   },
 });
 
