@@ -2,44 +2,44 @@ import * as React from 'react'
 import useDeepCompareEffect from 'use-deep-compare-effect'
 import { VerseObjects } from 'scripture-resources-rcl'
 import { UsfmFileConversionHelpers } from 'word-aligner-rcl'
-import { ScriptureReference, VerseObjectsType } from '../../types'
-import {getResourceMessage, NT_ORIG_LANG, OT_ORIG_LANG} from '../../utils'
+import { ScriptureReference } from '../../types'
+import { getResourceMessage } from '../../utils'
 import { Container, Content } from './styled'
-import {ScriptureALignmentEditProps, useScriptureAlignmentEdit} from "../../hooks/useScriptureAlignmentEdit";
+import { ScriptureALignmentEditProps, useScriptureAlignmentEdit } from "../../hooks/useScriptureAlignmentEdit";
 
 interface Props {
-  /** current reference **/
-  reference: ScriptureReference;
-  /** optional styles to use for reference **/
-  refStyle: any;
   /** optional styles to use for content **/
   contentStyle: any;
+  // index number for this scripture pane
+  currentIndex: number,
   /** language direction to use **/
   direction: string|undefined;
-  /** verseObjects **/
-  verseObjects: VerseObjectsType|undefined;
   /** if true then do not display lexicon popover on hover **/
   disableWordPopover: boolean|undefined;
-  /** object that contains resource loading status or fetching errors */
-  resourceStatus: object|undefined;
-  /** resource that was loaded */
-  resourceLink: string|undefined;
-  /** server */
-  server: string|undefined;
-  /** true if browsing NT */
-  isNT: boolean;
   /** font size for messages */
   fontSize: number;
   /** function to get latest lexicon data */
   getLexiconData: Function;
-  /** optional function for localization */
-  translate: Function;
+  /** true if browsing NT */
+  isNT: boolean;
+  /** current reference **/
+  reference: ScriptureReference;
+  /** optional styles to use for reference **/
+  refStyle: any;
+  /** object that contains resource loading status or fetching errors */
+  resourceStatus: object|undefined;
+  /** resource that was loaded */
+  resourceLink: string|undefined;
   /** true if currently saving updated text and alignments */
   saving: boolean;
   // initialization for useScriptureAlignmentEdit
   scriptureAlignmentEditConfig: ScriptureALignmentEditProps,
-  // index number for this scripture pane
-  currentIndex: number,
+  /** server */
+  server: string|undefined;
+  /** callback to flag unsaved status */
+  setSavedChanges: Function;
+  /** optional function for localization */
+  translate: Function;
 }
 
 const MessageStyle = {
@@ -116,12 +116,10 @@ function ScripturePane({
       handleAlignmentClick,
       setEditing,
       setVerseChanged,
-      saveChangesToCloud,
     },
     state: {
       aligned,
       alignerData,
-      doingSave,
       editing,
       unsavedChanges,
     },
@@ -136,11 +134,6 @@ function ScripturePane({
       setState({ doingAlignment: false })
     }
   }, [_scriptureAlignmentEdit?.state?.alignerData])
-
-  React.useEffect(() => { // set saved changes whenever user edits verse text or alignments or if alignments are open
-    const unsavedChanges_ = unsavedChanges || alignerData
-    setSavedChanges && setSavedChanges(currentIndex, !unsavedChanges_, saveChangesToCloud)
-  }, [unsavedChanges, alignerData])
 
   // dynamically adjust font size
   const calculatedFontSize = React.useMemo(() => (

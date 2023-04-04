@@ -1,6 +1,5 @@
 import * as React from 'react'
 import * as PropTypes from 'prop-types'
-import { RxLink2, RxLinkBreak2 } from 'react-icons/rx'
 import { core } from 'scripture-resources-rcl'
 import usfmjs from 'usfm-js'
 import { useEdit } from 'gitea-react-toolkit'
@@ -12,12 +11,10 @@ import {
   MANIFEST_NOT_LOADED_ERROR,
 } from 'translation-helps-rcl'
 import { AlignmentHelpers, UsfmFileConversionHelpers } from 'word-aligner-rcl'
-import { IconButton } from '@mui/material'
 import * as isEqual from 'deep-equal'
 import { ScripturePane, ScriptureSelector } from '..'
 import { useScriptureSettings } from '../../hooks/useScriptureSettings'
 import {
-  getVerseDataFromScripConfig,
   getResourceLink,
   getResourceMessage,
   getScriptureVersionSettings,
@@ -75,15 +72,19 @@ export default function ScriptureCard({
   const [state, setState_] = React.useState({
     currentVerseNum: 0, //TODO will be used in future when need to support multiple verses in card
     ref: appRef,
+    saveContent: null,
+    sha: null,
+    startSave: false,
     urlError: null,
     usingUserBranch: false,
     unsavedChanges: {},
-    doingSave: false,
   })
   const {
     currentVerseNum,
-    doingSave,
     ref,
+    saveContent,
+    sha,
+    startSave,
     urlError,
     usingUserBranch,
     unsavedChanges,
@@ -128,6 +129,18 @@ export default function ScriptureCard({
     hebrewRepoUrl,
     wholeBook: true,
   })
+
+  const fetchResp_ = scriptureConfig?.fetchResponse
+  // @ts-ignore
+  const repo = `${scriptureConfig?.resource?.languageId}_${scriptureConfig?.resource?.projectId}`
+  const reference_ = scriptureConfig?.reference || null
+
+  React.useEffect(() => { // get the sha from last scripture download
+    const sha = fetchResp_?.data?.sha || null
+    console.log(`for ${JSON.stringify(reference_)} new sha is ${sha}`)
+    setState({ sha })
+    // @ts-ignore
+  }, [fetchResp_])
 
   // @ts-ignore
   const cardResourceId = scriptureConfig?.resource?.projectId || resourceId
@@ -215,11 +228,6 @@ export default function ScriptureCard({
   const isHebrew = (languageId_ === 'hbo')
   const fontFactor = isHebrew ? 1.4 : 1 // we automatically scale up font size for Hebrew
   const scaledFontSize = fontSize * fontFactor
-  const currentVerseStr = currentVerseData_?.verse.toString()
-
-  if (currentVerseStr && (currentVerseStr !== reference.verse)) { // support for verse span
-    reference.verse = currentVerseStr
-  }
 
   const items = null
   const {
@@ -251,39 +259,44 @@ export default function ScriptureCard({
 
   React.useEffect(() => { // pre-cache glosses on verse change
     const fetchGlossDataForVerse = async () => {
-      if (!disableWordPopover && initialVerseObjects && fetchGlossesForVerse) {
-        await fetchGlossesForVerse(initialVerseObjects, languageId_)
+      for (const verseRef of scriptureConfig?.versesForRef || []) {
+        const verseObjects = verseRef?.verseData?.verseObjects
+
+        if (!disableWordPopover && verseObjects && fetchGlossesForVerse) {
+          // eslint-disable-next-line no-await-in-loop
+          await fetchGlossesForVerse(verseObjects, languageId_)
+        }
       }
     }
 
     fetchGlossDataForVerse()
-  }, [ initialVerseObjects, disableWordPopover, languageId_, fetchGlossesForVerse ])
+  }, [ scriptureConfig?.versesForRef, disableWordPopover, languageId_, fetchGlossesForVerse ])
 
   const enableEdit = !usingOriginalBible
   const enableAlignment = !usingOriginalBible
   const originalRepoUrl = isNewTestament ? greekRepoUrl : hebrewRepoUrl
   const scriptureAlignmentEditConfig = {
     authentication: canUseEditBranch ? authentication : null,
+    bookIndex,
     currentVerseRef: reference,
+    currentVerseNum,
     enableEdit,
     enableAlignment,
     httpConfig,
-    initialVerseObjects,
-    isNewTestament,
     // @ts-ignore
+    isNewTestament,
     loggedInUser: canUseEditBranch ? loggedInUser : null,
     originalLanguageOwner,
-    originalRepoUrl,
     // @ts-ignore
+    originalRepoUrl,
     scriptureConfig,
     scriptureSettings,
     startEditBranch,
-    bookIndex,
-    workingResourceBranch: ref,
-    currentVerseNum,
-    targetLanguage: language,
+    setSavedChanges: _setSavedChanges,
     sourceLanguage: isNT_ ? NT_ORIG_LANG : OT_ORIG_LANG,
+    targetLanguage: language,
     title: scriptureTitle,
+    workingResourceBranch: ref,
   }
 
   // React.useEffect(() => {
@@ -499,27 +512,32 @@ export default function ScriptureCard({
   }, [reference.verse])
 
 
-  const renderedScripturePanes = scriptureConfig?.versesForRef?.map(({verse}, index) => {
-    const mappedVerseObjects = getVerseObjectsForVerse(scriptureConfig, verse)
+  const renderedScripturePanes = scriptureConfig?.versesForRef?.map((currentVerseData_, index) => {
+    const initialVerseObjects = currentVerseData_?.verseData?.verseObjects || null
+    const _scriptureAlignmentEditConfig = {
+      ...scriptureAlignmentEditConfig,
+      currentIndex: index,
+      initialVerseObjects,
+    }
 
     return (
       <ScripturePane
+        {...scriptureConfig}
+        contentStyle={contentStyle}
+        currentIndex={index}
+        direction={direction}
+        disableWordPopover={disableWordPopover_}
+        fontSize={fontSize}
+        getLexiconData={getLexiconData}
+        isNT={isNT_}
         key={index}
         refStyle={refStyle}
-        {...scriptureConfig}
-        verseObjects={mappedVerseObjects}
-        isNT={isNT_}
+        reference={{ ...reference, verse }}
+        saving={startSave}
+        // @ts-ignore
+        scriptureAlignmentEditConfig={_scriptureAlignmentEditConfig}
         server={server}
-        reference={{...reference, verse}}
-        direction={direction}
-        contentStyle={contentStyle}
-        fontSize={fontSize}
-        disableWordPopover={disableWordPopover_}
-        getLexiconData={getLexiconData}
         translate={translate}
-        editing={editing}
-        setEditing={setEditing}
-        setVerseChanged={setVerseChanged}
       />
     )
   })
@@ -545,30 +563,12 @@ export default function ScriptureCard({
       onMenuClose={onMenuClose}
       onMinimize={onMinimize ? () => onMinimize(id) : null}
       editable={enableEdit || enableAlignment}
-      saved={doingSave || !unsavedChanges?.length}
+      saved={startSave || !Object.keys(unsavedChanges).length}
       onSaveEdit={saveChangesToCloud}
     >
-      <ScripturePane
-        refStyle={refStyle}
-        currentIndex={0}
-        {...scriptureConfig}
-        isNT={isNT_}
-        server={server}
-        reference={reference}
-        direction={direction}
-        contentStyle={contentStyle}
-        fontSize={fontSize}
-        disableWordPopover={disableWordPopover_}
-        getLexiconData={getLexiconData}
-        translate={translate}
-        saving={doingSave}
-        scriptureAlignmentEditConfig={scriptureAlignmentEditConfig}
-        setSavedChanges={(saved, onSaveToCloud) => _setSavedChanges(0, saved, onSaveToCloud)}
-      />
-        <div id="scripture-pane-list">
-          {renderedScripturePanes}
-        </div>
-      }
+      <div id="scripture-pane-list">
+        {renderedScripturePanes}
+      </div>
     </Card>
   )
 }

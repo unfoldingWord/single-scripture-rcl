@@ -21,10 +21,8 @@ interface StartEdit {
 }
 
 export interface ScriptureALignmentEditProps {
-  // user login info
-  authentication: { config: object, token: string },
   // current verse selected from initialVerseObjects[]
-  currentVerseNum: number,
+  currentIndex: number,
   // if true then editing is allowed
   enableEdit: boolean,
   // if true then alignment is allowed
@@ -96,8 +94,7 @@ function getCurrentVerseUsfm(updatedVerseObjects, initialVerseObjects, verseText
 
 // manage verse edit and alignment states
 export function useScriptureAlignmentEdit({
-  authentication,
-  currentVerseNum,
+  currentIndex,
   enableEdit,
   enableAlignment,
   httpConfig,
@@ -108,6 +105,7 @@ export function useScriptureAlignmentEdit({
   originalRepoUrl,
   scriptureConfig,
   scriptureSettings,
+  setSavedChanges,
   sourceLanguage,
   startEditBranch,
   targetLanguage,
@@ -123,9 +121,6 @@ export function useScriptureAlignmentEdit({
     newVerseText: null,
     updatedVerseObjects: null,
     verseTextChanged: false,
-    saveContent: null,
-    startSave: false,
-    sha: null,
   })
 
   const {
@@ -137,9 +132,6 @@ export function useScriptureAlignmentEdit({
     newVerseText,
     updatedVerseObjects,
     verseTextChanged,
-    saveContent,
-    startSave,
-    sha,
   } = state
 
   function setState(newState) {
@@ -177,17 +169,6 @@ export function useScriptureAlignmentEdit({
   const originalScriptureSettings = getScriptureResourceSettings(
     bookId, originalScriptureSettings_, isNewTestament, originalRepoUrl,
   )
-
-  const fetchResp_ = scriptureConfig?.fetchResponse
-  const owner = scriptureConfig?.resource?.owner
-  const repo = `${scriptureConfig?.resource?.languageId}_${scriptureConfig?.resource?.projectId}`
-
-  React.useEffect(() => { // get the sha from last scripture download
-    const sha = fetchResp_?.data?.sha || null
-    console.log(`for ${JSON.stringify(reference_)} new sha is ${sha}`)
-    setState({ sha })
-    // @ts-ignore
-  }, [fetchResp_])
 
   if (!enableAlignment) { // if not enabled, then we don't fetch resource
     originalScriptureSettings.resourceLink = null
@@ -247,8 +228,8 @@ export function useScriptureAlignmentEdit({
     }
   }, [initialVerseObjects, alignerData, newVerseText, initialVerseText, enableAlignment, originalVerseObjects])
 
-  function saveChangesToCloud() {
-    console.log(`saveChangesToCloud - started`)
+  function getChanges() {
+    console.log(`getChanges - started %{currentIndex}`)
     let updatedVerseObjects_
 
     if (newAlignments) { // if unsaved alignment changes, apply them
@@ -262,7 +243,7 @@ export function useScriptureAlignmentEdit({
     }
 
     if (updatedVerseObjects_) {
-      const ref = scriptureConfig?.versesForRef?.[currentVerseNum]
+      const ref = scriptureConfig?.versesForRef?.[currentIndex]
       return {
         newVerseText,
         ref,
@@ -398,6 +379,11 @@ export function useScriptureAlignmentEdit({
     return changed
   }, [updatedVerseObjects, initialVerseObjects, verseTextChanged])
 
+  React.useEffect(() => { // set saved changes whenever user edits verse text or alignments or if alignments are open
+    const unsavedChanges_ = unsavedChanges || alignerData
+    setSavedChanges && setSavedChanges(currentIndex, !unsavedChanges_, getChanges)
+  }, [unsavedChanges, alignerData])
+
   /**
    * callback for when alignments are being changed
    * @param {object} results
@@ -416,17 +402,16 @@ export function useScriptureAlignmentEdit({
     actions: {
       cancelAlignment,
       currentVerseObjects,
+      getChanges,
       handleAlignmentClick,
       onAlignmentsChange,
       saveAlignment,
       setEditing,
       setVerseChanged,
-      saveChangesToCloud,
     },
     state: {
       aligned,
       alignerData,
-      currentVerseRef,
       editing,
       sourceLanguage,
       targetLanguage,
