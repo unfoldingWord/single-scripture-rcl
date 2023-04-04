@@ -526,6 +526,7 @@ export default function ScriptureCard({
         saving={startSave}
         // @ts-ignore
         scriptureAlignmentEditConfig={_scriptureAlignmentEditConfig}
+        setWordAlignerStatus={setWordAlignerStatus}
         server={server}
         translate={translate}
       />

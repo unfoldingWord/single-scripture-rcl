@@ -6,7 +6,6 @@ import {
   usfmHelpers,
 } from 'word-aligner-rcl'
 import * as isEqual from 'deep-equal'
-import useDeepCompareEffect from 'use-deep-compare-effect'
 import {
   ScriptureConfig,
   ScriptureReference,
@@ -23,6 +22,8 @@ interface StartEdit {
 export interface ScriptureALignmentEditProps {
   // current verse selected from initialVerseObjects[]
   currentIndex: number,
+  // reference for verse selected for alignment
+  currentVerseRef: ScriptureReference,
   // if true then editing is allowed
   enableEdit: boolean,
   // if true then alignment is allowed
@@ -59,8 +60,6 @@ export interface ScriptureALignmentEditProps {
   sourceLanguage: string,
   // title to show in alignment
   title: string,
-  // reference for verse selected for alignment
-  currentVerseRef: ScriptureReference,
 }
 
 /**
@@ -140,7 +139,7 @@ export function useScriptureAlignmentEdit({
 
   const reference_ = scriptureConfig?.reference || null
 
-  useDeepCompareEffect(() => { // check for context changes, reset edit and alignment state
+  React.useEffect(() => { // check for context changes, reset edit and alignment state
     console.log(`reference changed ${JSON.stringify(reference_)}`)
 
     const clearState = {

@@ -2,6 +2,8 @@ import * as React from 'react'
 import useDeepCompareEffect from 'use-deep-compare-effect'
 import { VerseObjects } from 'scripture-resources-rcl'
 import { UsfmFileConversionHelpers } from 'word-aligner-rcl'
+import { RxLink2, RxLinkBreak2 } from 'react-icons/rx'
+import { IconButton } from '@mui/material'
 import { ScriptureReference } from '../../types'
 import { getResourceMessage } from '../../utils'
 import { ScriptureALignmentEditProps, useScriptureAlignmentEdit } from "../../hooks/useScriptureAlignmentEdit";
@@ -38,6 +40,8 @@ interface Props {
   server: string|undefined;
   /** callback to flag unsaved status */
   setSavedChanges: Function;
+  // callback for change in word alignment status
+  setWordAlignerStatus: Function;
   /** optional function for localization */
   translate: Function;
 }
@@ -80,6 +84,7 @@ function ScripturePane({
   saving,
   scriptureAlignmentEditConfig,
   setSavedChanges,
+  setWordAlignerStatus,
 } : Props) {
   const [state, setState_] = React.useState({
     urlError: null,
@@ -132,10 +137,10 @@ function ScripturePane({
 
   React.useEffect(() => {
     if (alignerData && !doingAlignment) {
-      // TODO: setWordAlignerStatus(_scriptureAlignmentEdit)
+      setWordAlignerStatus && setWordAlignerStatus(_scriptureAlignmentEdit)
       setState({ doingAlignment: true })
     } else if (doingAlignment) {
-      // TODO: setWordAlignerStatus(_scriptureAlignmentEdit)
+      setWordAlignerStatus && setWordAlignerStatus(_scriptureAlignmentEdit)
       setState({ doingAlignment: false })
     }
   }, [_scriptureAlignmentEdit?.state?.alignerData])
@@ -166,6 +171,9 @@ function ScripturePane({
     setEditing(false)
   }
 
+  const checkingState = aligned ? 'valid' : 'invalid'
+  const titleText = checkingState === 'valid' ? 'Alignment is Valid' : 'Alignment is Invalid'
+
   return (
     <Container style={{ direction, width: '100%', paddingBottom: '0.5em'}}>
       {resourceMsg ?
@@ -189,13 +197,30 @@ function ScripturePane({
                 autoFocus
               />
               :
-              <VerseObjects
-                verseKey={`${reference.chapter}:${reference.verse}`}
-                verseObjects={currentVerseObjects || []}
-                disableWordPopover={disableWordPopover}
-                getLexiconData={getLexiconData}
-                translate={translate}
-              />
+              <>
+                <VerseObjects
+                  verseKey={`${reference.chapter}:${reference.verse}`}
+                  verseObjects={currentVerseObjects || []}
+                  disableWordPopover={disableWordPopover}
+                  getLexiconData={getLexiconData}
+                  translate={translate}
+                />
+                {setWordAlignerStatus &&
+                  <IconButton
+                    key='checking-button'
+                    onClick={() => handleAlignmentClick()}
+                    title={titleText}
+                    aria-label={titleText}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    {checkingState === 'valid' ? (
+                      <RxLink2 id='valid_icon' color='#BBB' />
+                    ) : (
+                      <RxLinkBreak2 id='invalid_icon' color='#000' />
+                    )}
+                  </IconButton>
+                }
+              </>
             }
           </span>
         </Content>
