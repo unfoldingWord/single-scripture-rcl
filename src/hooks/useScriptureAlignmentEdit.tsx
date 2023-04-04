@@ -31,6 +31,8 @@ export interface ScriptureALignmentEditProps {
   httpConfig: ServerConfig,
   // array of each verse for in reference range
   initialVerseObjects: [],
+  // initial text for verse
+  initialVerseText: string,
   // flag that we are working on NT book
   isNewTestament: boolean,
   // user name of logged in user
@@ -99,8 +101,8 @@ export function useScriptureAlignmentEdit({
   enableAlignment,
   httpConfig,
   initialVerseObjects,
+  initialVerseText,
   isNewTestament,
-  loggedInUser,
   originalLanguageOwner,
   originalRepoUrl,
   scriptureConfig,
@@ -116,7 +118,6 @@ export function useScriptureAlignmentEdit({
     aligned: false,
     alignerData: null,
     editing: false,
-    initialVerseText: null,
     newAlignments: null,
     newVerseText: null,
     updatedVerseObjects: null,
@@ -127,7 +128,6 @@ export function useScriptureAlignmentEdit({
     aligned,
     alignerData,
     editing,
-    initialVerseText,
     newAlignments,
     newVerseText,
     updatedVerseObjects,
@@ -142,6 +142,7 @@ export function useScriptureAlignmentEdit({
 
   useDeepCompareEffect(() => { // check for context changes, reset edit and alignment state
     console.log(`reference changed ${JSON.stringify(reference_)}`)
+
     const clearState = {
       ...state,
       alignerData: null,
@@ -413,6 +414,8 @@ export function useScriptureAlignmentEdit({
       aligned,
       alignerData,
       editing,
+      initialVerseText,
+      newVerseText,
       sourceLanguage,
       targetLanguage,
       unsavedChanges,

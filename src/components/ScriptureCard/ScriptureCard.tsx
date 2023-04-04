@@ -70,7 +70,6 @@ export default function ScriptureCard({
   setWordAlignerStatus,
 }) {
   const [state, setState_] = React.useState({
-    currentVerseNum: 0, //TODO will be used in future when need to support multiple verses in card
     ref: appRef,
     saveContent: null,
     sha: null,
@@ -80,7 +79,6 @@ export default function ScriptureCard({
     unsavedChanges: {},
   })
   const {
-    currentVerseNum,
     ref,
     saveContent,
     sha,
@@ -279,7 +277,6 @@ export default function ScriptureCard({
     authentication: canUseEditBranch ? authentication : null,
     bookIndex,
     currentVerseRef: reference,
-    currentVerseNum,
     enableEdit,
     enableAlignment,
     httpConfig,
@@ -299,16 +296,6 @@ export default function ScriptureCard({
     workingResourceBranch: ref,
   }
 
-  // React.useEffect(() => {
-  //   if (_scriptureAlignmentEdit?.state?.alignerData && !doingAlignment) {
-  //     setWordAlignerStatus(_scriptureAlignmentEdit)
-  //     setState({ doingAlignment: true })
-  //   } else if (doingAlignment) {
-  //     setWordAlignerStatus(_scriptureAlignmentEdit)
-  //     setState({ doingAlignment: false })
-  //   }
-  // }, [_scriptureAlignmentEdit?.state?.alignerData])
-
   function _setSavedChanges(currentVerse, state, onSaveToCloud = null) {
     const _unsavedChanges = { ...unsavedChanges }
 
@@ -325,6 +312,9 @@ export default function ScriptureCard({
     if (!isEqual(_unsavedChanges, unsavedChanges)) {
       setState({ unsavedChanges: _unsavedChanges })
     }
+
+    const haveUnsavedChanges = Object.keys(unsavedChanges).length
+    setSavedChanges && setSavedChanges(!haveUnsavedChanges)
   }
 
   /**

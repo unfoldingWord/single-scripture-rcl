@@ -129,6 +129,7 @@ function Component() {
         server={config.server}
         editing={editing}
         setEditing={setEditing_}
+        scriptureAlignmentEditConfig={{}}
       />
     </Card>
   );

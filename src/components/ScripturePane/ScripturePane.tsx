@@ -4,8 +4,8 @@ import { VerseObjects } from 'scripture-resources-rcl'
 import { UsfmFileConversionHelpers } from 'word-aligner-rcl'
 import { ScriptureReference } from '../../types'
 import { getResourceMessage } from '../../utils'
-import { Container, Content } from './styled'
 import { ScriptureALignmentEditProps, useScriptureAlignmentEdit } from "../../hooks/useScriptureAlignmentEdit";
+import { Container, Content } from './styled'
 
 interface Props {
   /** optional styles to use for content **/
@@ -109,7 +109,12 @@ function ScripturePane({
     fontSize: '100%',
   }
 
-  const _scriptureAlignmentEdit = useScriptureAlignmentEdit(scriptureAlignmentEditConfig)
+  const _scriptureAlignmentEditConfig = {
+    ...scriptureAlignmentEditConfig,
+    initialVerseText,
+  }
+
+  const _scriptureAlignmentEdit = useScriptureAlignmentEdit(_scriptureAlignmentEditConfig)
   const {
     actions: {
       currentVerseObjects,
@@ -147,7 +152,7 @@ function ScripturePane({
   }
 
   useDeepCompareEffect(() => {
-    const verseText = UsfmFileConversionHelpers.getUsfmForVerseContent({ currentVerseObjects })
+    const verseText = UsfmFileConversionHelpers.getUsfmForVerseContent({ verseObjects: currentVerseObjects })
     setInitialVerseText(verseText)
   }, [{ reference, currentVerseObjects }])
 
