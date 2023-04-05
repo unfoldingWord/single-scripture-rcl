@@ -440,7 +440,8 @@ export default function ScriptureCard({
       let updatedBibleUsfm = originalUsfm
 
       for (const cardIndex of unsavedCardIndices) {
-        const { getChanges } = unsavedChangesList[cardIndex]
+        const cardNum = parseInt(cardIndex)
+        const { getChanges } = unsavedChangesList[cardNum]
 
         if (getChanges) {
           let newUsfm
@@ -486,6 +487,10 @@ export default function ScriptureCard({
             const newBookJson = targetVerseObjects_ && scriptureConfig?.updateVerse(ref.chapter, ref.verse, { verseObjects: targetVerseObjects_ })
             updatedBibleUsfm = usfmjs.toUSFM(newBookJson, { forcedNewLines: true })
           }
+
+          if (newUsfm) {
+            updatedBibleUsfm = newUsfm
+          }
         }
       }
 
@@ -495,20 +500,21 @@ export default function ScriptureCard({
   }
 
   React.useEffect(() => {
-    // check for verse range
-    const _verse = reference.verse
-
-    if (addVerseRange && (typeof _verse === 'string')) {
-      // @ts-ignore
-      if (_verse.includes('-')) {
-        addVerseRange(`${scriptureConfig?.reference?.chapter}:${_verse}`)
-      }
-    }
-  }, [reference.verse])
-
-  React.useEffect(() => {
     if (!isEqual(versesForRef, scriptureConfig?.versesForRef)) {
-      setState({ versesForRef: scriptureConfig?.versesForRef })
+      const versesForRef = scriptureConfig?.versesForRef
+      setState({ versesForRef })
+
+      for (const verseRef of versesForRef || []) {
+        // check for verse range
+        const _verse = verseRef.verse
+
+        if (addVerseRange && (typeof _verse === 'string')) {
+          // @ts-ignore
+          if (_verse.includes('-')) {
+            addVerseRange(`${scriptureConfig?.reference?.chapter}:${_verse}`)
+          }
+        }
+      }
     }
   }, [scriptureConfig?.versesForRef])
 
@@ -527,7 +533,6 @@ export default function ScriptureCard({
       initialVerseObjects,
       reference: _reference,
     }
-
 
     return (
       <ScripturePane
