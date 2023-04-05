@@ -42,5 +42,7 @@ export interface ScriptureConfig {
   config: ServerConfig;
   disableWordPopover?: boolean;
   reloadResource: Function;
+  versesForRef: { chapter: string, verse: string, data: object }[];
+  fetchResponse: { data: {sha: string} }
 }
 
