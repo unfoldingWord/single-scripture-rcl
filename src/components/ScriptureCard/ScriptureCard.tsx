@@ -277,7 +277,9 @@ export default function ScriptureCard({
       }
     }
 
-    fetchGlossDataForVerse()
+    if (usingOriginalBible) {
+      fetchGlossDataForVerse()
+    }
   }, [ versesForRef, languageId_ ])
 
   const enableEdit = !usingOriginalBible
@@ -512,14 +514,20 @@ export default function ScriptureCard({
 
   const renderedScripturePanes = versesForRef?.map((_currentVerseData, index) => {
     const initialVerseObjects = _currentVerseData?.verseData?.verseObjects || null
+    // @ts-ignore
+    const { chapter, verse } = _currentVerseData || {}
+    const _reference = {
+      ...reference,
+      chapter,
+      verse,
+    }
     const _scriptureAlignmentEditConfig = {
       ...scriptureAlignmentEditConfig,
       currentIndex: index,
       initialVerseObjects,
+      reference: _reference,
     }
 
-    // @ts-ignore
-    const { chapter, verse } = _currentVerseData || {}
 
     return (
       <ScripturePane
@@ -533,11 +541,7 @@ export default function ScriptureCard({
         isNT={isNT_}
         key={index}
         refStyle={refStyle}
-        reference={{
-          ...reference,
-          chapter,
-          verse,
-        }}
+        reference={_reference}
         saving={startSave}
         // @ts-ignore
         scriptureAlignmentEditConfig={_scriptureAlignmentEditConfig}

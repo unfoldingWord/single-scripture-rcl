@@ -199,32 +199,30 @@ function ScripturePane({
                 autoFocus
               />
               :
-              <>
-                <VerseObjects
-                  verseKey={`${reference.chapter}:${reference.verse}`}
-                  verseObjects={currentVerseObjects || []}
-                  disableWordPopover={disableWordPopover}
-                  getLexiconData={getLexiconData}
-                  translate={translate}
-                />
-                {setWordAlignerStatus &&
-                  <IconButton
-                    key='checking-button'
-                    onClick={() => handleAlignmentClick()}
-                    title={titleText}
-                    aria-label={titleText}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    {checkingState === 'valid' ? (
-                      <RxLink2 id='valid_icon' color='#BBB' />
-                    ) : (
-                      <RxLinkBreak2 id='invalid_icon' color='#000' />
-                    )}
-                  </IconButton>
-                }
-              </>
+              <VerseObjects
+                verseKey={`${reference.chapter}:${reference.verse}`}
+                verseObjects={currentVerseObjects || []}
+                disableWordPopover={disableWordPopover}
+                getLexiconData={getLexiconData}
+                translate={translate}
+              />
             }
           </span>
+          {setWordAlignerStatus &&
+            <IconButton
+              key='checking-button'
+              onClick={() => handleAlignmentClick()}
+              title={titleText}
+              aria-label={titleText}
+              style={{ cursor: 'pointer' }}
+            >
+              {checkingState === 'valid' ? (
+                <RxLink2 id='valid_icon' color='#BBB' />
+              ) : (
+                <RxLinkBreak2 id='invalid_icon' color='#000' />
+              )}
+            </IconButton>
+          }
         </Content>
       }
     </Container>

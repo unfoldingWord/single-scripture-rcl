@@ -42,6 +42,8 @@ export interface ScriptureALignmentEditProps {
   originalLanguageOwner: string,
   // url for the original language repo
   originalRepoUrl: string,
+  /** current reference **/
+  reference: ScriptureReference;
   // details about the current scripture loaded
   scriptureConfig: ScriptureConfig,
   // settings to be used for scripture
@@ -104,6 +106,7 @@ export function useScriptureAlignmentEdit({
   isNewTestament,
   originalLanguageOwner,
   originalRepoUrl,
+  reference,
   scriptureConfig,
   scriptureSettings,
   setSavedChanges,
@@ -117,7 +120,6 @@ export function useScriptureAlignmentEdit({
     aligned: false,
     alignerData: null,
     editing: false,
-    reference: null,
     newAlignments: null,
     newVerseText: null,
     updatedVerseObjects: null,
@@ -130,7 +132,6 @@ export function useScriptureAlignmentEdit({
     editing,
     newAlignments,
     newVerseText,
-    reference,
     updatedVerseObjects,
     verseTextChanged,
   } = state
@@ -139,15 +140,12 @@ export function useScriptureAlignmentEdit({
     setState_(prevState => ({ ...prevState, ...newState }))
   }
 
-  const _reference = scriptureConfig?.reference || null
-
   function clearChanges() {
-    console.log(`clearChanges() - ${JSON.stringify(_reference)}`)
+    console.log(`clearChanges() - ${JSON.stringify(reference)}`)
     const clearState = {
       ...state,
       alignerData: null,
       editing: false,
-      reference: _reference,
       newAlignments: null,
       newVerseText: null,
       updatedVerseObjects: null,
@@ -160,13 +158,6 @@ export function useScriptureAlignmentEdit({
     }
   }
 
-  React.useEffect(() => { // check for context changes, reset edit and alignment state
-    if (!isEqual(reference, _reference)) {
-      console.log(`reference changed ${JSON.stringify(_reference)}`)
-      clearChanges()
-    }
-  }, [scriptureConfig?.reference])
-
   const originalScriptureSettings_ = {
     ...scriptureSettings,
     resourceId: ORIGINAL_SOURCE,
@@ -174,7 +165,7 @@ export function useScriptureAlignmentEdit({
 
   // @ts-ignore
   httpConfig = httpConfig || {}
-  const bookId = _reference?.projectId
+  const bookId = reference?.projectId
   const originalScriptureSettings = getScriptureResourceSettings(
     bookId, originalScriptureSettings_, isNewTestament, originalRepoUrl,
   )
@@ -187,8 +178,8 @@ export function useScriptureAlignmentEdit({
   const originalScriptureResource = useScriptureResources({
     bookId,
     scriptureSettings: originalScriptureSettings,
-    chapter: _reference?.chapter,
-    verse: _reference?.verse,
+    chapter: reference?.chapter,
+    verse: reference?.verse,
     isNewTestament,
     originalRepoUrl,
     currentLanguageId: originalScriptureSettings?.languageId,
@@ -268,7 +259,7 @@ export function useScriptureAlignmentEdit({
    */
   async function handleAlignmentClick() {
     if (enableAlignment) {
-      let alignerData_ = null
+      let _alignerData = null
       await startEditBranch()
 
       if (!alignerData) { // if word aligner not shown
@@ -284,13 +275,13 @@ export function useScriptureAlignmentEdit({
           targetWords: wordBank,
           verseAlignments: alignments,
         } = AlignmentHelpers.parseUsfmToWordAlignerData(targetVerseUSFM, originalVerseUsfm)
-        alignerData_ = { wordBank, alignments }
+        _alignerData = { wordBank, alignments }
       } else { // word aligner currently shown
         console.log(`handleAlignmentClick - alignment already shown`)
-        alignerData_ = alignerData
+        _alignerData = alignerData
       }
-      setState({ alignerData: alignerData_ })
-      console.log(alignerData_)
+      setState({ alignerData: _alignerData })
+      console.log(_alignerData)
     }
   }
 
@@ -429,7 +420,7 @@ export function useScriptureAlignmentEdit({
       targetLanguage,
       unsavedChanges,
       verseTextChanged,
-      reference: _reference,
+      reference,
       title,
     },
   }
