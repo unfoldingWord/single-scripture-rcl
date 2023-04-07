@@ -16,7 +16,7 @@
     "start": "styleguidist server",
     "build": "styleguidist build",
     "prepublishOnly": "rm -fr ./dist && babel ./src --out-dir ./dist -s inline --extensions \".ts,.tsx,.js\"",
-    "pack-next": "yarn version && yarn && yarn run prepublishOnly && yarn pack"
+    "pack-next": "yarn version --prerelease && yarn && yarn run prepublishOnly && yarn pack"
   },
   "peerDependencies": {
     "@material-ui/core": "4.11.0",
