@@ -225,7 +225,7 @@ export function useScriptureAlignmentEdit({
    * @param {object} newState - optionally pass in new state (to override state)
    */
   function getChanges(newState = {}) {
-    console.log(`getChanges - started %{currentIndex} - passed state`, newState)
+    console.log(`getChanges - started ${currentIndex} - passed state`, newState)
     const _newState = {
       state,
       ...newState,

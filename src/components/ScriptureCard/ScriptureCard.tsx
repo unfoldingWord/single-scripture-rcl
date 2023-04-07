@@ -352,7 +352,7 @@ export default function ScriptureCard({
     const index = chunks.findIndex((chunk, idx) => {
       if (idx > 0) {
         if (chunk.substring(0, refLen) === ref_) {
-          const nextChar = chunk[ref_]
+          const nextChar = chunk[refLen]
 
           if ((nextChar > '9') || (nextChar < '0')) {
             return true
@@ -435,8 +435,7 @@ export default function ScriptureCard({
       const unsavedCardIndices = Object.keys(unsavedChangesList)
 
       if (unsavedCardIndices?.length) {
-        const originalUsfm = core.getResponseData(scriptureConfig?.fetchResponse)
-        let updatedBibleUsfm = originalUsfm
+        let bibleUsfm = core.getResponseData(scriptureConfig?.fetchResponse)
 
         for (const cardIndex of unsavedCardIndices) {
           const cardNum = parseInt(cardIndex)
@@ -450,8 +449,8 @@ export default function ScriptureCard({
               updatedVerseObjects,
             } = getChanges(state)
 
-            if (updatedVerseObjects && updatedBibleUsfm) { // just replace verse
-              const chapterChunks = updatedBibleUsfm?.split('\\c ')
+            if (updatedVerseObjects && bibleUsfm) { // just replace verse
+              const chapterChunks = bibleUsfm?.split('\\c ')
               const chapterIndex = findRefInArray(ref?.chapter, chapterChunks)
 
               if (chapterIndex >= 0) {
@@ -461,6 +460,7 @@ export default function ScriptureCard({
 
                 if (verseIndex >= 0) {
                   const newVerseUsfm = UsfmFileConversionHelpers.convertVerseDataToUSFM(updatedVerseObjects)
+                  console.log(`saveChangesToCloud(${cardNum}) - new USFM for card:} - ${newVerseUsfm.substring(0, 100)}`)
                   const oldVerse = verseChunks[verseIndex]
                   const verseNumLen = (ref?.verse + '').length
                   verseChunks[verseIndex] = oldVerse.substring(0, verseNumLen + 1) + newVerseUsfm
@@ -472,11 +472,12 @@ export default function ScriptureCard({
             }
 
             if (updatedVerseObjects && !newUsfm) {
+              console.log(`saveChangesToCloud(${cardNum}) - verse not found, falling back to inserting verse object`)
               let targetVerseObjects_ = null
 
               if (ref) {
                 if (newVerseText) {
-                  const {targetVerseObjects} = AlignmentHelpers.updateAlignmentsToTargetVerse(updatedVerseObjects, newVerseText)
+                  const { targetVerseObjects } = AlignmentHelpers.updateAlignmentsToTargetVerse(updatedVerseObjects, newVerseText)
                   targetVerseObjects_ = targetVerseObjects
                 } else {
                   targetVerseObjects_ = updatedVerseObjects
@@ -484,17 +485,17 @@ export default function ScriptureCard({
               }
 
               const newBookJson = targetVerseObjects_ && scriptureConfig?.updateVerse(ref.chapter, ref.verse, { verseObjects: targetVerseObjects_ })
-              updatedBibleUsfm = usfmjs.toUSFM(newBookJson, { forcedNewLines: true })
+              bibleUsfm = usfmjs.toUSFM(newBookJson, { forcedNewLines: true })
             }
 
             if (newUsfm) {
-              updatedBibleUsfm = newUsfm
+              bibleUsfm = newUsfm
             }
           }
         }
 
-        console.log(`saveChangesToCloud() - saving new USFM: ${updatedBibleUsfm.substring(0, 100)}...`)
-        setState({ saveContent: updatedBibleUsfm, startSave: true, saveClicked: false })
+        console.log(`saveChangesToCloud() - saving new USFM: ${bibleUsfm.substring(0, 100)}...`)
+        setState({ saveContent: bibleUsfm, startSave: true, saveClicked: false })
       }
     }
   }, [saveClicked])
