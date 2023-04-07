@@ -87,12 +87,14 @@ function ScripturePane({
   setWordAlignerStatus,
 } : Props) {
   const [state, setState_] = React.useState({
-    urlError: null,
     doingAlignment: false,
+    newText: null,
+    urlError: null,
   })
   const {
-    urlError,
     doingAlignment,
+    newText,
+    urlError,
   } = state
 
   function setState(newState) {
@@ -164,20 +166,22 @@ function ScripturePane({
   }, [{ reference, initialVerseObjects }])
 
   function onTextChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
-    const newText = event?.target?.value
-    const changed = newText !== initialVerseText
-    setVerseChanged(changed, newText, initialVerseText)
+    const newVerseText = event?.target?.value
+    const changed = newVerseText !== initialVerseText
+    console.log(`SP.onTextChange`, { changed, newText: newVerseText, initialVerseText })
+    setVerseChanged(changed, newVerseText, initialVerseText)
+    setState({ newText: newVerseText })
   }
 
   function onBlur(event: React.ChangeEvent<HTMLTextAreaElement>) {
-    setEditing(false)
+    setEditing(false, newText)
   }
 
   const checkingState = aligned ? 'valid' : 'invalid'
   const titleText = checkingState === 'valid' ? 'Alignment is Valid' : 'Alignment is Invalid'
 
   return (
-    <Container style={{ direction, width: '100%', paddingBottom: '0.5em'}}>
+    <Container style={{ direction, width: '100%', paddingBottom: '0.5em' }}>
       {resourceMsg ?
         // @ts-ignore
         <div style={MessageStyle}>

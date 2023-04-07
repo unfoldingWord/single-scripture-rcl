@@ -72,6 +72,7 @@ export default function ScriptureCard({
   const [state, setState_] = React.useState({
     haveUnsavedChanges: false,
     ref: appRef,
+    saveClicked: false,
     saveContent: null,
     sha: null,
     startSave: false,
@@ -82,6 +83,7 @@ export default function ScriptureCard({
   })
   const {
     ref,
+    saveClicked,
     saveContent,
     sha,
     startSave,
@@ -314,8 +316,9 @@ export default function ScriptureCard({
    * @param {boolean} saved
    * @param {function} getChanges - will be called whenever user clicks save button
    * @param {function} clearChanges - will be called whenever save has completed
+   * @param {object} state - current state of word alignment/edit
    */
-  function _setSavedChanges(currentIndex, saved, getChanges = null, clearChanges = null) {
+  function _setSavedChanges(currentIndex, saved, { getChanges = null, clearChanges = null, state = null }) {
     const _unsavedChangesList = { ...unsavedChangesList }
 
     if (saved) {
@@ -323,9 +326,7 @@ export default function ScriptureCard({
         delete _unsavedChangesList[currentIndex]
       }
     } else {
-      if (!_unsavedChangesList.hasOwnProperty(currentIndex)) {
-        _unsavedChangesList[currentIndex] = { getChanges, clearChanges }
-      }
+      _unsavedChangesList[currentIndex] = { getChanges, clearChanges, state } // update with latest
     }
 
     const _haveUnsavedChanges = !!Object.keys(_unsavedChangesList).length
@@ -429,75 +430,74 @@ export default function ScriptureCard({
   }, [startSave])
 
 
-  /**
-   * for each unsaved change, call into versePane to get latest changes for verse to save
-   */
-  function saveChangesToCloud() {
-    const unsavedCardIndices = Object.keys(unsavedChangesList)
+  React.useEffect(() => { // for each unsaved change, call into versePane to get latest changes for verse to save
+    if (saveClicked) {
+      const unsavedCardIndices = Object.keys(unsavedChangesList)
 
-    if (unsavedCardIndices?.length) {
-      const originalUsfm = core.getResponseData(scriptureConfig?.fetchResponse)
-      let updatedBibleUsfm = originalUsfm
+      if (unsavedCardIndices?.length) {
+        const originalUsfm = core.getResponseData(scriptureConfig?.fetchResponse)
+        let updatedBibleUsfm = originalUsfm
 
-      for (const cardIndex of unsavedCardIndices) {
-        const cardNum = parseInt(cardIndex)
-        const { getChanges } = unsavedChangesList[cardNum]
+        for (const cardIndex of unsavedCardIndices) {
+          const cardNum = parseInt(cardIndex)
+          const { getChanges, state } = unsavedChangesList[cardNum]
 
-        if (getChanges) {
-          let newUsfm
-          const {
-            newVerseText,
-            ref,
-            updatedVerseObjects,
-          } = getChanges()
+          if (getChanges) {
+            let newUsfm
+            const {
+              newVerseText,
+              ref,
+              updatedVerseObjects,
+            } = getChanges(state)
 
-          if (updatedVerseObjects && updatedBibleUsfm) { // just replace verse
-            const chapterChunks = updatedBibleUsfm?.split('\\c ')
-            const chapterIndex = findRefInArray(ref?.chapter, chapterChunks)
+            if (updatedVerseObjects && updatedBibleUsfm) { // just replace verse
+              const chapterChunks = updatedBibleUsfm?.split('\\c ')
+              const chapterIndex = findRefInArray(ref?.chapter, chapterChunks)
 
-            if (chapterIndex >= 0) {
-              const currentChapter = chapterChunks[chapterIndex]
-              const verseChunks = currentChapter.split('\\v ')
-              const verseIndex = findRefInArray(ref?.verse, verseChunks)
+              if (chapterIndex >= 0) {
+                const currentChapter = chapterChunks[chapterIndex]
+                const verseChunks = currentChapter.split('\\v ')
+                const verseIndex = findRefInArray(ref?.verse, verseChunks)
 
-              if (verseIndex >= 0) {
-                const newVerseUsfm = UsfmFileConversionHelpers.convertVerseDataToUSFM(updatedVerseObjects)
-                const oldVerse = verseChunks[verseIndex]
-                const verseNumLen = (ref?.verse + '').length
-                verseChunks[verseIndex] = oldVerse.substring(0, verseNumLen + 1) + newVerseUsfm
-                const newChapter = verseChunks.join('\\v ')
-                chapterChunks[chapterIndex] = newChapter
-                newUsfm = chapterChunks.join('\\c ')
-              }
-            }
-          }
-
-          if (updatedVerseObjects && !newUsfm) {
-            let targetVerseObjects_ = null
-
-            if (ref) {
-              if (newVerseText) {
-                const { targetVerseObjects } = AlignmentHelpers.updateAlignmentsToTargetVerse(updatedVerseObjects, newVerseText)
-                targetVerseObjects_ = targetVerseObjects
-              } else {
-                targetVerseObjects_ = updatedVerseObjects
+                if (verseIndex >= 0) {
+                  const newVerseUsfm = UsfmFileConversionHelpers.convertVerseDataToUSFM(updatedVerseObjects)
+                  const oldVerse = verseChunks[verseIndex]
+                  const verseNumLen = (ref?.verse + '').length
+                  verseChunks[verseIndex] = oldVerse.substring(0, verseNumLen + 1) + newVerseUsfm
+                  const newChapter = verseChunks.join('\\v ')
+                  chapterChunks[chapterIndex] = newChapter
+                  newUsfm = chapterChunks.join('\\c ')
+                }
               }
             }
 
-            const newBookJson = targetVerseObjects_ && scriptureConfig?.updateVerse(ref.chapter, ref.verse, { verseObjects: targetVerseObjects_ })
-            updatedBibleUsfm = usfmjs.toUSFM(newBookJson, { forcedNewLines: true })
-          }
+            if (updatedVerseObjects && !newUsfm) {
+              let targetVerseObjects_ = null
 
-          if (newUsfm) {
-            updatedBibleUsfm = newUsfm
+              if (ref) {
+                if (newVerseText) {
+                  const {targetVerseObjects} = AlignmentHelpers.updateAlignmentsToTargetVerse(updatedVerseObjects, newVerseText)
+                  targetVerseObjects_ = targetVerseObjects
+                } else {
+                  targetVerseObjects_ = updatedVerseObjects
+                }
+              }
+
+              const newBookJson = targetVerseObjects_ && scriptureConfig?.updateVerse(ref.chapter, ref.verse, { verseObjects: targetVerseObjects_ })
+              updatedBibleUsfm = usfmjs.toUSFM(newBookJson, { forcedNewLines: true })
+            }
+
+            if (newUsfm) {
+              updatedBibleUsfm = newUsfm
+            }
           }
         }
-      }
 
-      console.log(`saveChangesToCloud() - saving new USFM: ${updatedBibleUsfm.substring(0, 100)}...`)
-      setState({ saveContent: updatedBibleUsfm, startSave: true })
+        console.log(`saveChangesToCloud() - saving new USFM: ${updatedBibleUsfm.substring(0, 100)}...`)
+        setState({ saveContent: updatedBibleUsfm, startSave: true, saveClicked: false })
+      }
     }
-  }
+  }, [saveClicked])
 
   React.useEffect(() => {
     if (!isEqual(versesForRef, scriptureConfig?.versesForRef)) {
@@ -579,7 +579,7 @@ export default function ScriptureCard({
       onMinimize={onMinimize ? () => onMinimize(id) : null}
       editable={enableEdit || enableAlignment}
       saved={startSave || !haveUnsavedChanges}
-      onSaveEdit={saveChangesToCloud}
+      onSaveEdit={() => setState({ saveClicked: true })}
     >
       <div id="scripture-pane-list">
         {renderedScripturePanes}
