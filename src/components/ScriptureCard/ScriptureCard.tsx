@@ -429,6 +429,36 @@ export default function ScriptureCard({
     }
   }, [startSave])
 
+  /**
+   * convert updatedVerseObjects to USFM and merge into the bibleUsfm
+   * @param {string} bibleUsfm - USFM of bible
+   * @param {object} ref - reference of verse to merge in
+   * @param {object[]} updatedVerseObjects - new verse in verseObject format
+   * @param {number} cardNum
+   */
+  function mergeVerseObjectsIntoBibleUsfm(bibleUsfm, ref, updatedVerseObjects, cardNum: number) {
+    let newUsfm
+    const chapterChunks = bibleUsfm?.split('\\c ')
+    const chapterIndex = findRefInArray(ref?.chapter, chapterChunks)
+
+    if (chapterIndex >= 0) {
+      const currentChapter = chapterChunks[chapterIndex]
+      const verseChunks = currentChapter.split('\\v ')
+      const verseIndex = findRefInArray(ref?.verse, verseChunks)
+
+      if (verseIndex >= 0) {
+        const newVerseUsfm = UsfmFileConversionHelpers.convertVerseDataToUSFM(updatedVerseObjects)
+        console.log(`saveChangesToCloud(${cardNum}) - new USFM for card:} - ${newVerseUsfm.substring(0, 100)}`)
+        const oldVerse = verseChunks[verseIndex]
+        const verseNumLen = (ref?.verse + '').length
+        verseChunks[verseIndex] = oldVerse.substring(0, verseNumLen + 1) + newVerseUsfm
+        const newChapter = verseChunks.join('\\v ')
+        chapterChunks[chapterIndex] = newChapter
+        newUsfm = chapterChunks.join('\\c ')
+      }
+    }
+    return newUsfm
+  }
 
   React.useEffect(() => { // for each unsaved change, call into versePane to get latest changes for verse to save
     if (saveClicked) {
@@ -436,62 +466,66 @@ export default function ScriptureCard({
 
       if (unsavedCardIndices?.length) {
         let bibleUsfm = core.getResponseData(scriptureConfig?.fetchResponse)
+        let mergeFail = false
+        let cardNum = 0
 
         for (const cardIndex of unsavedCardIndices) {
-          const cardNum = parseInt(cardIndex)
+          cardNum = parseInt(cardIndex)
           const { getChanges, state } = unsavedChangesList[cardNum]
 
           if (getChanges) {
             let newUsfm
             const {
-              newVerseText,
               ref,
               updatedVerseObjects,
             } = getChanges(state)
 
             if (updatedVerseObjects && bibleUsfm) { // just replace verse
-              const chapterChunks = bibleUsfm?.split('\\c ')
-              const chapterIndex = findRefInArray(ref?.chapter, chapterChunks)
-
-              if (chapterIndex >= 0) {
-                const currentChapter = chapterChunks[chapterIndex]
-                const verseChunks = currentChapter.split('\\v ')
-                const verseIndex = findRefInArray(ref?.verse, verseChunks)
-
-                if (verseIndex >= 0) {
-                  const newVerseUsfm = UsfmFileConversionHelpers.convertVerseDataToUSFM(updatedVerseObjects)
-                  console.log(`saveChangesToCloud(${cardNum}) - new USFM for card:} - ${newVerseUsfm.substring(0, 100)}`)
-                  const oldVerse = verseChunks[verseIndex]
-                  const verseNumLen = (ref?.verse + '').length
-                  verseChunks[verseIndex] = oldVerse.substring(0, verseNumLen + 1) + newVerseUsfm
-                  const newChapter = verseChunks.join('\\v ')
-                  chapterChunks[chapterIndex] = newChapter
-                  newUsfm = chapterChunks.join('\\c ')
-                }
-              }
-            }
-
-            if (updatedVerseObjects && !newUsfm) {
-              console.log(`saveChangesToCloud(${cardNum}) - verse not found, falling back to inserting verse object`)
-              let targetVerseObjects_ = null
-
-              if (ref) {
-                if (newVerseText) {
-                  const { targetVerseObjects } = AlignmentHelpers.updateAlignmentsToTargetVerse(updatedVerseObjects, newVerseText)
-                  targetVerseObjects_ = targetVerseObjects
-                } else {
-                  targetVerseObjects_ = updatedVerseObjects
-                }
-              }
-
-              const newBookJson = targetVerseObjects_ && scriptureConfig?.updateVerse(ref.chapter, ref.verse, { verseObjects: targetVerseObjects_ })
-              bibleUsfm = usfmjs.toUSFM(newBookJson, { forcedNewLines: true })
+              newUsfm = mergeVerseObjectsIntoBibleUsfm(bibleUsfm, ref, updatedVerseObjects, cardNum)
             }
 
             if (newUsfm) {
               bibleUsfm = newUsfm
+            } else {
+              mergeFail = true
+              break
             }
           }
+        }
+
+        if (mergeFail) { // if we failed to merge, fallback to brute force verse objects to USFM
+          console.log(`saveChangesToCloud(${cardNum}) - verse not found, falling back to inserting verse object`)
+          let newBookJson
+
+          for (const cardIndex of unsavedCardIndices) {
+            const cardNum = parseInt(cardIndex)
+            const { getChanges, state } = unsavedChangesList[cardNum]
+
+            if (getChanges) {
+              let newUsfm
+              const {
+                newVerseText,
+                ref,
+                updatedVerseObjects,
+              } = getChanges(state)
+
+              if (updatedVerseObjects && !newUsfm) {
+                let targetVerseObjects_ = null
+
+                if (ref) {
+                  if (newVerseText) {
+                    const { targetVerseObjects } = AlignmentHelpers.updateAlignmentsToTargetVerse(updatedVerseObjects, newVerseText)
+                    targetVerseObjects_ = targetVerseObjects
+                  } else {
+                    targetVerseObjects_ = updatedVerseObjects
+                  }
+                  newBookJson = targetVerseObjects_ && scriptureConfig?.updateVerse(ref.chapter, ref.verse, { verseObjects: targetVerseObjects_ })
+                }
+              }
+            }
+          }
+
+          bibleUsfm = usfmjs.toUSFM(newBookJson, { forcedNewLines: true })
         }
 
         console.log(`saveChangesToCloud() - saving new USFM: ${bibleUsfm.substring(0, 100)}...`)
