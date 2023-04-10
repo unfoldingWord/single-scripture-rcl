@@ -228,18 +228,43 @@ export function useScriptureAlignmentEdit({
     }
   }, [initialVerseObjects, alignerData, newVerseText, initialVerseText, enableAlignment, originalVerseObjects])
 
-  function getChanges() {
-    console.log(`getChanges - started %{currentIndex}`)
-    let updatedVerseObjects_
+  /**
+   * get changes for saving
+   * @param {object} newState - optionally pass in new state (to override state)
+   */
+  function getChanges(newState = {}) {
+    console.log(`getChanges - started ${currentIndex} - passed state`, newState)
+    const _newState = {
+      state,
+      ...newState,
+    }
+    // @ts-ignore
+    const {
+      // @ts-ignore
+      newAlignments,
+      // @ts-ignore
+      newVerseText,
+      // @ts-ignore
+      updatedVerseObjects,
+      // @ts-ignore
+      verseTextChanged,
+    } = _newState
+    let updatedVerseObjects_ = updatedVerseObjects
 
     if (newAlignments) { // if unsaved alignment changes, apply them
+      console.log(`getChanges - applying unsaved alignments}`)
       updatedVerseObjects_ = updateVerseWithNewAlignments()
-    } else if (verseTextChanged && newVerseText) {
-      const currentVerseObjects_ = updatedVerseObjects || initialVerseObjects
+    }
+
+    if (verseTextChanged && newVerseText) {
+      console.log(`getChanges - applying new text:`, newVerseText)
+      const currentVerseObjects_ = updatedVerseObjects_ || initialVerseObjects
+      updatedVerseObjects_ && console.log(`getChanges - applying updated alignments`)
       const { targetVerseObjects } = AlignmentHelpers.updateAlignmentsToTargetVerse(currentVerseObjects_, newVerseText)
       updatedVerseObjects_ = targetVerseObjects
     } else { // only alignment changes to upload
-      updatedVerseObjects_ = updatedVerseObjects || initialVerseObjects
+      updatedVerseObjects_ && console.log(`getChanges - applying updated alignments`, { newVerseText, updatedVerseObjects_ })
+      updatedVerseObjects_ = updatedVerseObjects_ || initialVerseObjects
     }
 
     if (updatedVerseObjects_) {
@@ -307,12 +332,14 @@ export function useScriptureAlignmentEdit({
     if (_newAlignments) {
       const alignedVerseObjects = updateVerseWithNewAlignments(_newAlignments)
       console.log(`saveAlignment() - alignedVerseObjects`, alignedVerseObjects)
-      setState({
+      const newState = {
         alignerData: null,
         editing: false,
         newAlignments: null,
         updatedVerseObjects: alignedVerseObjects,
-      })
+      }
+      setState(newState)
+      callSetSavedState(true, newState )
     } else {
       setState({
         alignerData: null,
@@ -334,15 +361,19 @@ export function useScriptureAlignmentEdit({
   /**
    * callback for button to set editing state
    * @param {boolean} editing_ - if true, editor is shown, otherwise editor is hidden
+   * @param {string} _newVerseText - optional verse text
    */
-  async function setEditing(editing_) {
+  async function setEditing(editing_, _newVerseText = newVerseText) {
     if (enableEdit) {
       if (editing_ && !editing) {
         await startEditBranch()
       }
 
       if (editing_ !== editing) {
-        setState({ editing: editing_ })
+        _newVerseText = _newVerseText || initialVerseText
+        const newState = { editing: editing_, newVerseText: _newVerseText }
+        setState(newState)
+        callSetSavedState((_newVerseText !== initialVerseText), newState )
       }
     }
   }
@@ -379,9 +410,23 @@ export function useScriptureAlignmentEdit({
     return changed
   }, [updatedVerseObjects, initialVerseObjects, verseTextChanged])
 
+  /**
+   * callback to scripture card to updated with latest state for saving
+   * @param {boolean} unsavedChanges_
+   * @param {object} newState
+   */
+  function callSetSavedState(unsavedChanges_, newState = { } ) {
+    const _newState = {
+      ...state,
+      ...newState,
+    }
+    // console.log(`callSetSavedState - new state`, _newState)
+    setSavedChanges && setSavedChanges(currentIndex, !unsavedChanges_, { getChanges, clearChanges, state: _newState })
+  }
+
   React.useEffect(() => { // set saved changes whenever user edits verse text or alignments or if alignments are open
     const unsavedChanges_ = unsavedChanges || alignerData
-    setSavedChanges && setSavedChanges(currentIndex, !unsavedChanges_, getChanges, clearChanges)
+    callSetSavedState(unsavedChanges_)
   }, [unsavedChanges, alignerData])
 
   /**
