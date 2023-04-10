@@ -1,10 +1,18 @@
 // @ts-ignore
 import * as React from 'react'
-import {AlignmentHelpers, UsfmFileConversionHelpers, usfmHelpers,} from 'word-aligner-rcl'
+import {
+  AlignmentHelpers,
+  UsfmFileConversionHelpers,
+  usfmHelpers,
+} from 'word-aligner-rcl'
 import * as isEqual from 'deep-equal'
-import {ScriptureConfig, ScriptureReference, ServerConfig,} from '../types'
-import {getScriptureResourceSettings} from '../utils/ScriptureSettings'
-import {ORIGINAL_SOURCE} from '../utils'
+import {
+  ScriptureConfig,
+  ScriptureReference,
+  ServerConfig,
+} from '../types'
+import { getScriptureResourceSettings } from '../utils/ScriptureSettings'
+import { ORIGINAL_SOURCE } from '../utils'
 import useScriptureResources from './useScriptureResources'
 
 interface StartEdit {
