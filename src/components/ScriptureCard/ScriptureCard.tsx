@@ -3,6 +3,9 @@ import * as PropTypes from 'prop-types'
 import { core } from 'scripture-resources-rcl'
 import usfmjs from 'usfm-js'
 import { useEdit } from 'gitea-react-toolkit'
+import { MdUpdate, MdUpdateDisabled } from 'react-icons/md'
+import { FiShare } from 'react-icons/fi'
+import { IconButton } from '@mui/material'
 import {
   Card,
   useCardState,
@@ -157,8 +160,17 @@ export default function ScriptureCard({
     ((ref_ === 'master') || (ref_.substring(0, loggedInUser.length) === loggedInUser) ) // not tag
 
   const {
-    state: { workingResourceBranch, usingUserBranch: usingUserBranch_ },
-    actions: { startEdit: startEditBranch },
+    state: {
+      workingResourceBranch,
+      usingUserBranch: usingUserBranch_,
+      mergeFromMaster,
+      mergeToMaster,
+    },
+    actions: {
+      startEdit: startEditBranch,
+      mergeFromMasterIntoUserBranch,
+      mergeToMasterFromUserBranch,
+    },
   } = useUserBranch({
     owner,
     server,
@@ -553,6 +565,17 @@ export default function ScriptureCard({
     }
   }, [scriptureConfig?.versesForRef])
 
+  const needToMergeFromMaster = mergeFromMaster?.mergeNeeded
+  const mergeFromMasterHasConflicts = mergeFromMaster?.conflict
+  const mergeToMasterHasConflicts = mergeToMaster?.conflict
+
+  // eslint-disable-next-line no-nested-ternary
+  const mergeFromMasterTitle = mergeFromMasterHasConflicts ? 'Merge Conflicts for update from master' : (needToMergeFromMaster ? 'Update from master' : 'No merge conflicts for update with master')
+  // eslint-disable-next-line no-nested-ternary
+  const mergeFromMasterColor = mergeFromMasterHasConflicts ? 'black' : (needToMergeFromMaster ? 'black' : 'lightgray')
+  const mergeToMasterTitle = mergeToMasterHasConflicts ? 'Merge Conflicts for share with master' : 'No merge conflicts for share with master'
+  const mergeToMasterColor = mergeToMasterHasConflicts ? 'black' : 'black'
+
   const renderedScripturePanes = versesForRef?.map((_currentVerseData, index) => {
     const initialVerseObjects = _currentVerseData?.verseData?.verseObjects || null
     // @ts-ignore
@@ -592,6 +615,47 @@ export default function ScriptureCard({
     )
   })
 
+  const onRenderToolbar = ({ items }) => {
+    const newItems = [...items];
+    if (mergeFromMaster) {
+      newItems.push(
+        <IconButton
+          className={classes.margin}
+          key='update-from-master'
+          onClick={mergeFromMasterIntoUserBranch}
+          title={mergeFromMasterTitle}
+          aria-label={mergeFromMasterTitle}
+          style={{ cursor: 'pointer' }}
+        >
+          {mergeFromMasterHasConflicts ?
+            <MdUpdateDisabled id='update-from-master-icon' color={mergeFromMasterColor} />
+            :
+            <MdUpdate id='update-from-master-icon' color={mergeFromMasterColor} />
+          }
+        </IconButton>
+      )
+    }
+    if (mergeToMaster) {
+      newItems.push(
+        <IconButton
+          className={classes.margin}
+          key='share-to-master'
+          onClick={mergeToMasterFromUserBranch}
+          title={mergeToMasterTitle}
+          aria-label={mergeToMasterTitle}
+          style={{ cursor: 'pointer' }}
+        >
+          {mergeToMasterHasConflicts ?
+            <MdUpdateDisabled id='share-to-master-icon' color={mergeToMasterColor} />
+            :
+            <FiShare id='share-to-master-icon' color={mergeToMasterColor} />
+          }
+        </IconButton>
+      )
+    }
+    return newItems;
+  }
+
   return (
     <Card
       id={`scripture_card_${cardNum}`}
@@ -615,6 +679,7 @@ export default function ScriptureCard({
       editable={enableEdit || enableAlignment}
       saved={startSave || !haveUnsavedChanges}
       onSaveEdit={() => setState({ saveClicked: true })}
+      onRenderToolbar={onRenderToolbar}
     >
       <div id="scripture-pane-list">
         {renderedScripturePanes}

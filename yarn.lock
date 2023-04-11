@@ -4684,6 +4684,13 @@ data-urls@^2.0.0:
     whatwg-mimetype "^2.3.0"
     whatwg-url "^8.0.0"
 
+dcs-branch-merger@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/dcs-branch-merger/-/dcs-branch-merger-1.0.1.tgz#83dc29d44d64fdb1afbbdeabecdb249a8844a63a"
+  integrity sha512-iTOYHtQkMwSFcLkvqHBPO07rbIvRMfe3sDF+xvofGYrotjqV0zjdKK3cO8RSgSQ+eBMQhJ3t9k7hOiLsfo/+9w==
+  dependencies:
+    path "0.12.7"
+
 debounce-promise@^3.1.0:
   version "3.1.2"
   resolved "https://registry.yarnpkg.com/debounce-promise/-/debounce-promise-3.1.2.tgz#320fb8c7d15a344455cd33cee5ab63530b6dc7c5"
@@ -12629,14 +12636,16 @@ transform-runtime@0.0.0:
   resolved "https://registry.yarnpkg.com/transform-runtime/-/transform-runtime-0.0.0.tgz#e714d9b69211dd9537939d50e3aa5788c442b85c"
   integrity sha512-PX3vXzO8lucrVm82vZb7BABBLHyMDPGzn9zElHr+DnvtS3JPXtqwB1iTRe+D6iFXYmjtAF3zH7O0Xc5XpLpMEg==
 
-translation-helps-rcl@3.3.6-beta.2:
-  version "3.3.6-beta.2"
-  resolved "https://registry.yarnpkg.com/translation-helps-rcl/-/translation-helps-rcl-3.3.6-beta.2.tgz#58dd95d1d5fd2ad3c27c8b9ae4dc769c06a42f06"
-  integrity sha512-NXVILP1NrfGoisx/8GglOD25c3GIkgdmHMKG4WlI+tPgUPtKRcy6mjCHTx7Iqp+QNj9wMBrqJXXleYWqfWpFBA==
+translation-helps-rcl@^3.3.10-beta:
+  version "3.3.10-beta"
+  resolved "https://registry.yarnpkg.com/translation-helps-rcl/-/translation-helps-rcl-3.3.10-beta.tgz#29b40955a7e6ed9aa7cbcd18fc1af5a1879cb509"
+  integrity sha512-9qZ0eiHVCDqdHxH41XFwcUzxB6E8XjW+fK0SOr5B756TgTBe6Dl4AvBvEgVHyRKoXMIVk9sLogylz7Y5G0/y5w==
   dependencies:
     "@gwdevs/extensible-rcl" "^1.0.1"
     "@mui/styled-engine" "npm:@mui/styled-engine-sc@latest"
     axios "^0.27.2"
+    bible-reference-range "^1.1.0"
+    dcs-branch-merger "^1.0.1"
     deep-equal "^2.0.5"
     react-draggable "^4.4.3"
     styled-components "^5.2.1"
