@@ -85,6 +85,7 @@ function ScripturePane({
   scriptureAlignmentEditConfig,
   setSavedChanges,
   setWordAlignerStatus,
+  merging,
 } : Props) {
   const [state, setState_] = React.useState({
     doingAlignment: false,
@@ -102,7 +103,16 @@ function ScripturePane({
   }
 
   const [initialVerseText, setInitialVerseText] = React.useState(null)
-  const resourceMsg = saving ? 'Saving Changes...' : getResourceMessage(resourceStatus, server, resourceLink, isNT)
+
+  let resourceMessage = ''
+  if (saving) {
+    resourceMessage = 'Saving Changes...'
+  } else if (merging) {
+    resourceMessage = 'Merging Changes...'
+  } else {
+    resourceMessage = getResourceMessage(resourceStatus, server, resourceLink, isNT)
+  }
+
   const { chapter, verse } = reference
   direction = direction || 'ltr'
 
@@ -182,10 +192,10 @@ function ScripturePane({
 
   return (
     <Container style={{ direction, width: '100%', paddingBottom: '0.5em' }}>
-      {resourceMsg ?
+      {resourceMessage ?
         // @ts-ignore
         <div style={MessageStyle}>
-          <div style={{ fontSize: `${fontSize}%` }}> {resourceMsg} </div>
+          <div style={{ fontSize: `${fontSize}%` }}> {resourceMessage} </div>
         </div>
         :
         <Content>

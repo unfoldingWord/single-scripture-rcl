@@ -166,6 +166,7 @@ export default function ScriptureCard({
       usingUserBranch: usingUserBranch_,
       mergeFromMaster,
       mergeToMaster,
+      merging,
     },
     actions: {
       startEdit: startEditBranch,
@@ -624,6 +625,7 @@ export default function ScriptureCard({
         setWordAlignerStatus={setWordAlignerStatus}
         server={server}
         translate={translate}
+        merging={merging}
       />
     )
   })
