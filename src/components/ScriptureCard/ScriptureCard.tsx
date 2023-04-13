@@ -187,7 +187,13 @@ export default function ScriptureCard({
 
   React.useEffect(() => {
     if (cardResourceId) {
-      updateMergeState && updateMergeState(cardResourceId, mergeFromMaster, mergeToMaster)
+      updateMergeState && updateMergeState(
+        cardResourceId,
+        mergeFromMaster,
+        mergeToMaster,
+        mergeFromMasterIntoUserBranch,
+        mergeToMasterFromUserBranch,
+      )
     }
   },[cardResourceId, mergeFromMaster, mergeToMaster])
 
