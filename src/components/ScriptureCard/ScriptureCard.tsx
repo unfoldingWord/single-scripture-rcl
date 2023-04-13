@@ -71,6 +71,7 @@ export default function ScriptureCard({
   bookIndex,
   addVerseRange,
   setWordAlignerStatus,
+  updateMergeState,
 }) {
   const [state, setState_] = React.useState({
     haveUnsavedChanges: false,
@@ -183,6 +184,18 @@ export default function ScriptureCard({
     onResourceError,
     useUserLocalStorage,
   })
+
+  React.useEffect(() => {
+    if (cardResourceId) {
+      updateMergeState && updateMergeState(
+        cardResourceId,
+        mergeFromMaster,
+        mergeToMaster,
+        mergeFromMasterIntoUserBranch,
+        mergeToMasterFromUserBranch,
+      )
+    }
+  },[cardResourceId, mergeFromMaster, mergeToMaster])
 
   const workingRef = canUseEditBranch ? workingResourceBranch : appRef
   let scriptureTitle
@@ -616,7 +629,8 @@ export default function ScriptureCard({
   })
 
   const onRenderToolbar = ({ items }) => {
-    const newItems = [...items];
+    const newItems = [...items]
+
     if (mergeFromMaster) {
       newItems.push(
         <IconButton
@@ -761,4 +775,6 @@ ScriptureCard.propTypes = {
   addVerseRange: PropTypes.func,
   /** callback to update word aligner state */
   setWordAlignerStatus: PropTypes.func,
+  /**callback to update the card's merge state in app */
+  updateMergeState: PropTypes.func,
 }
