@@ -56,6 +56,7 @@ export function useScripture({
       ref = null,
     } = resource_ || {}
     const ref_ = ref || branch
+
     resourceLink = getResourceLink({
       owner,
       languageId,

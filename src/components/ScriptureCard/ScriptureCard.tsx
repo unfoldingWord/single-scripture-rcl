@@ -160,15 +160,16 @@ export default function ScriptureCard({
     state: { workingResourceBranch, usingUserBranch: usingUserBranch_ },
     actions: { startEdit: startEditBranch },
   } = useUserBranch({
-    owner,
-    server,
     appRef,
-    languageId,
-    cardId: id,
-    loggedInUser: canUseEditBranch ? loggedInUser : null,
     authentication: canUseEditBranch ? authentication : null,
+    bookId,
+    cardId: id,
     cardResourceId,
+    languageId,
+    loggedInUser: canUseEditBranch ? loggedInUser : null,
+    owner,
     onResourceError,
+    server,
     useUserLocalStorage,
   })
 
