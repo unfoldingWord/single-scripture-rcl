@@ -154,7 +154,7 @@ export default function ScriptureCard({
   let ref_ = scriptureConfig?.resource?.ref || appRef
   const canUseEditBranch = loggedInUser && authentication &&
     (resourceId !== ORIGINAL_SOURCE) &&
-    ((ref_ === 'master') || (ref_.substring(0, loggedInUser.length) === loggedInUser) ) // not tag
+    ((ref_ === 'master') || (ref_.includes(loggedInUser)) ) // not a version tag
 
   const {
     state: { workingResourceBranch, usingUserBranch: usingUserBranch_ },
