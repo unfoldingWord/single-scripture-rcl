@@ -168,7 +168,7 @@ function ScripturePane({
   function onTextChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
     const newVerseText = event?.target?.value
     const changed = newVerseText !== initialVerseText
-    console.log(`SP.onTextChange`, { changed, newText: newVerseText, initialVerseText })
+    // console.log(`SP.onTextChange`, { changed, newText: newVerseText, initialVerseText })
     setVerseChanged(changed, newVerseText, initialVerseText)
     setState({ newText: newVerseText })
   }
