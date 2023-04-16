@@ -365,10 +365,6 @@ export function useScriptureAlignmentEdit({
    */
   async function setEditing(editing_, _newVerseText = newVerseText) {
     if (enableEdit) {
-      if (editing_ && !editing) {
-        await startEditBranch()
-      }
-
       if (editing_ !== editing) {
         _newVerseText = _newVerseText || initialVerseText
         const newState = { editing: editing_, newVerseText: _newVerseText }
