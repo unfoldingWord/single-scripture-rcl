@@ -1,15 +1,22 @@
 import * as React from 'react'
 import { makeStyles } from '@material-ui/core/styles'
-import Typography from '@mui/material/Typography';
 import { DraggableCard } from 'translation-helps-rcl'
+import Box from '@mui/material/Box';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import { BiBible } from 'react-icons/bi'
 
 const useStyles = makeStyles(theme => ({
   wrapper: {
     display: 'flex',
     flexDirection: 'column',
   },
-  row: {
-    padding: theme.spacing(2),
+  list: {
+    paddingTop: theme.spacing(1),
+    paddingBottom: theme.spacing(1),
   },
   button: {
     marginTop: theme.spacing(1),
@@ -19,23 +26,36 @@ const useStyles = makeStyles(theme => ({
 }))
 
 const VerseSelectorContent = ({
-  verseRefList,
+  resourceId,
+  versesForRef,
   onVerseSelect,
 }) => {
-  const classes = useStyles()
+  const renderedVerseItems = versesForRef.map(verse => {
+    return (
+      <ListItem
+        disablePadding
+        id={`verse-${verse.chapter}:${verse.verse}`}
+        key={`verse-${verse.chapter}:${verse.verse}`}
+        onClick={(event) => {onVerseSelect(verse)}}
+      >
+        <ListItemButton>
+          <ListItemIcon>
+            <BiBible />
+          </ListItemIcon>
+          <ListItemText primary={`${verse.chapter}:${verse.verse}`} />
+        </ListItemButton>
+      </ListItem>
+    )
+  })
 
   return (
-   <div id='merge-card-content' className={classes.wrapper}>
-      <Typography variant="body1" className={classes.row} >
-        This will be a merge card
-      </Typography>
-
-      {/* TODO: This will be a list of verses */}
-    </div>
+    <Box id={`verse-list-${resourceId}`} sx={{ width: '50vh', bgcolor: 'background.paper' }}>
+      {renderedVerseItems}
+    </Box>
   )
 }
 
-const VerseSelectorPopup = ({ resourceId, verseRefList, onVerseSelect, open, onClose }) => {
+const VerseSelectorPopup = ({ resourceId, versesForRef, onVerseSelect, open, onClose }) => {
   return (
 
     <DraggableCard
@@ -48,7 +68,7 @@ const VerseSelectorPopup = ({ resourceId, verseRefList, onVerseSelect, open, onC
       onClose={onClose}
       dimBackground={true}
       content={
-        <VerseSelectorContent verseRefList={verseRefList} onVerseSelect={onVerseSelect} />
+        <VerseSelectorContent resourceId={resourceId} versesForRef={versesForRef} onVerseSelect={onVerseSelect} />
       }
     />
   )

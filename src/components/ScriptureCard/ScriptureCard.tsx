@@ -87,6 +87,7 @@ export default function ScriptureCard({
     unsavedChangesList: {},
     versesForRef: null,
     showAlignmentPopup: false,
+    verseSelectedForAlignment: null,
   })
   const {
     ref,
@@ -100,6 +101,7 @@ export default function ScriptureCard({
     haveUnsavedChanges,
     versesForRef,
     showAlignmentPopup,
+    verseSelectedForAlignment,
   } = state
 
   const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
@@ -610,6 +612,11 @@ export default function ScriptureCard({
       reference: _reference,
     }
 
+    let isVerseSelectedForAlignment = false
+    if (verseSelectedForAlignment) {
+      isVerseSelectedForAlignment = verseSelectedForAlignment.chapter === chapter && verseSelectedForAlignment.verse === verse
+    }
+
     return (
       <ScripturePane
         {...scriptureConfig}
@@ -630,6 +637,7 @@ export default function ScriptureCard({
         server={server}
         translate={translate}
         merging={merging}
+        isVerseSelectedForAlignment={isVerseSelectedForAlignment}
       />
     )
   })
@@ -737,8 +745,8 @@ export default function ScriptureCard({
         resourceId={resourceId}
         open={showAlignmentPopup}
         onClose={() => setState({ showAlignmentPopup: false })}
-        verseRefList={[]}
-        onVerseSelect={() => console.log("Verse Selected!")}
+        versesForRef={versesForRef}
+        onVerseSelect={(verse) => setState({ verseSelectedForAlignment: verse })}
       />
     </>
   )
