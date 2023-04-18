@@ -6,6 +6,7 @@ import { useEdit } from 'gitea-react-toolkit'
 import { MdUpdate, MdUpdateDisabled } from 'react-icons/md'
 import { FiShare } from 'react-icons/fi'
 import { IconButton } from '@mui/material'
+import { RxLink2, RxLinkBreak2 } from 'react-icons/rx'
 import {
   Card,
   useCardState,
@@ -29,6 +30,7 @@ import {
   ORIGINAL_SOURCE,
   OT_ORIG_LANG,
 } from '../../utils'
+import { VerseSelectorPopup } from '../VerseSelectorPopup'
 
 const KEY_FONT_SIZE_BASE = 'scripturePaneFontSize_'
 const label = 'Version'
@@ -84,6 +86,7 @@ export default function ScriptureCard({
     usingUserBranch: false,
     unsavedChangesList: {},
     versesForRef: null,
+    showAlignmentPopup: false,
   })
   const {
     ref,
@@ -96,6 +99,7 @@ export default function ScriptureCard({
     unsavedChangesList,
     haveUnsavedChanges,
     versesForRef,
+    showAlignmentPopup,
   } = state
 
   const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
@@ -630,8 +634,35 @@ export default function ScriptureCard({
     )
   })
 
+  const alignButtonText = 'Align Verse(s)'
+  // TODO: change button hover text if all verses are aligned
+  // const checkingState = aligned ? 'valid' : 'invalid'
+  // const alignButtonText = checkingState === 'valid' ? 'Alignment is Valid' : 'Alignment is Invalid'
+
   const onRenderToolbar = ({ items }) => {
     const newItems = [...items]
+
+    // TODO: Hook it up to aligner status. But for now we can just display it to handle the uI.
+    // if (setWordAlignerStatus) {
+      newItems.push(
+        <IconButton
+          id={`alignment_icon_${resourceId}`}
+          key='checking-button'
+          onClick={() => setState({ showAlignmentPopup: true })}
+          title={alignButtonText}
+          aria-label={alignButtonText}
+          style={{ cursor: 'pointer' }}
+        >
+          <RxLink2 id='valid_icon' color='#000' />
+          {/* TODO: Change button color if all verses are aligned */}
+          {/* {checkingState === 'valid' ? (
+            <RxLink2 id='valid_icon' color='#BBB' />
+          ) : (
+            <RxLinkBreak2 id=`invalid_alignment_icon_${resourceId}` color='#000' />
+          )} */}
+        </IconButton>
+      )
+    // }
 
     if (mergeFromMaster) {
       newItems.push(
@@ -673,34 +704,43 @@ export default function ScriptureCard({
   }
 
   return (
-    <Card
-      id={`scripture_card_${cardNum}`}
-      title={scriptureLabel}
-      settingsTitle={scriptureTitle + ' Settings'}
-      items={items}
-      classes={classes}
-      headers={headers}
-      filters={filters}
-      fontSize={fontSize}
-      itemIndex={itemIndex}
-      setFilters={setFilters}
-      setFontSize={setFontSize}
-      setItemIndex={setItemIndex}
-      markdownView={markdownView}
-      setMarkdownView={setMarkdownView}
-      getCustomComponent={getScriptureSelector}
-      hideMarkdownToggle
-      onMenuClose={onMenuClose}
-      onMinimize={onMinimize ? () => onMinimize(id) : null}
-      editable={enableEdit || enableAlignment}
-      saved={startSave || !haveUnsavedChanges}
-      onSaveEdit={() => setState({ saveClicked: true })}
-      onRenderToolbar={onRenderToolbar}
-    >
-      <div id="scripture-pane-list">
-        {renderedScripturePanes}
-      </div>
-    </Card>
+    <>
+      <Card
+        id={`scripture_card_${cardNum}`}
+        title={scriptureLabel}
+        settingsTitle={scriptureTitle + ' Settings'}
+        items={items}
+        classes={classes}
+        headers={headers}
+        filters={filters}
+        fontSize={fontSize}
+        itemIndex={itemIndex}
+        setFilters={setFilters}
+        setFontSize={setFontSize}
+        setItemIndex={setItemIndex}
+        markdownView={markdownView}
+        setMarkdownView={setMarkdownView}
+        getCustomComponent={getScriptureSelector}
+        hideMarkdownToggle
+        onMenuClose={onMenuClose}
+        onMinimize={onMinimize ? () => onMinimize(id) : null}
+        editable={enableEdit || enableAlignment}
+        saved={startSave || !haveUnsavedChanges}
+        onSaveEdit={() => setState({ saveClicked: true })}
+        onRenderToolbar={onRenderToolbar}
+      >
+        <div id="scripture-pane-list">
+          {renderedScripturePanes}
+        </div>
+      </Card>
+      <VerseSelectorPopup
+        resourceId={resourceId}
+        open={showAlignmentPopup}
+        onClose={() => setState({ showAlignmentPopup: false })}
+        verseRefList={[]}
+        onVerseSelect={() => console.log("Verse Selected!")}
+      />
+    </>
   )
 }
 

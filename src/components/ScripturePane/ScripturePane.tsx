@@ -44,6 +44,8 @@ interface Props {
   setWordAlignerStatus: Function;
   /** optional function for localization */
   translate: Function;
+  /** whether or not we are currently merging changes from master */
+  merging: boolean;
 }
 
 const MessageStyle = {
