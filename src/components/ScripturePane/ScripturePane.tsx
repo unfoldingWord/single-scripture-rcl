@@ -48,6 +48,8 @@ interface Props {
   merging: boolean;
   /** whether or not this current verse has been selected for alignment */
   isVerseSelectedForAlignment: boolean;
+  /** function to be called when verse alignment has finished */
+  onAlignmentFinish: Function;
 }
 
 const MessageStyle = {
@@ -91,6 +93,7 @@ function ScripturePane({
   setWordAlignerStatus,
   merging,
   isVerseSelectedForAlignment,
+  onAlignmentFinish,
 } : Props) {
   const [state, setState_] = React.useState({
     doingAlignment: false,
@@ -154,8 +157,7 @@ function ScripturePane({
     },
   } = _scriptureAlignmentEdit
 
-  if (isVerseSelectedForAlignment && !alignerData) {
-    console.log(`Aligning ${chapter}:${verse}...`)
+  if (isVerseSelectedForAlignment && !alignerData && !doingAlignment) {
     handleAlignmentClick()
   }
 
@@ -166,6 +168,7 @@ function ScripturePane({
     } else if (doingAlignment) {
       setWordAlignerStatus && setWordAlignerStatus(_scriptureAlignmentEdit)
       setState({ doingAlignment: false })
+      onAlignmentFinish && onAlignmentFinish()
     }
   }, [_scriptureAlignmentEdit?.state?.alignerData])
 

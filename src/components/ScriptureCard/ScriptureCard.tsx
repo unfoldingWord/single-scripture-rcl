@@ -638,6 +638,7 @@ export default function ScriptureCard({
         translate={translate}
         merging={merging}
         isVerseSelectedForAlignment={isVerseSelectedForAlignment}
+        onAlignmentFinish={() => setState({ verseSelectedForAlignment: null })}
       />
     )
   })
@@ -746,7 +747,10 @@ export default function ScriptureCard({
         open={showAlignmentPopup}
         onClose={() => setState({ showAlignmentPopup: false })}
         versesForRef={versesForRef}
-        onVerseSelect={(verse) => setState({ verseSelectedForAlignment: verse })}
+        onVerseSelect={(verse) => setState({
+          verseSelectedForAlignment: verse,
+          showAlignmentPopup: false
+        })}
       />
     </>
   )
