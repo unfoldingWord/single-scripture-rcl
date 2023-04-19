@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useScripture } from '..'
 import { getScriptureResourceSettings } from '../utils/ScriptureSettings'
 
@@ -31,6 +32,10 @@ export function useScriptureResources({
   if (appRef !== scriptureSettings.ref) {
     scriptureSettings = { ...scriptureSettings, ref: appRef }
   }
+
+  useEffect(() => {
+    console.log(`useScriptureResources: appRef changed to scriptureSettings.ref=${scriptureSettings.ref} and appRef=${appRef}`)
+  }, [appRef, scriptureSettings.ref])
 
   const scriptureSettings_ = getScriptureResourceSettings(bookId, scriptureSettings, isNewTestament,
     originalRepoUrl, currentLanguageId, currentOwner) // convert any default settings strings

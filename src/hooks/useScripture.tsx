@@ -1,5 +1,9 @@
 // @ts-ignore
-import { useEffect, useMemo, useState } from 'react'
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
 import {
   core,
   useRsrc,
@@ -35,7 +39,7 @@ interface Props {
   wholeBook: boolean;
 }
 
-export function useScripture({
+export function useScripture({ // hook for fetching scripture
   config,
   reference,
   resource: resource_,
@@ -64,6 +68,10 @@ export function useScripture({
       ref: ref_,
     })
   }
+
+  useEffect(() => { // get the _sha from last scripture download
+    console.log(`for ${resource_?.projectId} resourceLink is now ${resourceLink}`)
+  }, [resourceLink])
 
   const options = { getBibleJson: true }
   const bookRef = useMemo(() => {
@@ -117,6 +125,10 @@ export function useScripture({
       }
     }
   }, [loading])
+
+  useEffect(() => {
+    console.log(`useScripture: resourceLink changed to resourceLink=${resourceLink} and resourceLink_=${resourceLink_}`)
+  }, [resourceLink])
 
   function getVersesForRef(ref, content_ = bookObjects) {
     if (content_) {

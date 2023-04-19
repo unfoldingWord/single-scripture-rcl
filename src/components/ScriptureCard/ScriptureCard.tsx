@@ -5,6 +5,7 @@ import usfmjs from 'usfm-js'
 import { useEdit } from 'gitea-react-toolkit'
 import {
   Card,
+  isValidUserWorkingBranch,
   useCardState,
   useUserBranch,
   ERROR_STATE,
@@ -22,6 +23,7 @@ import {
 } from '../../utils/ScriptureSettings'
 import { Title } from '../ScripturePane/styled'
 import {
+  delay,
   NT_ORIG_LANG,
   ORIGINAL_SOURCE,
   OT_ORIG_LANG,
@@ -70,6 +72,8 @@ export default function ScriptureCard({
   setWordAlignerStatus,
 }) {
   const [state, setState_] = React.useState({
+    editBranchReady: false,
+    fetchResource: { bookId, appRef },
     haveUnsavedChanges: false,
     ref: appRef,
     saveClicked: false,
@@ -82,6 +86,8 @@ export default function ScriptureCard({
     versesForRef: null,
   })
   const {
+    editBranchReady,
+    fetchResource,
     ref,
     saveClicked,
     saveContent,
@@ -116,8 +122,8 @@ export default function ScriptureCard({
     title,
     verse,
     owner,
-    bookId,
-    appRef: ref,
+    bookId: fetchResource?.bookId,
+    appRef: fetchResource?.appRef,
     server,
     cardNum,
     chapter,
@@ -141,9 +147,10 @@ export default function ScriptureCard({
 
   React.useEffect(() => { // get the _sha from last scripture download
     const _sha = fetchResp_?.data?.sha || null
-    console.log(`for ${JSON.stringify(reference_)} new sha is ${_sha}`)
+    const url = fetchResp_?.data?.download_url || null
 
     if (_sha !== sha) {
+      console.log(`ScriptureCard: for ${url} ${JSON.stringify(reference_)} new sha is ${_sha}`)
       setState({ sha: _sha })
     }
   }, [fetchResp_])
@@ -156,8 +163,31 @@ export default function ScriptureCard({
     (resourceId !== ORIGINAL_SOURCE) &&
     ((ref_ === 'master') || (ref_.includes(loggedInUser)) ) // not a version tag
 
+  React.useEffect(() => { // make sure we don't change resource until both bookId and branch name are ready
+    if (bookId && ref ) {
+      let _ref = ref
+
+      if (canUseEditBranch && ref !== 'master') {
+        if (!isValidUserWorkingBranch(loggedInUser, ref, bookId)) {
+          _ref = 'master' // switch back to master branch
+        }
+      }
+
+      const newFetchResource = { bookId, appRef: _ref }
+
+      if (!isEqual(newFetchResource, fetchResource)) {
+        console.log(`ScriptureCard: for ${reference_} updating to ${JSON.stringify(newFetchResource)} from ${JSON.stringify(fetchResource)}`)
+        setState( { fetchResource: newFetchResource })
+      }
+    }
+  }, [bookId, ref])
+
   const {
-    state: { workingResourceBranch, usingUserBranch: usingUserBranch_ },
+    state: {
+      workingResourceBranch,
+      userEditBranchName,
+      usingUserBranch: _usingUserBranch,
+    },
     actions: { startEdit: startEditBranch },
   } = useUserBranch({
     appRef,
@@ -177,10 +207,10 @@ export default function ScriptureCard({
   let scriptureTitle
 
   React.useEffect(() => { // select correct working ref - could be master, user branch, or release
-    if (usingUserBranch_ !== usingUserBranch) {
-      setState({ usingUserBranch: usingUserBranch_ })
+    if (_usingUserBranch !== usingUserBranch) {
+      setState({ usingUserBranch: _usingUserBranch })
     }
-  }, [usingUserBranch_, usingUserBranch])
+  }, [_usingUserBranch, usingUserBranch])
 
   React.useEffect(() => { // select correct working ref - could be master, user branch, or release
     let workingRef_ = workingRef || appRef
@@ -373,7 +403,11 @@ export default function ScriptureCard({
   const filepath = getBookName()
 
   // keep track of verse edit state
-  const { onSaveEdit } = useEdit({
+  const {
+    error: saveError,
+    isError: isSaveError,
+    onSaveEdit,
+  } = useEdit({
     sha,
     owner,
     content: saveContent,
@@ -391,21 +425,20 @@ export default function ScriptureCard({
     repo,
   })
 
+  React.useEffect(() => { // when we get a save saveError
+    if (saveError && isSaveError) {
+      console.log(`save error`, saveError)
+      // onResourceError && onResourceError(null, false, null, `Error saving ${languageId_}_${resourceId} ${saveError}`, true)
+    }
+  }, [saveError, isSaveError])
+
   React.useEffect(() => { // when startSave goes true, save edits to user branch and then clear startSave
     const _saveEdit = async () => { // begin uploading new USFM
-      let branch = (workingResourceBranch !== 'master') ? workingResourceBranch : undefined
-
-      if (!branch) {
-        branch = await startEditBranch() // make sure user branch exists and get name
-      }
-
-      await onSaveEdit(branch).then((success) => { // push changed to server
+      console.info(`saveChangesToCloud() - Using sha: ${sha}`)
+      await onSaveEdit(userEditBranchName).then((success) => { // push changed to server
         if (success) {
           console.log(`saveChangesToCloud() - save scripture edits success`)
-          setState({
-            startSave: false,
-          })
-
+          setState({ startSave: false })
           const unsavedCardIndices = Object.keys(unsavedChangesList)
 
           if (unsavedCardIndices?.length) {
@@ -425,10 +458,16 @@ export default function ScriptureCard({
     }
 
     if (startSave) {
-      console.log(`saveChangesToCloud - calling _saveEdit()`)
-      _saveEdit()
+      if (!editBranchReady) {
+        console.log(`saveChangesToCloud - edit branch not yet created`)
+      } else if (!sha) {
+        console.log(`saveChangesToCloud - save sha not yet ready`)
+      } else {
+        console.log(`saveChangesToCloud - calling _saveEdit()`)
+        _saveEdit()
+      }
     }
-  }, [startSave])
+  }, [startSave, editBranchReady, sha])
 
   /**
    * convert updatedVerseObjects to USFM and merge into the bibleUsfm
@@ -463,6 +502,32 @@ export default function ScriptureCard({
 
   React.useEffect(() => { // for each unsaved change, call into versePane to get latest changes for verse to save
     if (saveClicked) {
+      let createEditBranch = !_usingUserBranch
+
+      if (!createEditBranch) { // if already using the user branch
+        if (workingResourceBranch !== userEditBranchName) {
+          console.warn(`saveChangesToCloud - state conflict - should be in user branch ${userEditBranchName}, but actually using ${workingResourceBranch}`)
+          createEditBranch = true
+        } else {
+          console.log(`saveChangesToCloud - already using edit branch: ${workingResourceBranch}`)
+          setState({ editBranchReady: true })
+        }
+      }
+
+      if (createEditBranch) { // if not using the user branch, create it
+        console.log(`saveChangesToCloud - creating edit branch`)
+        setState({ editBranchReady: false, sha: null }) // we will need a new sha for book/branch
+        startEditBranch().then((success) => {
+          if (success) {
+            console.log(`saveChangesToCloud - edit branch created`)
+            setState({ sha: null })
+            delay(1000).then(() => { // add delay to wait for server after branch created
+              setState({ editBranchReady: true, sha: null })
+            })
+          }
+        })
+      }
+
       const unsavedCardIndices = Object.keys(unsavedChangesList)
 
       if (unsavedCardIndices?.length) {
