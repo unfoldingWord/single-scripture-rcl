@@ -648,16 +648,24 @@ export default function ScriptureCard({
   // const checkingState = aligned ? 'valid' : 'invalid'
   // const alignButtonText = checkingState === 'valid' ? 'Alignment is Valid' : 'Alignment is Invalid'
 
+  const handleAlignButtonClick = () => {
+    if (versesForRef?.length > 1) {
+      setState({ showAlignmentPopup: true })
+    } else if (versesForRef?.length === 1) {
+      setState({ verseSelectedForAlignment: versesForRef[0] })
+    }
+  }
+
   const onRenderToolbar = ({ items }) => {
     const newItems = [...items]
 
     // TODO: Hook it up to aligner status. But for now we can just display it to handle the uI.
-    // if (setWordAlignerStatus) {
+    if (setWordAlignerStatus) {
       newItems.push(
         <IconButton
           id={`alignment_icon_${resourceId}`}
           key='checking-button'
-          onClick={() => setState({ showAlignmentPopup: true })}
+          onClick={handleAlignButtonClick}
           title={alignButtonText}
           aria-label={alignButtonText}
           style={{ cursor: 'pointer' }}
@@ -671,7 +679,7 @@ export default function ScriptureCard({
           )} */}
         </IconButton>
       )
-    // }
+    }
 
     if (mergeFromMaster) {
       newItems.push(

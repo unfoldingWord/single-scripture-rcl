@@ -235,21 +235,6 @@ function ScripturePane({
               />
             }
           </span>
-          {setWordAlignerStatus &&
-            <IconButton
-              key='checking-button'
-              onClick={() => handleAlignmentClick()}
-              title={titleText}
-              aria-label={titleText}
-              style={{ cursor: 'pointer' }}
-            >
-              {checkingState === 'valid' ? (
-                <RxLink2 id='valid_icon' color='#BBB' />
-              ) : (
-                <RxLinkBreak2 id='invalid_icon' color='#000' />
-              )}
-            </IconButton>
-          }
         </Content>
       }
     </Container>
