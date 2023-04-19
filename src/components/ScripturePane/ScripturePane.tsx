@@ -154,7 +154,7 @@ function ScripturePane({
     },
   } = _scriptureAlignmentEdit
 
-  if (isVerseSelectedForAlignment && !doingAlignment) {
+  if (isVerseSelectedForAlignment && !alignerData) {
     console.log(`Aligning ${chapter}:${verse}...`)
     handleAlignmentClick()
   }

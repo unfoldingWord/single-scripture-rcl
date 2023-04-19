@@ -49,8 +49,10 @@ const VerseSelectorContent = ({
   })
 
   return (
-    <Box id={`verse-list-${resourceId}`} sx={{ width: '50vh', bgcolor: 'background.paper' }}>
-      {renderedVerseItems}
+    <Box id={`verse-list-${resourceId}`} sx={{ minWidth: '360px',maxWidth: '600px', bgcolor: 'background.paper' }}>
+      <List>
+        {renderedVerseItems}
+      </List>
     </Box>
   )
 }
