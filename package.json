@@ -32,7 +32,8 @@
     "tc-ui-toolkit": "^5.3.3",
     "translation-helps-rcl": "^3.3.5",
     "word-aligner": "^1.0.0",
-    "word-aligner-rcl": "^0.9.2"
+    "word-aligner-rcl": "^0.9.2",
+    "uw-quote-helpers": "^0.0.1-beta.6"
   },
   "devDependencies": {
     "@babel/cli": "^7.12.1",
@@ -85,6 +86,7 @@
     "ts-jest": "^29.0.5",
     "use-deep-compare-effect": "1.8.1",
     "usfm-js": "3.4.2",
+    "uw-quote-helpers": "^0.0.1-beta.6",
     "webpack": "^4.44.2",
     "word-aligner": "^1.0.0",
     "word-aligner-rcl": "0.9.2"

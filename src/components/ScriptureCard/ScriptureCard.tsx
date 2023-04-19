@@ -1,6 +1,6 @@
 import * as React from 'react'
 import * as PropTypes from 'prop-types'
-import { core } from 'scripture-resources-rcl'
+import { core, SelectionsContextProvider } from 'scripture-resources-rcl'
 import usfmjs from 'usfm-js'
 import { useEdit } from 'gitea-react-toolkit'
 import {
@@ -10,8 +10,10 @@ import {
   ERROR_STATE,
   MANIFEST_NOT_LOADED_ERROR,
 } from 'translation-helps-rcl'
+import { getQuoteMatchesInBookRef } from 'uw-quote-helpers'
 import { AlignmentHelpers, UsfmFileConversionHelpers } from 'word-aligner-rcl'
 import * as isEqual from 'deep-equal'
+import { getVerses } from 'bible-reference-range'
 import { ScripturePane, ScriptureSelector } from '..'
 import { useScriptureSettings } from '../../hooks/useScriptureSettings'
 import {
@@ -66,7 +68,7 @@ export default function ScriptureCard({
   authentication,
   setSavedChanges,
   bookIndex,
-  addVerseRange,
+  selectedQuote,
   setWordAlignerStatus,
 }) {
   const [state, setState_] = React.useState({
@@ -94,7 +96,9 @@ export default function ScriptureCard({
     versesForRef,
   } = state
 
+  const [originalScriptureResource, setOriginalScriptureResource] = React.useState(null)
   const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
+  const [selections, _setSelections] = React.useState(new Map())
   const isNT_ = isNT(bookId)
 
   function setState(newState) {
@@ -138,6 +142,28 @@ export default function ScriptureCard({
   // @ts-ignore
   const repo = `${scriptureConfig?.resource?.languageId}_${scriptureConfig?.resource?.projectId}`
   const reference_ = scriptureConfig?.reference || null
+
+  /**
+   * update selections if changed
+   * @param {Map} newSelections
+   */
+  function setSelections(newSelections) {
+    let _newSelections = newSelections
+
+    if (newSelections?.size && currentVerseSpans?.length) { // add support for verse range
+      _newSelections = new Map(newSelections) // shallow copy
+      let primaryReference = `${chapter}:${verse}`
+      const _selections = _newSelections.get(primaryReference)
+
+      for (const verseSpan of currentVerseSpans) {
+        _newSelections.set(verseSpan, _selections)
+      }
+    }
+
+    if (!isEqual(selections, _newSelections)) {
+      _setSelections(_newSelections)
+    }
+  }
 
   React.useEffect(() => { // get the _sha from last scripture download
     const _sha = fetchResp_?.data?.sha || null
@@ -535,23 +561,48 @@ export default function ScriptureCard({
   }, [saveClicked])
 
   React.useEffect(() => {
-    if (!isEqual(versesForRef, scriptureConfig?.versesForRef)) {
+    if (scriptureConfig?.versesForRef && !isEqual(versesForRef, scriptureConfig?.versesForRef)) {
       const versesForRef = scriptureConfig?.versesForRef
       setState({ versesForRef })
+      const originalVerses = {}
+      const bookVerseObject = originalScriptureResource?.bookObjects?.chapters
 
-      for (const verseRef of versesForRef || []) {
-        // check for verse range
-        const _verse = verseRef.verse
+      if (bookVerseObject) {
+        for (const verseRef of versesForRef || []) {
+          const {
+            chapter,
+            verse,
+            verseData,
+          } = verseRef
 
-        if (addVerseRange && (typeof _verse === 'string')) {
-          // @ts-ignore
-          if (_verse.includes('-')) {
-            addVerseRange(`${scriptureConfig?.reference?.chapter}:${_verse}`)
+          if (!bookVerseObject[chapter]) {
+            bookVerseObject[chapter] = {}
+          }
+
+          if ((typeof verseRef.verse === 'string') && (verseRef.verse.includes('-'))) {
+            const verses = getVerses(originalVerses, `${chapter}:${verse}`)
+            let verseObjects = []
+
+            for (const verseItem of verses) {
+              const vo = verseItem.verseData.verseObjects
+              verseObjects = verseObjects.concat(vo)
+            }
+            bookVerseObject[chapter][verse] = { verseObjects }
+          } else {
+            bookVerseObject[chapter][verse] = originalVerses[chapter][verse]
           }
         }
+
+        const quoteMatches = getQuoteMatchesInBookRef({
+          bookObject: bookVerseObject,
+          ref: selectedQuote?.reference,
+          quote: selectedQuote?.quote,
+          occurrence: selectedQuote?.occurrence,
+        })
+        console.log('quoteMatches', quoteMatches)
       }
     }
-  }, [scriptureConfig?.versesForRef])
+  }, [scriptureConfig?.versesForRef, originalScriptureResource?.verseObjects])
 
   const renderedScripturePanes = versesForRef?.map((_currentVerseData, index) => {
     const initialVerseObjects = _currentVerseData?.verseData?.verseObjects || null
@@ -567,6 +618,7 @@ export default function ScriptureCard({
       currentIndex: index,
       initialVerseObjects,
       reference: _reference,
+      setOriginalScriptureResource,
     }
 
     return (
@@ -593,33 +645,41 @@ export default function ScriptureCard({
   })
 
   return (
-    <Card
-      id={`scripture_card_${cardNum}`}
-      title={scriptureLabel}
-      settingsTitle={scriptureTitle + ' Settings'}
-      items={items}
-      classes={classes}
-      headers={headers}
-      filters={filters}
-      fontSize={fontSize}
-      itemIndex={itemIndex}
-      setFilters={setFilters}
-      setFontSize={setFontSize}
-      setItemIndex={setItemIndex}
-      markdownView={markdownView}
-      setMarkdownView={setMarkdownView}
-      getCustomComponent={getScriptureSelector}
-      hideMarkdownToggle
-      onMenuClose={onMenuClose}
-      onMinimize={onMinimize ? () => onMinimize(id) : null}
-      editable={enableEdit || enableAlignment}
-      saved={startSave || !haveUnsavedChanges}
-      onSaveEdit={() => setState({ saveClicked: true })}
+    <SelectionsContextProvider
+      selections={selections}
+      onSelections={setSelections}
+      quote={selectedQuote?.quote}
+      occurrence={fixOccurrence(selectedQuote?.occurrence)}
+      verseObjectsMap={verseObjectsMap}
     >
-      <div id="scripture-pane-list">
-        {renderedScripturePanes}
-      </div>
-    </Card>
+      <Card
+        id={`scripture_card_${cardNum}`}
+        title={scriptureLabel}
+        settingsTitle={scriptureTitle + ' Settings'}
+        items={items}
+        classes={classes}
+        headers={headers}
+        filters={filters}
+        fontSize={fontSize}
+        itemIndex={itemIndex}
+        setFilters={setFilters}
+        setFontSize={setFontSize}
+        setItemIndex={setItemIndex}
+        markdownView={markdownView}
+        setMarkdownView={setMarkdownView}
+        getCustomComponent={getScriptureSelector}
+        hideMarkdownToggle
+        onMenuClose={onMenuClose}
+        onMinimize={onMinimize ? () => onMinimize(id) : null}
+        editable={enableEdit || enableAlignment}
+        saved={startSave || !haveUnsavedChanges}
+        onSaveEdit={() => setState({ saveClicked: true })}
+      >
+        <div id="scripture-pane-list">
+          {renderedScripturePanes}
+        </div>
+      </Card>
+    </SelectionsContextProvider>
   )
 }
 
@@ -692,8 +752,8 @@ ScriptureCard.propTypes = {
   setSavedChanges: PropTypes.func,
   /** index for current book (e.g. '01' for 'gen')*/
   bookIndex: PropTypes.string,
-  /** callback to indicate that we are using a verse range here */
-  addVerseRange: PropTypes.func,
   /** callback to update word aligner state */
   setWordAlignerStatus: PropTypes.func,
+  /**This is currently selected quote */
+  selectedQuote: PropTypes.object,
 }
