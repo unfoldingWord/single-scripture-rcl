@@ -565,22 +565,14 @@ export default function ScriptureCard({
 
   React.useEffect(() => {
     if (scriptureConfig?.versesForRef && !isEqual(versesForRef, scriptureConfig?.versesForRef)) {
-      // const _map = new Map()
-      // const verseObjects = cleanupVerseObjects(originalScriptureResource?.verseObjects)//converting occurence from string to integers
-      // _map.set(`${chapter}:${verse}`, verseObjects)
-
-      // if (currentVerseSpans?.length) { // add support for verse ranges
-      //   for (const verseSpan of currentVerseSpans) {
-      //     _map.set(verseSpan, verseObjects)
-      //   }
-      // }
-
-      // if (!isEqual(verseObjectsMap, _map)) {
-      //   setVerseObjectsMap(_map)
-      // }
+      const _map = new Map()
 
       const versesForRef = scriptureConfig?.versesForRef
-      setState({ versesForRef })
+
+      if (versesForRef?.length) {
+        setState({ versesForRef })
+      }
+
       const originalVerses = {}
       const bookVerseObject = originalScriptureResource?.bookObjects?.chapters
 
@@ -589,33 +581,36 @@ export default function ScriptureCard({
           const {
             chapter,
             verse,
-            verseData,
           } = verseRef
 
-          if (!bookVerseObject[chapter]) {
-            bookVerseObject[chapter] = {}
+          if (!originalVerses[chapter]) {
+            originalVerses[chapter] = {}
           }
 
+          let verseObjects = []
+
           if ((typeof verseRef.verse === 'string') && (verseRef.verse.includes('-'))) {
-            const verses = getVerses(originalVerses, `${chapter}:${verse}`)
-            let verseObjects = []
+            const verses = getVerses(bookVerseObject, `${chapter}:${verse}`)
 
             for (const verseItem of verses) {
               const vo = verseItem.verseData.verseObjects
               verseObjects = verseObjects.concat(vo)
             }
-            bookVerseObject[chapter][verse] = { verseObjects }
           } else {
-            bookVerseObject[chapter][verse] = originalVerses[chapter][verse]
+            verseObjects = bookVerseObject[chapter][verse]
           }
+          verseObjects = cleanupVerseObjects(verseObjects)
+          originalVerses[chapter][verse] = { verseObjects }
+          _map.set(`${chapter}:${verse}`, { verseObjects })
         }
-
+        setVerseObjectsMap(_map)
         const quoteMatches = getQuoteMatchesInBookRef({
-          bookObject: bookVerseObject,
+          bookObject: originalVerses,
           ref: selectedQuote?.reference,
           quote: selectedQuote?.quote,
           occurrence: selectedQuote?.occurrence,
         })
+        setSelections(quoteMatches)
         console.log('quoteMatches', quoteMatches)
       }
     }
