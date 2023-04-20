@@ -7,7 +7,7 @@ import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import { BiBible } from 'react-icons/bi'
+import { RxLink2, RxLinkBreak2 } from 'react-icons/rx'
 
 const useStyles = makeStyles(theme => ({
   wrapper: {
@@ -28,9 +28,19 @@ const useStyles = makeStyles(theme => ({
 const VerseSelectorContent = ({
   resourceId,
   versesForRef,
+  versesAlignmentStatus,
   onVerseSelect,
 }) => {
+
   const renderedVerseItems = versesForRef.map(verse => {
+    const isVerseAligned = versesAlignmentStatus?.[`${verse.chapter}:${verse.verse}`]
+    let alignIcon = null
+    if (isVerseAligned) {
+      alignIcon = <RxLink2 id={`valid_icon_${resourceId}`} color='#BBB' />
+    } else {
+      alignIcon = <RxLinkBreak2 id={`invalid_alignment_icon_${resourceId}`} color='#000' />
+    }
+
     return (
       <ListItem
         disablePadding
@@ -40,7 +50,7 @@ const VerseSelectorContent = ({
       >
         <ListItemButton>
           <ListItemIcon>
-            <BiBible />
+            {alignIcon}
           </ListItemIcon>
           <ListItemText primary={`${verse.chapter}:${verse.verse}`} />
         </ListItemButton>
@@ -57,7 +67,7 @@ const VerseSelectorContent = ({
   )
 }
 
-const VerseSelectorPopup = ({ resourceId, versesForRef, onVerseSelect, open, onClose }) => {
+const VerseSelectorPopup = ({ resourceId, versesForRef, versesAlignmentStatus, onVerseSelect, open, onClose }) => {
   return (
 
     <DraggableCard
@@ -70,7 +80,12 @@ const VerseSelectorPopup = ({ resourceId, versesForRef, onVerseSelect, open, onC
       onClose={onClose}
       dimBackground={true}
       content={
-        <VerseSelectorContent resourceId={resourceId} versesForRef={versesForRef} onVerseSelect={onVerseSelect} />
+        <VerseSelectorContent
+          resourceId={resourceId}
+          versesForRef={versesForRef}
+          versesAlignmentStatus={versesAlignmentStatus}
+          onVerseSelect={onVerseSelect}
+        />
       }
     />
   )

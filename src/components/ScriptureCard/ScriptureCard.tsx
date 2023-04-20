@@ -88,6 +88,7 @@ export default function ScriptureCard({
     versesForRef: null,
     showAlignmentPopup: false,
     verseSelectedForAlignment: null,
+    versesAlignmentStatus: null,
   })
   const {
     ref,
@@ -102,6 +103,7 @@ export default function ScriptureCard({
     versesForRef,
     showAlignmentPopup,
     verseSelectedForAlignment,
+    versesAlignmentStatus,
   } = state
 
   const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
@@ -585,6 +587,10 @@ export default function ScriptureCard({
     }
   }, [scriptureConfig?.versesForRef])
 
+  React.useEffect(() => {
+    setState({ versesAlignmentStatus: null })
+  }, [verse])
+
   const needToMergeFromMaster = mergeFromMaster?.mergeNeeded
   const mergeFromMasterHasConflicts = mergeFromMaster?.conflict
   const mergeToMasterHasConflicts = mergeToMaster?.conflict
@@ -595,6 +601,13 @@ export default function ScriptureCard({
   const mergeFromMasterColor = mergeFromMasterHasConflicts ? 'black' : (needToMergeFromMaster ? 'black' : 'lightgray')
   const mergeToMasterTitle = mergeToMasterHasConflicts ? 'Merge Conflicts for share with master' : 'No merge conflicts for share with master'
   const mergeToMasterColor = mergeToMasterHasConflicts ? 'black' : 'black'
+
+  const updateVersesAlignmentStatus = (reference, aligned) => {
+    setState_(prevState => ({
+      ...prevState,
+      versesAlignmentStatus: {...prevState.versesAlignmentStatus, [`${reference.chapter}:${reference.verse}`]: aligned},
+    }))
+  }
 
   const renderedScripturePanes = versesForRef?.map((_currentVerseData, index) => {
     const initialVerseObjects = _currentVerseData?.verseData?.verseObjects || null
@@ -639,6 +652,7 @@ export default function ScriptureCard({
         merging={merging}
         isVerseSelectedForAlignment={isVerseSelectedForAlignment}
         onAlignmentFinish={() => setState({ verseSelectedForAlignment: null })}
+        updateVersesAlignmentStatus={updateVersesAlignmentStatus}
       />
     )
   })
@@ -659,8 +673,19 @@ export default function ScriptureCard({
   const onRenderToolbar = ({ items }) => {
     const newItems = [...items]
 
-    // TODO: Hook it up to aligner status. But for now we can just display it to handle the uI.
-    if (setWordAlignerStatus) {
+    let allVersesAligned = false
+    // Check if all values in versesAlignmentStatus are true
+    if (versesAlignmentStatus) {
+      allVersesAligned = Object.values(versesAlignmentStatus).every(alignStatus => alignStatus === true)
+    }
+    let alignIcon = null
+    if (allVersesAligned) {
+      alignIcon = <RxLink2 id={`valid_icon_${resourceId}`} color='#BBB' />
+    } else {
+      alignIcon = <RxLinkBreak2 id={`invalid_alignment_icon_${resourceId}`} color='#000' />
+    }
+
+    if (setWordAlignerStatus && resourceId !== 'ORIGINAL_SOURCE') {
       newItems.push(
         <IconButton
           id={`alignment_icon_${resourceId}`}
@@ -670,13 +695,7 @@ export default function ScriptureCard({
           aria-label={alignButtonText}
           style={{ cursor: 'pointer' }}
         >
-          <RxLink2 id='valid_icon' color='#000' />
-          {/* TODO: Change button color if all verses are aligned */}
-          {/* {checkingState === 'valid' ? (
-            <RxLink2 id='valid_icon' color='#BBB' />
-          ) : (
-            <RxLinkBreak2 id=`invalid_alignment_icon_${resourceId}` color='#000' />
-          )} */}
+          {alignIcon}
         </IconButton>
       )
     }
@@ -755,6 +774,7 @@ export default function ScriptureCard({
         open={showAlignmentPopup}
         onClose={() => setState({ showAlignmentPopup: false })}
         versesForRef={versesForRef}
+        versesAlignmentStatus={versesAlignmentStatus}
         onVerseSelect={(verse) => setState({
           verseSelectedForAlignment: verse,
           showAlignmentPopup: false

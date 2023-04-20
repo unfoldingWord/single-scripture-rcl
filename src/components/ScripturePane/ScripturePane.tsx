@@ -2,8 +2,6 @@ import * as React from 'react'
 import useDeepCompareEffect from 'use-deep-compare-effect'
 import { VerseObjects } from 'scripture-resources-rcl'
 import { UsfmFileConversionHelpers } from 'word-aligner-rcl'
-import { RxLink2, RxLinkBreak2 } from 'react-icons/rx'
-import { IconButton } from '@mui/material'
 import { ScriptureReference } from '../../types'
 import { getResourceMessage } from '../../utils'
 import { ScriptureALignmentEditProps, useScriptureAlignmentEdit } from "../../hooks/useScriptureAlignmentEdit";
@@ -50,6 +48,8 @@ interface Props {
   isVerseSelectedForAlignment: boolean;
   /** function to be called when verse alignment has finished */
   onAlignmentFinish: Function;
+  /** function to be called to update verse alignment status */
+  updateVersesAlignmentStatus: Function;
 }
 
 const MessageStyle = {
@@ -94,6 +94,7 @@ function ScripturePane({
   merging,
   isVerseSelectedForAlignment,
   onAlignmentFinish,
+  updateVersesAlignmentStatus,
 } : Props) {
   const [state, setState_] = React.useState({
     doingAlignment: false,
@@ -160,6 +161,10 @@ function ScripturePane({
   if (isVerseSelectedForAlignment && !alignerData && !doingAlignment) {
     handleAlignmentClick()
   }
+
+  React.useEffect(() => {
+    updateVersesAlignmentStatus(reference, aligned)
+  }, [aligned])
 
   React.useEffect(() => {
     if (alignerData && !doingAlignment) {
