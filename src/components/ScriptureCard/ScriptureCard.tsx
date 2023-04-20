@@ -10,7 +10,7 @@ import {
   ERROR_STATE,
   MANIFEST_NOT_LOADED_ERROR,
 } from 'translation-helps-rcl'
-// import { getQuoteMatchesInBookRef } from 'uw-quote-helpers'
+import { getQuoteMatchesInBookRef } from 'uw-quote-helpers'
 import { AlignmentHelpers, UsfmFileConversionHelpers } from 'word-aligner-rcl'
 import * as isEqual from 'deep-equal'
 import { getVerses } from 'bible-reference-range'
@@ -597,24 +597,27 @@ export default function ScriptureCard({
               verseObjects = verseObjects.concat(vo)
             }
           } else {
-            verseObjects = bookVerseObject[chapter][verse]
+            verseObjects = bookVerseObject[chapter][verse].verseObjects
           }
           verseObjects = cleanupVerseObjects(verseObjects)
           originalVerses[chapter][verse] = { verseObjects }
-          _map.set(`${chapter}:${verse}`, { verseObjects })
+          _map.set(`${chapter}:${verse}`, verseObjects)
         }
         setVerseObjectsMap(_map)
-        // const quoteMatches = getQuoteMatchesInBookRef({
-        //   bookObject: originalVerses,
-        //   ref: selectedQuote?.reference,
-        //   quote: selectedQuote?.quote,
-        //   occurrence: selectedQuote?.occurrence,
-        // })
-        // setSelections(quoteMatches)
-        // console.log('quoteMatches', quoteMatches)
+
+        if (selectedQuote?.quote) {
+          const quoteMatches = getQuoteMatchesInBookRef({
+            bookObject: originalVerses,
+            ref: selectedQuote?.reference,
+            quote: selectedQuote?.quote,
+            occurrence: selectedQuote?.occurrence,
+          })
+          setSelections(quoteMatches)
+          console.log('quoteMatches', quoteMatches)
+        }
       }
     }
-  }, [scriptureConfig?.versesForRef, originalScriptureResource?.bookObjects])
+  }, [scriptureConfig?.versesForRef, originalScriptureResource?.bookObjects, selectedQuote])
 
   const renderedScripturePanes = versesForRef?.map((_currentVerseData, index) => {
     const initialVerseObjects = _currentVerseData?.verseData?.verseObjects || null
@@ -630,7 +633,6 @@ export default function ScriptureCard({
       currentIndex: index,
       initialVerseObjects,
       reference: _reference,
-      setOriginalScriptureResource,
     }
 
     return (
@@ -652,6 +654,7 @@ export default function ScriptureCard({
         setWordAlignerStatus={setWordAlignerStatus}
         server={server}
         translate={translate}
+        setOriginalScriptureResource={setOriginalScriptureResource}
       />
     )
   })
