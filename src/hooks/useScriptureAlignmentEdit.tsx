@@ -62,6 +62,8 @@ export interface ScriptureALignmentEditProps {
   sourceLanguage: string,
   // title to show in alignment
   title: string,
+  // callback to return the original scripture for the book
+  setOriginalScriptureResource: Function,
 }
 
 /**
@@ -115,6 +117,7 @@ export function useScriptureAlignmentEdit({
   targetLanguage,
   title,
   workingResourceBranch,
+  setOriginalScriptureResource,
 } : ScriptureALignmentEditProps) {
   const [state, setState_] = React.useState({
     aligned: false,
@@ -467,6 +470,7 @@ export function useScriptureAlignmentEdit({
       verseTextChanged,
       reference,
       title,
+      originalScriptureResource,
     },
   }
 }

@@ -44,6 +44,8 @@ interface Props {
   setWordAlignerStatus: Function;
   /** optional function for localization */
   translate: Function;
+  /** This is a callback for original scripture resource */
+  setOriginalScriptureResource: Function;
 }
 
 const MessageStyle = {
@@ -85,6 +87,7 @@ function ScripturePane({
   scriptureAlignmentEditConfig,
   setSavedChanges,
   setWordAlignerStatus,
+  setOriginalScriptureResource,
 } : Props) {
   const [state, setState_] = React.useState({
     doingAlignment: false,
@@ -136,8 +139,15 @@ function ScripturePane({
       editing,
       unsavedChanges,
       newVerseText,
+      originalScriptureResource,
     },
   } = _scriptureAlignmentEdit
+
+  React.useEffect(() => {
+    if (originalScriptureResource) {
+      setOriginalScriptureResource && setOriginalScriptureResource(originalScriptureResource)
+    }
+  },[originalScriptureResource])
 
   React.useEffect(() => {
     if (alignerData && !doingAlignment) {
@@ -212,7 +222,7 @@ function ScripturePane({
               />
             }
           </span>
-          {setWordAlignerStatus &&
+          {setWordAlignerStatus && //add scriptureAlignmentEditConfig?.enableAlignment 
             <IconButton
               key='checking-button'
               onClick={() => handleAlignmentClick()}

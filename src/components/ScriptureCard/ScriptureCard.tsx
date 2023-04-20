@@ -17,10 +17,12 @@ import { getVerses } from 'bible-reference-range'
 import { ScripturePane, ScriptureSelector } from '..'
 import { useScriptureSettings } from '../../hooks/useScriptureSettings'
 import {
+  fixOccurrence,
   getResourceLink,
   getResourceMessage,
   getScriptureVersionSettings,
   isOriginalBible,
+  cleanupVerseObjects,
 } from '../../utils/ScriptureSettings'
 import { Title } from '../ScripturePane/styled'
 import {
@@ -96,6 +98,7 @@ export default function ScriptureCard({
     versesForRef,
   } = state
 
+  const [verseObjectsMap, setVerseObjectsMap] = React.useState(new Map())
   const [originalScriptureResource, setOriginalScriptureResource] = React.useState(null)
   const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
   const [selections, _setSelections] = React.useState(new Map())
@@ -562,6 +565,20 @@ export default function ScriptureCard({
 
   React.useEffect(() => {
     if (scriptureConfig?.versesForRef && !isEqual(versesForRef, scriptureConfig?.versesForRef)) {
+      // const _map = new Map()
+      // const verseObjects = cleanupVerseObjects(originalScriptureResource?.verseObjects)//converting occurence from string to integers
+      // _map.set(`${chapter}:${verse}`, verseObjects)
+
+      // if (currentVerseSpans?.length) { // add support for verse ranges
+      //   for (const verseSpan of currentVerseSpans) {
+      //     _map.set(verseSpan, verseObjects)
+      //   }
+      // }
+
+      // if (!isEqual(verseObjectsMap, _map)) {
+      //   setVerseObjectsMap(_map)
+      // }
+
       const versesForRef = scriptureConfig?.versesForRef
       setState({ versesForRef })
       const originalVerses = {}
@@ -602,7 +619,7 @@ export default function ScriptureCard({
         console.log('quoteMatches', quoteMatches)
       }
     }
-  }, [scriptureConfig?.versesForRef, originalScriptureResource?.verseObjects])
+  }, [scriptureConfig?.versesForRef, originalScriptureResource?.bookObjects])
 
   const renderedScripturePanes = versesForRef?.map((_currentVerseData, index) => {
     const initialVerseObjects = _currentVerseData?.verseData?.verseObjects || null
