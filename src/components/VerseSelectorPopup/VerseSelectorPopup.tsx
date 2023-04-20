@@ -36,9 +36,9 @@ const VerseSelectorContent = ({
     const isVerseAligned = versesAlignmentStatus?.[`${verse.chapter}:${verse.verse}`]
     let alignIcon = null
     if (isVerseAligned) {
-      alignIcon = <RxLink2 id={`valid_icon_${resourceId}`} color='#BBB' />
+      alignIcon = <RxLink2 id={`valid_icon_${resourceId}`} color='#BBB' size={24} />
     } else {
-      alignIcon = <RxLinkBreak2 id={`invalid_alignment_icon_${resourceId}`} color='#000' />
+      alignIcon = <RxLinkBreak2 id={`invalid_alignment_icon_${resourceId}`} color='#000' size={24} />
     }
 
     return (
