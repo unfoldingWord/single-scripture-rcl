@@ -10,7 +10,7 @@ import {
   ERROR_STATE,
   MANIFEST_NOT_LOADED_ERROR,
 } from 'translation-helps-rcl'
-import { getQuoteMatchesInBookRef } from 'uw-quote-helpers'
+// import { getQuoteMatchesInBookRef } from 'uw-quote-helpers'
 import { AlignmentHelpers, UsfmFileConversionHelpers } from 'word-aligner-rcl'
 import * as isEqual from 'deep-equal'
 import { getVerses } from 'bible-reference-range'
@@ -604,14 +604,14 @@ export default function ScriptureCard({
           _map.set(`${chapter}:${verse}`, { verseObjects })
         }
         setVerseObjectsMap(_map)
-        const quoteMatches = getQuoteMatchesInBookRef({
-          bookObject: originalVerses,
-          ref: selectedQuote?.reference,
-          quote: selectedQuote?.quote,
-          occurrence: selectedQuote?.occurrence,
-        })
-        setSelections(quoteMatches)
-        console.log('quoteMatches', quoteMatches)
+        // const quoteMatches = getQuoteMatchesInBookRef({
+        //   bookObject: originalVerses,
+        //   ref: selectedQuote?.reference,
+        //   quote: selectedQuote?.quote,
+        //   occurrence: selectedQuote?.occurrence,
+        // })
+        // setSelections(quoteMatches)
+        // console.log('quoteMatches', quoteMatches)
       }
     }
   }, [scriptureConfig?.versesForRef, originalScriptureResource?.bookObjects])
