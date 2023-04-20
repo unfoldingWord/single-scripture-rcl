@@ -151,20 +151,8 @@ export default function ScriptureCard({
    * @param {Map} newSelections
    */
   function setSelections(newSelections) {
-    let _newSelections = newSelections
-
-    if (newSelections?.size && currentVerseSpans?.length) { // add support for verse range
-      _newSelections = new Map(newSelections) // shallow copy
-      let primaryReference = `${chapter}:${verse}`
-      const _selections = _newSelections.get(primaryReference)
-
-      for (const verseSpan of currentVerseSpans) {
-        _newSelections.set(verseSpan, _selections)
-      }
-    }
-
-    if (!isEqual(selections, _newSelections)) {
-      _setSelections(_newSelections)
+    if (!isEqual(selections, newSelections)) {
+      _setSelections(newSelections)
     }
   }
 
@@ -564,7 +552,7 @@ export default function ScriptureCard({
   }, [saveClicked])
 
   React.useEffect(() => {
-    if (scriptureConfig?.versesForRef && !isEqual(versesForRef, scriptureConfig?.versesForRef)) {
+    if (scriptureConfig?.versesForRef) {
       const _map = new Map()
 
       const versesForRef = scriptureConfig?.versesForRef
@@ -612,8 +600,19 @@ export default function ScriptureCard({
             quote: selectedQuote?.quote,
             occurrence: selectedQuote?.occurrence,
           })
-          setSelections(quoteMatches)
-          console.log('quoteMatches', quoteMatches)
+
+          const selections = new Map()
+
+          if (quoteMatches?.size) {
+            quoteMatches.forEach((words, key) => {
+              selections.set(key, words.map(word => (
+                { ...word, text: core.normalizeString(word.text) }
+              )))
+            })
+          }
+          setSelections(selections)
+        } else {
+          setSelections(new Map())
         }
       }
     }
