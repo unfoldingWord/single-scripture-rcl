@@ -24,6 +24,7 @@ import {
   isOriginalBible,
   cleanupVerseObjects,
 } from '../../utils/ScriptureSettings'
+import { areMapsTheSame } from '../../utils/maps'
 import { Title } from '../ScripturePane/styled'
 import {
   NT_ORIG_LANG,
@@ -75,33 +76,38 @@ export default function ScriptureCard({
 }) {
   const [state, setState_] = React.useState({
     haveUnsavedChanges: false,
+    lastSelectedQuote: null,
+    originalVerseObjects: null,
     ref: appRef,
     saveClicked: false,
     saveContent: null,
+    selections: new Map(),
     sha: null,
     startSave: false,
     urlError: null,
     usingUserBranch: false,
     unsavedChangesList: {},
     versesForRef: null,
+    verseObjectsMap: new Map(),
   })
   const {
+    haveUnsavedChanges,
+    lastSelectedQuote,
+    originalVerseObjects,
     ref,
     saveClicked,
     saveContent,
+    selections,
     sha,
     startSave,
     urlError,
     usingUserBranch,
     unsavedChangesList,
-    haveUnsavedChanges,
     versesForRef,
+    verseObjectsMap,
   } = state
 
-  const [verseObjectsMap, setVerseObjectsMap] = React.useState(new Map())
-  const [originalVerseObjects, _setOriginalVerseObjects] = React.useState(null)
   const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
-  const [selections, _setSelections] = React.useState(new Map())
   const isNT_ = isNT(bookId)
 
   function setState(newState) {
@@ -109,8 +115,15 @@ export default function ScriptureCard({
   }
 
   function setOriginalScriptureResource(newResource) {
-    if (!isEqual(newResource?.bookObjects, originalVerseObjects)) {
-      _setOriginalVerseObjects(newResource?.bookObjects)
+    const newBookObjects = newResource?.bookObjects || {}
+    const bookId = newResource?.reference?.projectId
+    const _newBookObjects = {
+      ...newBookObjects,
+      bookId,
+    }
+
+    if (!isEqual(_newBookObjects, originalVerseObjects)) {
+      setState({ originalVerseObjects: _newBookObjects })
     }
   }
 
@@ -151,16 +164,6 @@ export default function ScriptureCard({
   // @ts-ignore
   const repo = `${scriptureConfig?.resource?.languageId}_${scriptureConfig?.resource?.projectId}`
   const reference_ = scriptureConfig?.reference || null
-
-  /**
-   * update selections if changed
-   * @param {Map} newSelections
-   */
-  function setSelections(newSelections) {
-    if (!isEqual(selections, newSelections)) {
-      _setSelections(newSelections)
-    }
-  }
 
   React.useEffect(() => { // get the _sha from last scripture download
     const _sha = fetchResp_?.data?.sha || null
@@ -424,9 +427,7 @@ export default function ScriptureCard({
       await onSaveEdit(branch).then((success) => { // push changed to server
         if (success) {
           console.log(`saveChangesToCloud() - save scripture edits success`)
-          setState({
-            startSave: false,
-          })
+          setState({ startSave: false })
 
           const unsavedCardIndices = Object.keys(unsavedChangesList)
 
@@ -558,28 +559,31 @@ export default function ScriptureCard({
   }, [saveClicked])
 
   React.useEffect(() => {
-    if (scriptureConfig?.versesForRef) {
-      const _map = new Map()
+    const _versesForRef = scriptureConfig?.versesForRef
+    let newSelections = new Map()
+    let updateSelections = false;
+    const _map = newSelections
+    const originalBookId = originalVerseObjects?.bookId
+    const bookVerseObject = originalVerseObjects?.chapters
+    let newSelectedQuote = null
 
-      const versesForRef = scriptureConfig?.versesForRef
+    // if we have everything we need to calculate selections
+    if (_versesForRef &&
+      bookVerseObject &&
+      (bookId === originalBookId) &&
+      bookVerseObject[chapter] && // we need to have data for chapter
+      selectedQuote?.quote
+    ) {
+      // if quote is different than last
+      if (!isEqual(lastSelectedQuote, selectedQuote) ||
+        !isEqual(versesForRef, _versesForRef)) {
+        const originalVerses = {}
 
-      if (versesForRef?.length) {
-        setState({ versesForRef })
-      }
-
-      const originalVerses = {}
-      const bookVerseObject = originalVerseObjects?.chapters
-
-      if (bookVerseObject) {
-        for (const verseRef of versesForRef || []) {
+        for (const verseRef of _versesForRef || []) {
           const {
             chapter,
             verse,
           } = verseRef
-
-          if (!bookVerseObject[chapter]) { // skip over if we don't yet have chapter for book
-            continue
-          }
 
           if (!originalVerses[chapter]) {
             originalVerses[chapter] = {}
@@ -595,41 +599,65 @@ export default function ScriptureCard({
               verseObjects = verseObjects.concat(vo)
             }
           } else {
-            verseObjects = bookVerseObject[chapter][verse].verseObjects
+            verseObjects = bookVerseObject[chapter][verse]?.verseObjects
           }
-          verseObjects = cleanupVerseObjects(verseObjects)
-          originalVerses[chapter][verse] = { verseObjects }
-          _map.set(`${chapter}:${verse}`, verseObjects)
+
+          if (verseObjects) {
+            verseObjects = cleanupVerseObjects(verseObjects)
+            originalVerses[chapter][verse] = { verseObjects }
+            _map.set(`${chapter}:${verse}`, verseObjects)
+          }
         }
 
-        if (!isEqual(verseObjectsMap, _map)) {
-          setVerseObjectsMap(_map)
-        }
+        const quoteMatches = getQuoteMatchesInBookRef({
+          bookObject: originalVerses,
+          ref: selectedQuote?.reference,
+          quote: selectedQuote?.quote,
+          occurrence: selectedQuote?.occurrence,
+        })
 
-        if (selectedQuote?.quote) {
-          const quoteMatches = getQuoteMatchesInBookRef({
-            bookObject: originalVerses,
-            ref: selectedQuote?.reference,
-            quote: selectedQuote?.quote,
-            occurrence: selectedQuote?.occurrence,
+        const selections = new Map()
+
+        if (quoteMatches?.size) {
+          quoteMatches.forEach((words, key) => {
+            selections.set(key, words.map(word => (
+              { ...word, text: core.normalizeString(word.text) }
+            )))
           })
-
-          const selections = new Map()
-
-          if (quoteMatches?.size) {
-            quoteMatches.forEach((words, key) => {
-              selections.set(key, words.map(word => (
-                { ...word, text: core.normalizeString(word.text) }
-              )))
-            })
-          }
-          setSelections(selections)
-        } else {
-          setSelections(new Map())
         }
+        newSelections = selections
+        newSelectedQuote = selectedQuote
+        updateSelections = true
       }
     }
-  }, [scriptureConfig?.versesForRef, originalVerseObjects, selectedQuote])
+
+    const newState: any = {}
+
+    // update states that have changed
+    if (!areMapsTheSame(verseObjectsMap, _map)) {
+      newState.verseObjectsMap = _map
+    }
+
+    if (!isEqual(Object.keys(versesForRef || {}), Object.keys(_versesForRef || {}))) {
+      newState.versesForRef = _versesForRef
+      newState.lastSelectedQuote = newSelectedQuote
+      newState.selections = newSelections
+    }
+
+    if (newSelectedQuote) {
+      newState.lastSelectedQuote = newSelectedQuote
+    }
+
+    if (updateSelections) {
+      if (!areMapsTheSame(selections || (new Map()), newSelections)) {
+        newState.selections = newSelections
+      }
+    }
+
+    if (Object.keys(newState).length) {
+      setState(newState)
+    }
+  }, [owner, resourceId, bookId, languageId_, scriptureConfig?.versesForRef, originalVerseObjects, selectedQuote])
 
   const renderedScripturePanes = versesForRef?.map((_currentVerseData, index) => {
     const initialVerseObjects = _currentVerseData?.verseData?.verseObjects || null
@@ -666,7 +694,7 @@ export default function ScriptureCard({
         setWordAlignerStatus={setWordAlignerStatus}
         server={server}
         translate={translate}
-        setOriginalScriptureResource={setOriginalScriptureResource}
+        setOriginalScriptureResource={!index && setOriginalScriptureResource}
       />
     )
   })
@@ -674,7 +702,9 @@ export default function ScriptureCard({
   return (
     <SelectionsContextProvider
       selections={selections}
-      onSelections={setSelections}
+      onSelections={newSelections => {
+        // console.log('onSelections', newSelections)
+      }}
       quote={selectedQuote?.quote}
       occurrence={fixOccurrence(selectedQuote?.occurrence)}
       verseObjectsMap={verseObjectsMap}
