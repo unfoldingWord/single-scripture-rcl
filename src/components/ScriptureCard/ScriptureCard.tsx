@@ -657,11 +657,6 @@ export default function ScriptureCard({
     )
   })
 
-  const alignButtonText = 'Align Verse(s)'
-  // TODO: change button hover text if all verses are aligned
-  // const checkingState = aligned ? 'valid' : 'invalid'
-  // const alignButtonText = checkingState === 'valid' ? 'Alignment is Valid' : 'Alignment is Invalid'
-
   const handleAlignButtonClick = () => {
     if (versesForRef?.length > 1) {
       setState({ showAlignmentPopup: true })
@@ -679,10 +674,13 @@ export default function ScriptureCard({
       allVersesAligned = Object.values(versesAlignmentStatus).every(alignStatus => alignStatus === true)
     }
     let alignIcon = null
+    let alignButtonText = ''
     if (allVersesAligned) {
       alignIcon = <RxLink2 id={`valid_icon_${resourceId}`} color='#BBB' />
+      alignButtonText = 'Alignment is Valid'
     } else {
       alignIcon = <RxLinkBreak2 id={`invalid_alignment_icon_${resourceId}`} color='#000' />
+      alignButtonText = 'Alignment is Invalid'
     }
 
     if (setWordAlignerStatus && resourceId !== 'ORIGINAL_SOURCE') {
