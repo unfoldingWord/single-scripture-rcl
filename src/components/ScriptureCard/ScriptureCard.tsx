@@ -99,13 +99,19 @@ export default function ScriptureCard({
   } = state
 
   const [verseObjectsMap, setVerseObjectsMap] = React.useState(new Map())
-  const [originalScriptureResource, setOriginalScriptureResource] = React.useState(null)
+  const [originalVerseObjects, _setOriginalVerseObjects] = React.useState(null)
   const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
   const [selections, _setSelections] = React.useState(new Map())
   const isNT_ = isNT(bookId)
 
   function setState(newState) {
     setState_(prevState => ({ ...prevState, ...newState }))
+  }
+
+  function setOriginalScriptureResource(newResource) {
+    if (!isEqual(newResource?.bookObjects, originalVerseObjects)) {
+      _setOriginalVerseObjects(newResource?.bookObjects)
+    }
   }
 
   if (usingUserBranch) {
@@ -562,7 +568,7 @@ export default function ScriptureCard({
       }
 
       const originalVerses = {}
-      const bookVerseObject = originalScriptureResource?.bookObjects?.chapters
+      const bookVerseObject = originalVerseObjects?.chapters
 
       if (bookVerseObject) {
         for (const verseRef of versesForRef || []) {
@@ -570,6 +576,10 @@ export default function ScriptureCard({
             chapter,
             verse,
           } = verseRef
+
+          if (!bookVerseObject[chapter]) { // skip over if we don't yet have chapter for book
+            continue
+          }
 
           if (!originalVerses[chapter]) {
             originalVerses[chapter] = {}
@@ -591,7 +601,10 @@ export default function ScriptureCard({
           originalVerses[chapter][verse] = { verseObjects }
           _map.set(`${chapter}:${verse}`, verseObjects)
         }
-        setVerseObjectsMap(_map)
+
+        if (!isEqual(verseObjectsMap, _map)) {
+          setVerseObjectsMap(_map)
+        }
 
         if (selectedQuote?.quote) {
           const quoteMatches = getQuoteMatchesInBookRef({
@@ -616,7 +629,7 @@ export default function ScriptureCard({
         }
       }
     }
-  }, [scriptureConfig?.versesForRef, originalScriptureResource?.bookObjects, selectedQuote])
+  }, [scriptureConfig?.versesForRef, originalVerseObjects, selectedQuote])
 
   const renderedScripturePanes = versesForRef?.map((_currentVerseData, index) => {
     const initialVerseObjects = _currentVerseData?.verseData?.verseObjects || null
