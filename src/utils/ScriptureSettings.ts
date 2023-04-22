@@ -343,10 +343,14 @@ export function cleanupVerseObjects(verseObjects) {
       const vo = verseObjects_[i]
 
       if (vo.type === 'word') {
-        const word = {
-          ...vo,
-          occurrence: fixOccurrence(vo.occurrence),
-          occurrences: fixOccurrence(vo.occurrences),
+        const word = { ...vo }
+
+        if (vo.occurrence) {
+          word.occurrence = fixOccurrence(vo.occurrence)
+        }
+
+        if (vo.occurrences) {
+          word.occurrences = fixOccurrence(vo.occurrences)
         }
         verseObjects_[i] = word
       } else if (vo.children) {

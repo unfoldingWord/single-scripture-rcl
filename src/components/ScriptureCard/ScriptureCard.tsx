@@ -561,14 +561,14 @@ export default function ScriptureCard({
   React.useEffect(() => {
     const _versesForRef = scriptureConfig?.versesForRef
     let newSelections = new Map()
-    let updateSelections = false;
+    let updateSelections = false
     const _map = newSelections
     const originalBookId = originalVerseObjects?.bookId
     const bookVerseObject = originalVerseObjects?.chapters
     let newSelectedQuote = null
 
     // if we have everything we need to calculate selections
-    if (_versesForRef &&
+    if (_versesForRef?.length &&
       bookVerseObject &&
       (bookId === originalBookId) &&
       bookVerseObject[chapter] && // we need to have data for chapter
@@ -578,12 +578,18 @@ export default function ScriptureCard({
       if (!isEqual(lastSelectedQuote, selectedQuote) ||
         !isEqual(versesForRef, _versesForRef)) {
         const originalVerses = {}
+        const substitute = {} // keep track of verse substitutions
+        const startVerse = _versesForRef[0].verse
 
-        for (const verseRef of _versesForRef || []) {
+        for (let i = 0, l = _versesForRef.length; i < l; i++) {
+          const verseRef = _versesForRef[i]
           const {
             chapter,
             verse,
           } = verseRef
+          // TRICKY - we remap verses in reference range to a linear series of verses so verse spans don't choke getQuoteMatchesInBookRef
+          let _verse = startVerse + i
+          substitute[`${chapter}:${_verse}`] = `${chapter}:${verse}`
 
           if (!originalVerses[chapter]) {
             originalVerses[chapter] = {}
@@ -591,7 +597,7 @@ export default function ScriptureCard({
 
           let verseObjects = []
 
-          if ((typeof verseRef.verse === 'string') && (verseRef.verse.includes('-'))) {
+          if ((typeof verse === 'string') && (verse.includes('-'))) {
             const verses = getVerses(bookVerseObject, `${chapter}:${verse}`)
 
             for (const verseItem of verses) {
@@ -604,7 +610,7 @@ export default function ScriptureCard({
 
           if (verseObjects) {
             verseObjects = cleanupVerseObjects(verseObjects)
-            originalVerses[chapter][verse] = { verseObjects }
+            originalVerses[chapter][_verse] = { verseObjects }
             _map.set(`${chapter}:${verse}`, verseObjects)
           }
         }
@@ -620,7 +626,9 @@ export default function ScriptureCard({
 
         if (quoteMatches?.size) {
           quoteMatches.forEach((words, key) => {
-            selections.set(key, words.map(word => (
+            const _key = substitute[key]
+
+            selections.set(_key, words.map(word => (
               { ...word, text: core.normalizeString(word.text) }
             )))
           })
