@@ -579,7 +579,13 @@ export default function ScriptureCard({
         !isEqual(versesForRef, _versesForRef)) {
         const originalVerses = {}
         const substitute = {} // keep track of verse substitutions
-        const startVerse = _versesForRef[0].verse
+        let startVerse = _versesForRef[0].verse
+
+        if (typeof startVerse === 'string') {
+          startVerse = parseInt(startVerse)
+        }
+
+        let lastVerse = startVerse
 
         for (let i = 0, l = _versesForRef.length; i < l; i++) {
           const verseRef = _versesForRef[i]
@@ -589,6 +595,7 @@ export default function ScriptureCard({
           } = verseRef
           // TRICKY - we remap verses in reference range to a linear series of verses so verse spans don't choke getQuoteMatchesInBookRef
           let _verse = startVerse + i
+          lastVerse = _verse
           substitute[`${chapter}:${_verse}`] = `${chapter}:${verse}`
 
           if (!originalVerses[chapter]) {
@@ -615,9 +622,17 @@ export default function ScriptureCard({
           }
         }
 
+        // create new reference range for new linear verse range
+        const [chapter] = selectedQuote?.reference?.split(':')
+        let subRef = `${chapter}:${startVerse}`
+
+        if (lastVerse != startVerse) {
+          subRef += `-${lastVerse}`
+        }
+
         const quoteMatches = getQuoteMatchesInBookRef({
           bookObject: originalVerses,
-          ref: selectedQuote?.reference,
+          ref: subRef,
           quote: selectedQuote?.quote,
           occurrence: selectedQuote?.occurrence,
         })
