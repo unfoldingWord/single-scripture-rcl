@@ -3,6 +3,8 @@ import * as PropTypes from 'prop-types'
 import { core } from 'scripture-resources-rcl'
 import usfmjs from 'usfm-js'
 import { useEdit } from 'gitea-react-toolkit'
+import { IconButton } from '@mui/material'
+import { RxLink2, RxLinkBreak2 } from 'react-icons/rx'
 import {
   Card,
   useCardState,
@@ -26,6 +28,7 @@ import {
   ORIGINAL_SOURCE,
   OT_ORIG_LANG,
 } from '../../utils'
+import { VerseSelectorPopup } from '../VerseSelectorPopup'
 
 const KEY_FONT_SIZE_BASE = 'scripturePaneFontSize_'
 const label = 'Version'
@@ -80,6 +83,9 @@ export default function ScriptureCard({
     usingUserBranch: false,
     unsavedChangesList: {},
     versesForRef: null,
+    showAlignmentPopup: false,
+    verseSelectedForAlignment: null,
+    versesAlignmentStatus: null,
   })
   const {
     ref,
@@ -92,6 +98,9 @@ export default function ScriptureCard({
     unsavedChangesList,
     haveUnsavedChanges,
     versesForRef,
+    showAlignmentPopup,
+    verseSelectedForAlignment,
+    versesAlignmentStatus,
   } = state
 
   const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
@@ -553,6 +562,13 @@ export default function ScriptureCard({
     }
   }, [scriptureConfig?.versesForRef])
 
+  const updateVersesAlignmentStatus = (reference, aligned) => {
+    setState_(prevState => ({
+      ...prevState,
+      versesAlignmentStatus: {...prevState.versesAlignmentStatus, [`${reference.chapter}:${reference.verse}`]: aligned},
+    }))
+  }
+
   const renderedScripturePanes = versesForRef?.map((_currentVerseData, index) => {
     const initialVerseObjects = _currentVerseData?.verseData?.verseObjects || null
     // @ts-ignore
@@ -567,6 +583,12 @@ export default function ScriptureCard({
       currentIndex: index,
       initialVerseObjects,
       reference: _reference,
+    }
+
+    let isVerseSelectedForAlignment = false
+
+    if (verseSelectedForAlignment) {
+      isVerseSelectedForAlignment = verseSelectedForAlignment.chapter === chapter && verseSelectedForAlignment.verse === verse
     }
 
     return (
@@ -588,38 +610,97 @@ export default function ScriptureCard({
         setWordAlignerStatus={setWordAlignerStatus}
         server={server}
         translate={translate}
+        isVerseSelectedForAlignment={isVerseSelectedForAlignment}
+        onAlignmentFinish={() => setState({ verseSelectedForAlignment: null })}
+        updateVersesAlignmentStatus={updateVersesAlignmentStatus}
       />
     )
   })
 
+  const handleAlignButtonClick = () => {
+    if (versesForRef?.length > 1) {
+      setState({ showAlignmentPopup: true })
+    } else if (versesForRef?.length === 1) {
+      setState({ verseSelectedForAlignment: versesForRef[0] })
+    }
+  }
+
+  const onRenderToolbar = ({ items }) => {
+    const newItems = [...items]
+
+    let allVersesAligned = false
+    // Check if all values in versesAlignmentStatus are true
+    if (versesAlignmentStatus) {
+      allVersesAligned = Object.values(versesAlignmentStatus).every(alignStatus => alignStatus === true)
+    }
+    let alignIcon = null
+    let alignButtonText = ''
+    if (allVersesAligned) {
+      alignIcon = <RxLink2 id={`valid_icon_${resourceId}`} color='#BBB'/>
+      alignButtonText = 'Alignment is Valid'
+    } else {
+      alignIcon = <RxLinkBreak2 id={`invalid_alignment_icon_${resourceId}`} color='#000'/>
+      alignButtonText = 'Alignment is Invalid'
+    }
+
+    if (setWordAlignerStatus && resourceId !== 'ORIGINAL_SOURCE') {
+      newItems.push(
+        <IconButton
+          id={`alignment_icon_${resourceId}`}
+          key='checking-button'
+          onClick={handleAlignButtonClick}
+          title={alignButtonText}
+          aria-label={alignButtonText}
+          style={{cursor: 'pointer'}}
+        >
+          {alignIcon}
+        </IconButton>
+      )
+    }
+  }
+
   return (
-    <Card
-      id={`scripture_card_${cardNum}`}
-      title={scriptureLabel}
-      settingsTitle={scriptureTitle + ' Settings'}
-      items={items}
-      classes={classes}
-      headers={headers}
-      filters={filters}
-      fontSize={fontSize}
-      itemIndex={itemIndex}
-      setFilters={setFilters}
-      setFontSize={setFontSize}
-      setItemIndex={setItemIndex}
-      markdownView={markdownView}
-      setMarkdownView={setMarkdownView}
-      getCustomComponent={getScriptureSelector}
-      hideMarkdownToggle
-      onMenuClose={onMenuClose}
-      onMinimize={onMinimize ? () => onMinimize(id) : null}
-      editable={enableEdit || enableAlignment}
-      saved={startSave || !haveUnsavedChanges}
-      onSaveEdit={() => setState({ saveClicked: true })}
-    >
-      <div id="scripture-pane-list">
-        {renderedScripturePanes}
-      </div>
-    </Card>
+    <>
+      <Card
+        id={`scripture_card_${cardNum}`}
+        title={scriptureLabel}
+        settingsTitle={scriptureTitle + ' Settings'}
+        items={items}
+        classes={classes}
+        headers={headers}
+        filters={filters}
+        fontSize={fontSize}
+        itemIndex={itemIndex}
+        setFilters={setFilters}
+        setFontSize={setFontSize}
+        setItemIndex={setItemIndex}
+        markdownView={markdownView}
+        setMarkdownView={setMarkdownView}
+        getCustomComponent={getScriptureSelector}
+        hideMarkdownToggle
+        onMenuClose={onMenuClose}
+        onMinimize={onMinimize ? () => onMinimize(id) : null}
+        editable={enableEdit || enableAlignment}
+        saved={startSave || !haveUnsavedChanges}
+        onSaveEdit={() => setState({ saveClicked: true })}
+        onRenderToolbar={onRenderToolbar}
+      >
+        <div id="scripture-pane-list">
+          {renderedScripturePanes}
+        </div>
+      </Card>
+      <VerseSelectorPopup
+        resourceId={resourceId}
+        open={showAlignmentPopup}
+        onClose={() => setState({ showAlignmentPopup: false })}
+        versesForRef={versesForRef}
+        versesAlignmentStatus={versesAlignmentStatus}
+        onVerseSelect={(verse) => setState({
+          verseSelectedForAlignment: verse,
+          showAlignmentPopup: false
+        })}
+      />
+    </>
   )
 }
 
