@@ -342,7 +342,7 @@ export function cleanupVerseObjects(verseObjects) {
     for (let i = 0, l = verseObjects_.length; i < l; i++) {
       const vo = verseObjects_[i]
 
-      if (vo.type === 'word') {
+      if (vo.type === 'word' && (vo.occurrence || vo.occurrences)) {
         const word = { ...vo }
 
         if (vo.occurrence) {
