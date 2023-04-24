@@ -562,6 +562,10 @@ export default function ScriptureCard({
     }
   }, [scriptureConfig?.versesForRef])
 
+  React.useEffect(() => {
+    setState({ versesAlignmentStatus: null })
+  }, [verse])
+
   const updateVersesAlignmentStatus = (reference, aligned) => {
     setState_(prevState => ({
       ...prevState,
