@@ -791,6 +791,8 @@ export default function ScriptureCard({
         </IconButton>
       )
     }
+
+    return newItems
   }
 
   return (
@@ -826,7 +828,7 @@ export default function ScriptureCard({
         editable={enableEdit || enableAlignment}
         saved={startSave || !haveUnsavedChanges}
         onSaveEdit={() => setState({ saveClicked: true })}
-      onRenderToolbar={onRenderToolbar}
+        onRenderToolbar={onRenderToolbar}
       >
         <div id="scripture-pane-list">
           {renderedScripturePanes}
