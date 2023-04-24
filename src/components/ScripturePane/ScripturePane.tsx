@@ -48,6 +48,8 @@ interface Props {
   onAlignmentFinish: Function;
   /** function to be called to update verse alignment status */
   updateVersesAlignmentStatus: Function;
+  /** This is a callback for original scripture resource */
+  setOriginalScriptureResource: Function;
 }
 
 const MessageStyle = {
@@ -92,6 +94,7 @@ function ScripturePane({
   isVerseSelectedForAlignment,
   onAlignmentFinish,
   updateVersesAlignmentStatus,
+  setOriginalScriptureResource,
 } : Props) {
   const [state, setState_] = React.useState({
     doingAlignment: false,
@@ -143,6 +146,7 @@ function ScripturePane({
       editing,
       unsavedChanges,
       newVerseText,
+      originalScriptureResource,
     },
   } = _scriptureAlignmentEdit
 
@@ -153,6 +157,12 @@ function ScripturePane({
   React.useEffect(() => {
     updateVersesAlignmentStatus(reference, aligned)
   }, [aligned])
+
+  React.useEffect(() => {
+    if (originalScriptureResource) {
+      setOriginalScriptureResource && setOriginalScriptureResource(originalScriptureResource)
+    }
+  },[originalScriptureResource])
 
   React.useEffect(() => {
     if (alignerData && !doingAlignment) {
