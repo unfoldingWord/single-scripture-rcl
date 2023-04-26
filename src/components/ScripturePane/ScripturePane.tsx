@@ -2,8 +2,6 @@ import * as React from 'react'
 import useDeepCompareEffect from 'use-deep-compare-effect'
 import { VerseObjects } from 'scripture-resources-rcl'
 import { UsfmFileConversionHelpers } from 'word-aligner-rcl'
-import { RxLink2, RxLinkBreak2 } from 'react-icons/rx'
-import { IconButton } from '@mui/material'
 import { ScriptureReference } from '../../types'
 import { getResourceMessage } from '../../utils'
 import { ScriptureALignmentEditProps, useScriptureAlignmentEdit } from "../../hooks/useScriptureAlignmentEdit";
@@ -44,6 +42,12 @@ interface Props {
   setWordAlignerStatus: Function;
   /** optional function for localization */
   translate: Function;
+  /** whether or not this current verse has been selected for alignment */
+  isVerseSelectedForAlignment: boolean;
+  /** function to be called when verse alignment has finished */
+  onAlignmentFinish: Function;
+  /** function to be called to update verse alignment status */
+  updateVersesAlignmentStatus: Function;
   /** This is a callback for original scripture resource */
   setOriginalScriptureResource: Function;
 }
@@ -87,6 +91,9 @@ function ScripturePane({
   scriptureAlignmentEditConfig,
   setSavedChanges,
   setWordAlignerStatus,
+  isVerseSelectedForAlignment,
+  onAlignmentFinish,
+  updateVersesAlignmentStatus,
   setOriginalScriptureResource,
 } : Props) {
   const [state, setState_] = React.useState({
@@ -143,6 +150,14 @@ function ScripturePane({
     },
   } = _scriptureAlignmentEdit
 
+  if (isVerseSelectedForAlignment && !alignerData && !doingAlignment) {
+    handleAlignmentClick()
+  }
+
+  React.useEffect(() => {
+    updateVersesAlignmentStatus(reference, aligned)
+  }, [aligned])
+
   React.useEffect(() => {
     if (originalScriptureResource) {
       setOriginalScriptureResource && setOriginalScriptureResource(originalScriptureResource)
@@ -156,6 +171,7 @@ function ScripturePane({
     } else if (doingAlignment) {
       setWordAlignerStatus && setWordAlignerStatus(_scriptureAlignmentEdit)
       setState({ doingAlignment: false })
+      onAlignmentFinish && onAlignmentFinish()
     }
   }, [_scriptureAlignmentEdit?.state?.alignerData])
 
@@ -222,21 +238,6 @@ function ScripturePane({
               />
             }
           </span>
-          {setWordAlignerStatus && //add scriptureAlignmentEditConfig?.enableAlignment 
-            <IconButton
-              key='checking-button'
-              onClick={() => handleAlignmentClick()}
-              title={titleText}
-              aria-label={titleText}
-              style={{ cursor: 'pointer' }}
-            >
-              {checkingState === 'valid' ? (
-                <RxLink2 id='valid_icon' color='#BBB' />
-              ) : (
-                <RxLinkBreak2 id='invalid_icon' color='#000' />
-              )}
-            </IconButton>
-          }
         </Content>
       }
     </Container>

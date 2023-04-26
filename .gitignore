@@ -106,5 +106,8 @@ dist
 # IntelliJ config
 .idea
 
+# VsCode Plugins
+.prettierignore
+
 .yalc/
 yalc.lock
