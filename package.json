@@ -81,7 +81,7 @@
     "scripture-resources-rcl": "^5.2.0",
     "style-loader": "^2.0.0",
     "tc-ui-toolkit": "^5.3.3",
-    "translation-helps-rcl": "^3.3.11",
+    "translation-helps-rcl": "file:.yalc/translation-helps-rcl",
     "ts-jest": "^29.0.5",
     "use-deep-compare-effect": "1.8.1",
     "usfm-js": "3.4.2",

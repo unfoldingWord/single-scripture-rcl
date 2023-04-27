@@ -174,7 +174,8 @@ export default function ScriptureCard({
       usingUserBranch: usingUserBranch_,
       mergeFromMaster,
       mergeToMaster,
-      merging,
+      loadingMergeFromMaster,
+      loadingMergeToMaster,
     },
     actions: {
       startEdit: startEditBranch,
@@ -649,7 +650,7 @@ export default function ScriptureCard({
         setWordAlignerStatus={setWordAlignerStatus}
         server={server}
         translate={translate}
-        merging={merging}
+        merging={loadingMergeFromMaster || loadingMergeToMaster}
         isVerseSelectedForAlignment={isVerseSelectedForAlignment}
         onAlignmentFinish={() => setState({ verseSelectedForAlignment: null })}
         updateVersesAlignmentStatus={updateVersesAlignmentStatus}
