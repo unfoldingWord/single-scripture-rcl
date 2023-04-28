@@ -80,7 +80,9 @@ export default function ScriptureCard({
   setWordAlignerStatus,
 }) {
   const [state, setState_] = React.useState({
+    checkForEditBranch: 0,
     editBranchReady: false,
+    fetchReady: false,
     fetchResource: { bookId, appRef },
     haveUnsavedChanges: false,
     lastSelectedQuote: null,
@@ -101,7 +103,9 @@ export default function ScriptureCard({
     verseObjectsMap: new Map(),
   })
   const {
+    checkForEditBranch,
     editBranchReady,
+    fetchReady,
     fetchResource,
     haveUnsavedChanges,
     lastSelectedQuote,
@@ -173,12 +177,17 @@ export default function ScriptureCard({
     greekRepoUrl,
     hebrewRepoUrl,
     wholeBook: true,
+    fetchReady,
   })
 
   const fetchResp_ = scriptureConfig?.fetchResponse
   // @ts-ignore
   const repo = `${scriptureConfig?.resource?.languageId}_${scriptureConfig?.resource?.projectId}`
   const reference_ = scriptureConfig?.reference || null
+
+  React.useEffect(() => {
+    setState({ fetchReady: false, checkForEditBranch: checkForEditBranch + 1 })
+  }, [bookId, owner, languageId, resourceId])
 
   React.useEffect(() => { // get the _sha from last scripture download
     const _sha = fetchResp_?.data?.sha || null
@@ -219,9 +228,10 @@ export default function ScriptureCard({
 
   const {
     state: {
-      workingResourceBranch,
+      fetchingBranch,
       userEditBranchName,
       usingUserBranch: _usingUserBranch,
+      workingResourceBranch,
     },
     actions: { startEdit: startEditBranch },
   } = useUserBranch({
@@ -230,6 +240,7 @@ export default function ScriptureCard({
     bookId,
     cardId: id,
     cardResourceId,
+    checkForEditBranch,
     languageId,
     loggedInUser: canUseEditBranch ? loggedInUser : null,
     owner,
@@ -246,6 +257,12 @@ export default function ScriptureCard({
       setState({ usingUserBranch: _usingUserBranch })
     }
   }, [_usingUserBranch, usingUserBranch])
+
+  React.useEffect(() => { // waiting for branch fetch to complete
+    if (!fetchReady && !fetchingBranch ) {
+      setState({ fetchReady: true })
+    }
+  }, [fetchReady])
 
   React.useEffect(() => { // select correct working ref - could be master, user branch, or release
     let workingRef_ = workingRef || appRef
