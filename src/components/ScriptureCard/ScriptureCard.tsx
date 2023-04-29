@@ -30,7 +30,6 @@ import {
 import { areMapsTheSame } from '../../utils/maps'
 import { Title } from '../ScripturePane/styled'
 import {
-  delay,
   NT_ORIG_LANG,
   ORIGINAL_SOURCE,
   OT_ORIG_LANG,
@@ -82,7 +81,7 @@ export default function ScriptureCard({
   const [state, setState_] = React.useState({
     checkForEditBranch: 0,
     editBranchReady: false,
-    fetchReady: false,
+    readyForFetch: false,
     fetchResource: { bookId, appRef },
     haveUnsavedChanges: false,
     lastSelectedQuote: null,
@@ -105,7 +104,7 @@ export default function ScriptureCard({
   const {
     checkForEditBranch,
     editBranchReady,
-    fetchReady,
+    readyForFetch,
     fetchResource,
     haveUnsavedChanges,
     lastSelectedQuote,
@@ -177,7 +176,7 @@ export default function ScriptureCard({
     greekRepoUrl,
     hebrewRepoUrl,
     wholeBook: true,
-    fetchReady,
+    readyForFetch,
   })
 
   const fetchResp_ = scriptureConfig?.fetchResponse
@@ -186,7 +185,7 @@ export default function ScriptureCard({
   const reference_ = scriptureConfig?.reference || null
 
   React.useEffect(() => {
-    setState({ fetchReady: false, checkForEditBranch: checkForEditBranch + 1 })
+    setState({ readyForFetch: false, checkForEditBranch: checkForEditBranch + 1 })
   }, [bookId, owner, languageId, resourceId])
 
   React.useEffect(() => { // get the _sha from last scripture download
@@ -228,7 +227,7 @@ export default function ScriptureCard({
 
   const {
     state: {
-      fetchingBranch,
+      branchDetermined,
       userEditBranchName,
       usingUserBranch: _usingUserBranch,
       workingResourceBranch,
@@ -259,18 +258,18 @@ export default function ScriptureCard({
   }, [_usingUserBranch, usingUserBranch])
 
   React.useEffect(() => { // waiting for branch fetch to complete
-    if (!fetchReady && !fetchingBranch ) {
-      setState({ fetchReady: true })
+    if (!readyForFetch && branchDetermined ) {
+      setState({ readyForFetch: true })
     }
-  }, [fetchReady])
+  }, [readyForFetch, branchDetermined])
 
   React.useEffect(() => { // select correct working ref - could be master, user branch, or release
     let workingRef_ = workingRef || appRef
 
-    if (ref !== workingRef_) {
+    if (branchDetermined && ref !== workingRef_) {
       setState({ ref: workingRef_ })
     }
-  }, [workingRef, ref, appRef])
+  }, [workingRef, ref, appRef, branchDetermined])
 
   React.useEffect(() => { // update display status if error
     const error = scriptureConfig?.resourceStatus?.[ERROR_STATE]
@@ -568,14 +567,11 @@ export default function ScriptureCard({
 
       if (createEditBranch) { // if not using the user branch, create it
         console.log(`saveChangesToCloud - creating edit branch`)
-        setState({ editBranchReady: false, sha: null }) // we will need a new sha for book/branch
+        setState({ editBranchReady: false, readyForFetch: false, sha: null }) // we will need a new sha for book/branch
         startEditBranch().then((success) => {
           if (success) {
             console.log(`saveChangesToCloud - edit branch created`)
-            setState({ sha: null })
-            delay(1000).then(() => { // add delay to wait for server after branch created
-              setState({ editBranchReady: true, sha: null })
-            })
+            setState({ editBranchReady: true, readyForFetch: true })
           }
         })
       }
@@ -787,12 +783,18 @@ export default function ScriptureCard({
     }))
   }
 
-  const renderedScripturePanes = versesForRef?.map((_currentVerseData, index) => {
+  const _versesForRef = scriptureConfig?.versesForRef
+
+  React.useEffect(() => {
+    console.log(`_versesForRef changed`, scriptureConfig)
+  }, [_versesForRef])
+
+  const renderedScripturePanes = _versesForRef?.map((_currentVerseData, index) => {
     const initialVerseObjects = _currentVerseData?.verseData?.verseObjects || null
     // @ts-ignore
     const { chapter, verse } = _currentVerseData || {}
     const _reference = {
-      ...reference,
+      ..._versesForRef,
       chapter,
       verse,
     }
@@ -870,7 +872,7 @@ export default function ScriptureCard({
           onClick={handleAlignButtonClick}
           title={alignButtonText}
           aria-label={alignButtonText}
-          style={{cursor: 'pointer'}}
+          style={{ cursor: 'pointer' }}
         >
           {alignIcon}
         </IconButton>

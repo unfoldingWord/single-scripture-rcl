@@ -37,10 +37,13 @@ interface Props {
   resource: ScriptureResource|undefined;
   /** if true then fetch the entire book */
   wholeBook: boolean;
+  /** if true then settings are ready for fetching data */
+  readyForFetch: boolean;
 }
 
 export function useScripture({ // hook for fetching scripture
   config,
+  readyForFetch,
   reference,
   resource: resource_,
   resourceLink: resourceLink_,
@@ -49,9 +52,9 @@ export function useScripture({ // hook for fetching scripture
   const [initialized, setInitialized] = useState(false)
   const [bookObjects, setBookObjects] = useState(null)
   const [versesForRef, setVersesForRef] = useState(null)
-  let resourceLink = resourceLink_
+  let resourceLink = readyForFetch && resourceLink_
 
-  if (!resourceLink_ && resource_) {
+  if (readyForFetch && !resourceLink_ && resource_) {
     const {
       owner,
       languageId,
@@ -78,7 +81,8 @@ export function useScripture({ // hook for fetching scripture
     const bookRef = { ...reference }
 
     if (wholeBook) {
-      delete bookRef.chapter // remove the chapter so the whole book is fetched
+      delete bookRef.chapter // remove the chapter and verse so the whole book is fetched
+      delete bookRef.verse
     }
     return bookRef
   }, [reference, wholeBook])
@@ -119,15 +123,19 @@ export function useScripture({ // hook for fetching scripture
   }
 
   useEffect(() => {
-    if (!initialized) {
+    if (!readyForFetch) {
+      if (initialized) {
+        setInitialized(false)
+      }
+    } else if (!initialized) {
       if (loading) { // once first load has begun, we are initialized
         setInitialized(true)
       }
     }
-  }, [loading])
+  }, [loading, readyForFetch])
 
   useEffect(() => {
-    console.log(`useScripture: resourceLink changed to resourceLink=${resourceLink} and resourceLink_=${resourceLink_}`)
+    console.log(`useScripture: resourceLink changed to resourceLink=${resourceLink} and resourceLink_=${resourceLink_}`, reference)
   }, [resourceLink])
 
   function getVersesForRef(ref, content_ = bookObjects) {
@@ -170,6 +178,7 @@ export function useScripture({ // hook for fetching scripture
 
   useEffect(() => {
     if (bookObjects) {
+      console.log(`useScripture bookObjects changed`, { content, reference, resourceLink })
       const ref = `${reference.chapter}:${reference.verse}`
       const versesForRef = getVersesForRef(ref, bookObjects)
       setVersesForRef(versesForRef)
@@ -179,6 +188,7 @@ export function useScripture({ // hook for fetching scripture
   }, [bookObjects])
 
   useEffect(() => {
+    console.log(`useScripture content changed`, { content, reference, resourceLink, fetchResponse })
     setBookObjects(content)
   }, [content])
 

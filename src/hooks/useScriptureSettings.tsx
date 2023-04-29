@@ -100,7 +100,7 @@ export function useScriptureSettings({
   greekRepoUrl,
   hebrewRepoUrl,
   wholeBook = false,
-  fetchReady = false,
+  readyForFetch = false,
 }) {
   const isNewTestament = isNT(bookId)
   const scriptureDefaultSettings = getScriptureObject({
@@ -160,7 +160,7 @@ export function useScriptureSettings({
     httpConfig,
     appRef,
     wholeBook,
-    fetchReady,
+    readyForFetch,
   })
 
   /**

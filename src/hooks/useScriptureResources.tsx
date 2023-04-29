@@ -15,7 +15,7 @@ import { getScriptureResourceSettings } from '../utils/ScriptureSettings'
  * @param {object} httpConfig - optional config settings for fetches (timeout, cache, etc.)
  * @param {string} appRef - app default, points to specific ref that could be a branch or tag
  * @param {boolean} wholeBook - if true then fetch the entire book
- * @param {boolean} fetchReady - true if ready for fetching
+ * @param {boolean} readyForFetch - true if ready for fetching
  */
 export function useScriptureResources({
   bookId,
@@ -29,7 +29,7 @@ export function useScriptureResources({
   httpConfig = {},
   appRef = 'master',
   wholeBook = false,
-  fetchReady = false,
+  readyForFetch = false,
 }) {
   if (appRef !== scriptureSettings.ref) {
     scriptureSettings = { ...scriptureSettings, ref: appRef }
@@ -42,20 +42,18 @@ export function useScriptureResources({
   const scriptureSettings_ = getScriptureResourceSettings(bookId, scriptureSettings, isNewTestament,
     originalRepoUrl, currentLanguageId, currentOwner) // convert any default settings strings
 
-  let resource = fetchReady ? {
-    languageId: scriptureSettings_.languageId,
-    projectId: scriptureSettings_.resourceId,
-    owner: scriptureSettings_.owner,
-    ref: scriptureSettings_.ref || scriptureSettings_.branch || appRef,
-  } : null
-
   const scriptureConfig_ = {
     reference: {
       projectId: bookId,
       chapter: chapter,
       verse: verse,
     },
-    resource,
+    resource: {
+      languageId: scriptureSettings_.languageId,
+      projectId: scriptureSettings_.resourceId,
+      owner: scriptureSettings_.owner,
+      ref: scriptureSettings_.ref || scriptureSettings_.branch || appRef,
+    },
     resourceLink: scriptureSettings_.resourceLink,
     config: {
       server: scriptureSettings_.server,
@@ -63,6 +61,7 @@ export function useScriptureResources({
     },
     disableWordPopover: scriptureSettings_.disableWordPopover,
     wholeBook,
+    readyForFetch,
   }
 
   // @ts-ignore
