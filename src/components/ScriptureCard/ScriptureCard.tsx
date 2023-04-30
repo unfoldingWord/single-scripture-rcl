@@ -160,8 +160,8 @@ export default function ScriptureCard({
     title,
     verse,
     owner,
-    bookId: fetchResource?.bookId,
-    appRef: fetchResource?.appRef,
+    bookId,
+    appRef: ref,
     server,
     cardNum,
     chapter,
@@ -259,7 +259,7 @@ export default function ScriptureCard({
 
   React.useEffect(() => { // waiting for branch fetch to complete
     if (!readyForFetch && branchDetermined ) {
-      setState({ readyForFetch: true })
+      setState({ readyForFetch: true, ref: workingRef })
     }
   }, [readyForFetch, branchDetermined])
 

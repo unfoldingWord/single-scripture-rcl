@@ -18,6 +18,8 @@ import {
   SCRIPTURE_NOT_LOADED_ERROR,
 } from 'translation-helps-rcl'
 import { getVerses } from 'bible-reference-range'
+import * as isEqual from 'deep-equal'
+import useDeepCompareEffect from 'use-deep-compare-effect'
 import { cleanupVerseObjects, getResourceLink } from '../utils/ScriptureSettings'
 import {
   ServerConfig,
@@ -176,16 +178,28 @@ export function useScripture({ // hook for fetching scripture
     return null
   }
 
-  useEffect(() => {
+  function updateVersesForRef() {
+    let newVersesForRef = null
+
     if (bookObjects) {
-      console.log(`useScripture bookObjects changed`, { content, reference, resourceLink })
       const ref = `${reference.chapter}:${reference.verse}`
-      const versesForRef = getVersesForRef(ref, bookObjects)
-      setVersesForRef(versesForRef)
-    } else {
-      setVersesForRef(null)
+      newVersesForRef = getVersesForRef(ref, bookObjects)
     }
+
+    if (!isEqual(newVersesForRef, versesForRef)) {
+      setVersesForRef(newVersesForRef)
+    }
+  }
+
+  useEffect(() => {
+    console.log(`useScripture bookObjects changed`, { content, reference, resourceLink })
+    updateVersesForRef()
   }, [bookObjects])
+
+  useDeepCompareEffect(() => {
+    console.log(`useScripture reference changed`, { content, reference, resourceLink })
+    updateVersesForRef()
+  }, [reference])
 
   useEffect(() => {
     console.log(`useScripture content changed`, { content, reference, resourceLink, fetchResponse })
