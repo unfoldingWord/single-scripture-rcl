@@ -179,15 +179,14 @@ export function useScriptureAlignmentEdit({
 
   // get original language for this alignment
   const originalScriptureResource = useScriptureResources({
-    bookId,
     scriptureSettings: originalScriptureSettings,
-    chapter: reference?.chapter,
-    verse: reference?.verse,
+    reference,
     isNewTestament,
     originalRepoUrl,
     currentLanguageId: originalScriptureSettings?.languageId,
     currentOwner: originalLanguageOwner,
     httpConfig,
+    readyForFetch: true,
   })
 
   const originalVerseObjects = React.useMemo(() => { // get the original language verseObjects

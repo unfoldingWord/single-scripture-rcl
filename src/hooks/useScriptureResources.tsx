@@ -4,10 +4,8 @@ import { getScriptureResourceSettings } from '../utils/ScriptureSettings'
 
 /**
  * hook to get a scripture resource
- * @param {string} bookId
  * @param {object} scriptureSettings - info about the scripture being referenced
- * @param {string} chapter
- * @param {string} verse
+ * @param {object} reference
  * @param {boolean} isNewTestament
  * @param {string} originalRepoUrl - optional path to repo for original language
  * @param {string} currentLanguageId - optional over-ride for transient case where language in scripture settings have not yet updated
@@ -18,19 +16,19 @@ import { getScriptureResourceSettings } from '../utils/ScriptureSettings'
  * @param {boolean} readyForFetch - true if ready for fetching
  */
 export function useScriptureResources({
-  bookId,
-  scriptureSettings,
-  chapter,
-  verse,
-  isNewTestament,
-  originalRepoUrl,
+  appRef = 'master',
   currentLanguageId = null,
   currentOwner = null,
   httpConfig = {},
-  appRef = 'master',
-  wholeBook = false,
+  isNewTestament,
+  originalRepoUrl,
   readyForFetch = false,
+  reference,
+  scriptureSettings,
+  wholeBook = false,
 }) {
+  const bookId = reference?.projectId
+
   if (appRef !== scriptureSettings.ref) {
     scriptureSettings = { ...scriptureSettings, ref: appRef }
   }
@@ -43,11 +41,7 @@ export function useScriptureResources({
     originalRepoUrl, currentLanguageId, currentOwner) // convert any default settings strings
 
   const scriptureConfig_ = {
-    reference: {
-      projectId: bookId,
-      chapter: chapter,
-      verse: verse,
-    },
+    reference,
     resource: {
       languageId: scriptureSettings_.languageId,
       projectId: scriptureSettings_.resourceId,

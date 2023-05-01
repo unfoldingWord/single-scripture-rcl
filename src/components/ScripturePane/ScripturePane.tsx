@@ -3,7 +3,7 @@ import useDeepCompareEffect from 'use-deep-compare-effect'
 import { VerseObjects } from 'scripture-resources-rcl'
 import { UsfmFileConversionHelpers } from 'word-aligner-rcl'
 import { ScriptureReference } from '../../types'
-import { getResourceMessage } from '../../utils'
+import { getResourceMessage, LOADING_RESOURCE } from '../../utils'
 import { ScriptureALignmentEditProps, useScriptureAlignmentEdit } from "../../hooks/useScriptureAlignmentEdit";
 import { Container, Content } from './styled'
 
@@ -12,6 +12,8 @@ interface Props {
   contentStyle: any;
   // index number for this scripture pane
   currentIndex: number,
+  // waiting to determine branch
+  determiningBranch: boolean,
   /** language direction to use **/
   direction: string|undefined;
   /** if true then do not display lexicon popover on hover **/
@@ -74,27 +76,28 @@ const TextAreaStyle = {
 }
 
 function ScripturePane({
-  reference,
-  refStyle,
-  direction,
   currentIndex,
   contentStyle,
+  determiningBranch,
+  direction,
   disableWordPopover,
-  resourceStatus,
-  resourceLink,
-  server,
-  isNT,
   fontSize,
   getLexiconData,
-  translate,
-  saving,
-  scriptureAlignmentEditConfig,
-  setSavedChanges,
-  setWordAlignerStatus,
+  isNT,
   isVerseSelectedForAlignment,
   onAlignmentFinish,
-  updateVersesAlignmentStatus,
+  reference,
+  refStyle,
+  resourceStatus,
+  resourceLink,
+  saving,
+  scriptureAlignmentEditConfig,
   setOriginalScriptureResource,
+  setSavedChanges,
+  setWordAlignerStatus,
+  server,
+  translate,
+  updateVersesAlignmentStatus,
 } : Props) {
   const [state, setState_] = React.useState({
     doingAlignment: false,
@@ -112,7 +115,17 @@ function ScripturePane({
   }
 
   const [initialVerseText, setInitialVerseText] = React.useState(null)
-  const resourceMsg = saving ? 'Saving Changes...' : getResourceMessage(resourceStatus, server, resourceLink, isNT)
+
+  let resourceMsg = null
+
+  if (saving) {
+    resourceMsg = 'Saving Changes...'
+  } else if (determiningBranch) {
+    resourceMsg = 'Pre-' + LOADING_RESOURCE
+  } else {
+    getResourceMessage(resourceStatus, server, resourceLink, isNT)
+  }
+
   const { chapter, verse } = reference
   direction = direction || 'ltr'
 

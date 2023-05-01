@@ -7,7 +7,7 @@ import { IconButton } from '@mui/material'
 import { RxLink2, RxLinkBreak2 } from 'react-icons/rx'
 import {
   Card,
-  isValidUserWorkingBranch,
+
   useCardState,
   useUserBranch,
   ERROR_STATE,
@@ -55,11 +55,7 @@ export default function ScriptureCard({
     originalLanguageOwner,
   },
   getLanguage,
-  reference: {
-    verse,
-    chapter,
-    projectId: bookId,
-  },
+  reference,
   resourceLink,
   useUserLocalStorage,
   disableWordPopover,
@@ -78,14 +74,15 @@ export default function ScriptureCard({
   selectedQuote,
   setWordAlignerStatus,
 }) {
+  const bookId = reference?.projectId
   const [state, setState_] = React.useState({
     checkForEditBranch: 0,
+    currentReference: null,
     editBranchReady: false,
-    readyForFetch: false,
-    fetchResource: { bookId, appRef },
     haveUnsavedChanges: false,
     lastSelectedQuote: null,
     originalVerseObjects: null,
+    readyForFetch: false,
     ref: appRef,
     saveClicked: false,
     saveContent: null,
@@ -103,26 +100,26 @@ export default function ScriptureCard({
   })
   const {
     checkForEditBranch,
+    currentReference,
     editBranchReady,
-    readyForFetch,
-    fetchResource,
     haveUnsavedChanges,
     lastSelectedQuote,
     originalVerseObjects,
+    readyForFetch,
     ref,
     saveClicked,
     saveContent,
     selections,
     sha,
+    showAlignmentPopup,
     startSave,
     urlError,
     usingUserBranch,
     unsavedChangesList,
-    versesForRef,
-    showAlignmentPopup,
+    verseObjectsMap,
     verseSelectedForAlignment,
     versesAlignmentStatus,
-    verseObjectsMap,
+    versesForRef,
   } = state
 
   const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
@@ -158,13 +155,11 @@ export default function ScriptureCard({
   } = useScriptureSettings({
     isNT,
     title,
-    verse,
     owner,
-    bookId,
+    reference: currentReference,
     appRef: ref,
     server,
     cardNum,
-    chapter,
     languageId,
     resourceId,
     resourceLink,
@@ -185,8 +180,16 @@ export default function ScriptureCard({
   const reference_ = scriptureConfig?.reference || null
 
   React.useEffect(() => {
+    console.log(`ScriptureCard book changed`, { bookId, owner, languageId, resourceId })
     setState({ readyForFetch: false, checkForEditBranch: checkForEditBranch + 1 })
   }, [bookId, owner, languageId, resourceId])
+
+  React.useEffect(() => {
+    if (!isEqual(reference, currentReference)) {
+      console.log(`ScriptureCard reference changed`, reference)
+      setState({ currentReference: reference })
+    }
+  }, [reference])
 
   React.useEffect(() => { // get the _sha from last scripture download
     const _sha = fetchResp_?.data?.sha || null
@@ -205,25 +208,6 @@ export default function ScriptureCard({
   const canUseEditBranch = loggedInUser && authentication &&
     (resourceId !== ORIGINAL_SOURCE) &&
     ((ref_ === 'master') || (ref_.includes(loggedInUser)) ) // not a version tag
-
-  React.useEffect(() => { // make sure we don't change resource until both bookId and branch name are ready
-    if (bookId && ref ) {
-      let _ref = ref
-
-      if (canUseEditBranch && ref !== 'master') {
-        if (!isValidUserWorkingBranch(loggedInUser, ref, bookId)) {
-          _ref = 'master' // switch back to master branch
-        }
-      }
-
-      const newFetchResource = { bookId, appRef: _ref }
-
-      if (!isEqual(newFetchResource, fetchResource)) {
-        console.log(`ScriptureCard: for ${reference_} updating to ${JSON.stringify(newFetchResource)} from ${JSON.stringify(fetchResource)}`)
-        setState( { fetchResource: newFetchResource })
-      }
-    }
-  }, [bookId, ref])
 
   const {
     state: {
@@ -251,25 +235,19 @@ export default function ScriptureCard({
   const workingRef = canUseEditBranch ? workingResourceBranch : appRef
   let scriptureTitle
 
+  React.useEffect(() => { // waiting for branch fetch to complete
+    console.log(`ScriptureCard branchDetermined is ${branchDetermined} and workingRef is ${workingRef} and readyForFetch is ${readyForFetch}`)
+
+    if (!readyForFetch && branchDetermined ) {
+      setState({ readyForFetch: true, ref: workingRef })
+    }
+  }, [branchDetermined])
+
   React.useEffect(() => { // select correct working ref - could be master, user branch, or release
     if (_usingUserBranch !== usingUserBranch) {
       setState({ usingUserBranch: _usingUserBranch })
     }
   }, [_usingUserBranch, usingUserBranch])
-
-  React.useEffect(() => { // waiting for branch fetch to complete
-    if (!readyForFetch && branchDetermined ) {
-      setState({ readyForFetch: true, ref: workingRef })
-    }
-  }, [readyForFetch, branchDetermined])
-
-  React.useEffect(() => { // select correct working ref - could be master, user branch, or release
-    let workingRef_ = workingRef || appRef
-
-    if (branchDetermined && ref !== workingRef_) {
-      setState({ ref: workingRef_ })
-    }
-  }, [workingRef, ref, appRef, branchDetermined])
 
   React.useEffect(() => { // update display status if error
     const error = scriptureConfig?.resourceStatus?.[ERROR_STATE]
@@ -311,7 +289,7 @@ export default function ScriptureCard({
   const languageId_ = scriptureConfig?.resource?.languageId
   const language = getLanguage({ languageId: languageId_ })
   const direction = (language?.direction) || 'ltr'
-  const reference = { ...scriptureConfig.reference }
+  const _reference = { ...scriptureConfig.reference }
 
   const isHebrew = (languageId_ === 'hbo')
   const fontFactor = isHebrew ? 1.4 : 1 // we automatically scale up font size for Hebrew
@@ -372,7 +350,7 @@ export default function ScriptureCard({
   const scriptureAlignmentEditConfig = {
     authentication: canUseEditBranch ? authentication : null,
     bookIndex,
-    currentVerseRef: reference,
+    currentVerseRef: _reference,
     enableEdit,
     enableAlignment,
     httpConfig,
@@ -648,6 +626,8 @@ export default function ScriptureCard({
     }
   }, [saveClicked])
 
+  const { chapter, verse } = _reference || {}
+
   React.useEffect(() => {
     const _versesForRef = scriptureConfig?.versesForRef
     let newSelections = new Map()
@@ -816,6 +796,7 @@ export default function ScriptureCard({
         {...scriptureConfig}
         contentStyle={contentStyle}
         currentIndex={index}
+        determiningBranch={!readyForFetch}
         direction={direction}
         disableWordPopover={disableWordPopover_}
         fontSize={fontSize}
@@ -850,6 +831,7 @@ export default function ScriptureCard({
     const newItems = [...items]
 
     let allVersesAligned = false
+
     // Check if all values in versesAlignmentStatus are true
     if (versesAlignmentStatus) {
       allVersesAligned = Object.values(versesAlignmentStatus).every(alignStatus => alignStatus === true)

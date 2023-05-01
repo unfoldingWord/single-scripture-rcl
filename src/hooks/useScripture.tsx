@@ -19,7 +19,6 @@ import {
 } from 'translation-helps-rcl'
 import { getVerses } from 'bible-reference-range'
 import * as isEqual from 'deep-equal'
-import useDeepCompareEffect from 'use-deep-compare-effect'
 import { cleanupVerseObjects, getResourceLink } from '../utils/ScriptureSettings'
 import {
   ServerConfig,
@@ -75,10 +74,30 @@ export function useScripture({ // hook for fetching scripture
   }
 
   useEffect(() => { // get the _sha from last scripture download
-    console.log(`for ${resource_?.projectId} resourceLink is now ${resourceLink}`)
+    console.log(`useScripture - for ${resource_?.projectId} resourceLink is now ${resourceLink} and resourceLink_=${resourceLink_}`, reference)
   }, [resourceLink])
 
-  const options = { getBibleJson: true }
+  useEffect(() => { // get the _sha from last scripture download
+    console.log(`useScripture - for ${resource_?.projectId} readyForFetch is now ${readyForFetch}`)
+  }, [readyForFetch])
+
+  /**
+   * validate to make sure returned resource if resource matches the current resource link
+   * @param {object} resource - returned resource
+   * @param {string} resourceLink - requested resource link
+   * @param {string} resourceTag - identifier for resource fetched
+   */
+  function validateResponse(resource, resourceLink, resourceTag) {
+    let valid = resourceLink === resourceLink_
+    console.log(`useScripture - validateResponse`, { resource, resourceLink, resourceTag })
+
+    if (!valid) {
+      console.log(`useScripture - validateResponse resourceLink ${resourceLink} different then ${resourceLink_}`, { resource, resourceLink, resourceTag })
+    }
+    return valid
+  }
+
+  const options = { getBibleJson: true, validateResponse }
   const bookRef = useMemo(() => {
     const bookRef = { ...reference }
 
@@ -136,10 +155,6 @@ export function useScripture({ // hook for fetching scripture
     }
   }, [loading, readyForFetch])
 
-  useEffect(() => {
-    console.log(`useScripture: resourceLink changed to resourceLink=${resourceLink} and resourceLink_=${resourceLink_}`, reference)
-  }, [resourceLink])
-
   function getVersesForRef(ref, content_ = bookObjects) {
     if (content_) {
       let verses = getVerses(content_.chapters, ref)
@@ -196,7 +211,12 @@ export function useScripture({ // hook for fetching scripture
     updateVersesForRef()
   }, [bookObjects])
 
-  useDeepCompareEffect(() => {
+  useEffect(() => {
+    console.log(`useScripture book changed to ${reference?.projectId}`, { content, reference, resourceLink })
+    setBookObjects(null)
+  }, [reference?.projectId])
+
+  useEffect(() => {
     console.log(`useScripture reference changed`, { content, reference, resourceLink })
     updateVersesForRef()
   }, [reference])

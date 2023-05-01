@@ -83,9 +83,7 @@ export function useScriptureSettings({
   isNT,
   title,
   cardNum,
-  chapter,
-  verse,
-  bookId,
+  reference,
   owner,
   server,
   appRef,
@@ -102,6 +100,7 @@ export function useScriptureSettings({
   wholeBook = false,
   readyForFetch = false,
 }) {
+  const bookId = reference?.projectId
   const isNewTestament = isNT(bookId)
   const scriptureDefaultSettings = getScriptureObject({
     title,
@@ -149,10 +148,8 @@ export function useScriptureSettings({
 
   const originalRepoUrl = isNewTestament ? greekRepoUrl : hebrewRepoUrl
   const scriptureConfig = useScriptureResources({
-    bookId,
+    reference,
     scriptureSettings,
-    chapter,
-    verse,
     isNewTestament,
     originalRepoUrl,
     currentLanguageId: languageId,
@@ -238,11 +235,7 @@ export function useScriptureSettings({
       // make sure it exists
       core.resourceFromResourceLink({
         resourceLink: url_,
-        reference: {
-          projectId: bookId,
-          chapter: chapter,
-          verse: verse,
-        },
+        reference,
         config: {
           server: server_,
           cache: { maxAge: 1 * 60 * 60 * 1000 }, // 1 hr
