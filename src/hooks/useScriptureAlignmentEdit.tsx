@@ -203,7 +203,7 @@ export function useScriptureAlignmentEdit({
       return verseObjects
     }
     return originalScriptureResource?.verseObjects
-  }, [originalScriptureResource?.verseObjects, originalScriptureResource?.versesForRef])
+  }, [originalScriptureResource?.versesForRef])
 
   React.useEffect(() => { // update alignment status when aligner is hidden
     const notEmpty = !!initialVerseObjects
@@ -356,7 +356,7 @@ export function useScriptureAlignmentEdit({
   function cancelAlignment() {
     console.log(`cancelAlignment()`)
     const targetVerseUSFM = getCurrentVerseUsfm(updatedVerseObjects, initialVerseObjects, verseTextChanged, newVerseText)
-    const aligned = isUsfmAligned(targetVerseUSFM, originalScriptureResource?.verseObjects)
+    const aligned = isUsfmAligned(targetVerseUSFM, originalVerseObjects)
     setState({ alignerData: null, aligned })
   }
 
@@ -384,7 +384,7 @@ export function useScriptureAlignmentEdit({
    */
   function setVerseChanged(changed, newVerseText, _initialVerseText) {
     const { targetVerseText } = AlignmentHelpers.updateAlignmentsToTargetVerse(initialVerseObjects, newVerseText)
-    const aligned = isUsfmAligned(targetVerseText, originalScriptureResource?.verseObjects)
+    const aligned = isUsfmAligned(targetVerseText, originalVerseObjects)
     const _changed = newVerseText !== initialVerseText
 
     setState({
