@@ -268,11 +268,9 @@ export function useScripture({ // hook for fetching scripture
     if (_bookObjects) {
       const ref = `${reference.chapter}:${reference.verse}`
       newVersesForRef = getVersesForRef(ref, _bookObjects)
-    }
-
-    if (!isEqual(newVersesForRef, versesForRef)) {
       return newVersesForRef
     }
+
     return null
   }
 
@@ -295,7 +293,7 @@ export function useScripture({ // hook for fetching scripture
       const _versesForRef = updateVersesForRef(_bookObjects)
       setState({ versesForRef: _versesForRef })
     }
-  }, [fetchParams?.reference])
+  }, [reference])
 
   return {
     title,
