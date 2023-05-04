@@ -11,6 +11,10 @@ import {
   Card,
   useCardState,
   useUserBranch,
+  useBranchMerger,
+  useContentUpdateProps,
+  UpdateBranchButton,
+  ErrorDialog,
   ERROR_STATE,
   MANIFEST_NOT_LOADED_ERROR,
 } from 'translation-helps-rcl'
@@ -171,16 +175,11 @@ export default function ScriptureCard({
   const {
     state: {
       workingResourceBranch,
+      userEditBranchName,
       usingUserBranch: usingUserBranch_,
-      mergeFromMaster,
-      mergeToMaster,
-      loadingMergeFromMaster,
-      loadingMergeToMaster,
     },
     actions: {
       startEdit: startEditBranch,
-      mergeFromMasterIntoUserBranch,
-      mergeToMasterFromUserBranch,
     },
   } = useUserBranch({
     owner,
@@ -195,6 +194,18 @@ export default function ScriptureCard({
     useUserLocalStorage,
   })
 
+  const _useBranchMerger = useBranchMerger({ server, owner, repo, userBranch: userEditBranchName, tokenid: authentication?.token?.sha1 });
+  const {
+    state: {
+      mergeStatus: mergeToMaster,
+      updateStatus: mergeFromMaster,
+    },
+    actions: {
+      updateUserBranch: mergeFromMasterIntoUserBranch,
+      mergeMasterBranch: mergeToMasterFromUserBranch
+    }
+  } = _useBranchMerger;
+
   React.useEffect(() => {
     if (cardResourceId) {
       updateMergeState && updateMergeState(
@@ -206,6 +217,21 @@ export default function ScriptureCard({
       )
     }
   },[cardResourceId, mergeFromMaster, mergeToMaster])
+
+  const updateButtonProps = useContentUpdateProps({
+    isSaving: startSave,
+    useBranchMerger: _useBranchMerger,
+    reloadContent: scriptureConfig?.reloadResource()
+  });
+  const {
+    isErrorDialogOpen,
+    onCloseErrorDialog,
+    isLoading,
+    dialogMessage,
+    dialogTitle,
+    dialogLink,
+    dialogLinkTooltip
+  } = updateButtonProps;
 
   const workingRef = canUseEditBranch ? workingResourceBranch : appRef
   let scriptureTitle
@@ -650,7 +676,6 @@ export default function ScriptureCard({
         setWordAlignerStatus={setWordAlignerStatus}
         server={server}
         translate={translate}
-        merging={loadingMergeFromMaster || loadingMergeToMaster}
         isVerseSelectedForAlignment={isVerseSelectedForAlignment}
         onAlignmentFinish={() => setState({ verseSelectedForAlignment: null })}
         updateVersesAlignmentStatus={updateVersesAlignmentStatus}
@@ -699,24 +724,13 @@ export default function ScriptureCard({
       )
     }
 
-    if (mergeFromMaster) {
-      newItems.push(
-        <IconButton
-          className={classes.margin}
-          key='update-from-master'
-          onClick={mergeFromMasterIntoUserBranch}
-          title={mergeFromMasterTitle}
-          aria-label={mergeFromMasterTitle}
-          style={{ cursor: 'pointer' }}
-        >
-          {mergeFromMasterHasConflicts ?
-            <MdUpdateDisabled id='update-from-master-icon' color={mergeFromMasterColor} />
-            :
-            <MdUpdate id='update-from-master-icon' color={mergeFromMasterColor} />
-          }
-        </IconButton>
-      )
-    }
+    newItems.push(
+      <>
+        <UpdateBranchButton {...updateButtonProps} isLoading={isLoading || startSave}/>
+        <ErrorDialog title={dialogTitle} content={dialogMessage} open={isErrorDialogOpen} onClose={onCloseErrorDialog} isLoading={ isLoading || startSave } link={dialogLink} linkTooltip={dialogLinkTooltip} />
+      </>
+    )
+
     if (mergeToMaster) {
       newItems.push(
         <IconButton

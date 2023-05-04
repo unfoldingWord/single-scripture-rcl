@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "test": "jest",
-    "start": "styleguidist server",
+    "start": "styleguidist server NODE_OPTIONS=--max_old_space_size=4096",
     "build": "styleguidist build",
     "prepublishOnly": "rm -fr ./dist && babel ./src --out-dir ./dist -s inline --extensions \".ts,.tsx,.js\"",
     "pack-next": "yarn version --prerelease && yarn && yarn run prepublishOnly && yarn pack"

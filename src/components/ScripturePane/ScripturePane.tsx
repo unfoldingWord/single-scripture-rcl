@@ -42,8 +42,6 @@ interface Props {
   setWordAlignerStatus: Function;
   /** optional function for localization */
   translate: Function;
-  /** whether or not we are currently merging changes from master */
-  merging: boolean;
   /** whether or not this current verse has been selected for alignment */
   isVerseSelectedForAlignment: boolean;
   /** function to be called when verse alignment has finished */
@@ -91,7 +89,6 @@ function ScripturePane({
   scriptureAlignmentEditConfig,
   setSavedChanges,
   setWordAlignerStatus,
-  merging,
   isVerseSelectedForAlignment,
   onAlignmentFinish,
   updateVersesAlignmentStatus,
@@ -116,8 +113,6 @@ function ScripturePane({
   let resourceMessage = ''
   if (saving) {
     resourceMessage = 'Saving Changes...'
-  } else if (merging) {
-    resourceMessage = 'Merging Changes...'
   } else {
     resourceMessage = getResourceMessage(resourceStatus, server, resourceLink, isNT)
   }
