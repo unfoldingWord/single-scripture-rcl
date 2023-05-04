@@ -221,7 +221,7 @@ export default function ScriptureCard({
   const updateButtonProps = useContentUpdateProps({
     isSaving: startSave,
     useBranchMerger: _useBranchMerger,
-    reloadContent: scriptureConfig?.reloadResource()
+    reloadContent: scriptureConfig?.reloadResource
   });
   const {
     isErrorDialogOpen,
