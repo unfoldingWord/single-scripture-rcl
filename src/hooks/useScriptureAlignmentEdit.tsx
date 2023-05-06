@@ -186,7 +186,7 @@ export function useScriptureAlignmentEdit({
     currentLanguageId: originalScriptureSettings?.languageId,
     currentOwner: originalLanguageOwner,
     httpConfig,
-    readyForFetch: true,
+    readyForFetch: false,
   })
 
   const originalVerseObjects = React.useMemo(() => { // get the original language verseObjects
