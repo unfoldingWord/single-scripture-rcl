@@ -467,7 +467,6 @@ export default function ScriptureCard({
       await onSaveEdit(userEditBranchName).then((success) => { // push changed to server
         if (success) {
           console.log(`saveChangesToCloud() - save scripture edits success`)
-          setState({ startSave: false })
           const unsavedCardIndices = Object.keys(unsavedChangesList)
 
           if (unsavedCardIndices?.length) {
@@ -478,6 +477,11 @@ export default function ScriptureCard({
           }
 
           console.info('saveChangesToCloud() - Reloading resource')
+          setState({
+            startSave: false,
+            readyForFetch: true,
+            ref: userEditBranchName,
+          })
           scriptureConfig?.reloadResource()
         } else {
           console.error('saveChangesToCloud() - saving changed scripture failed')
