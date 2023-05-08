@@ -74,6 +74,7 @@ export function useScripture({ // hook for fetching scripture
     fetchParams,
     resourceState,
   } = state
+  const _bookId = reference?.projectId
 
   function setState(newState) {
     setState_(prevState => ({ ...prevState, ...newState }))
@@ -125,7 +126,7 @@ export function useScripture({ // hook for fetching scripture
         setState({ fetchParams: newFetchParams })
       }
     }
-  }, [readyForFetch])
+  }, [readyForFetch, _bookId, resourceLink_])
 
   useEffect(() => {
     console.log(`useScripture - for ${resource_?.projectId} readyForFetch is now ${readyForFetch}`)
@@ -165,7 +166,7 @@ export function useScripture({ // hook for fetching scripture
           // TRICKY - responses from server can come back from previous requests.  So we make sure this response is for the latest request by making sure the response is for the current book
           let sameBook = false
           // @ts-ignore
-          const expectedBookId = reference?.projectId || ''
+          const expectedBookId = _bookId || ''
           const fetchedBook = content.name
 
           if (fetchedBook && expectedBookId) {
@@ -302,13 +303,12 @@ export function useScripture({ // hook for fetching scripture
   }, [currentBookRef])
 
   useEffect(() => {
-    console.log(`useScripture book ref changed to ${reference?.projectId}, ${resourceLink_}`)
+    console.log(`useScripture book ref changed to ${_bookId}, ${resourceLink_}`)
     // @ts-ignore
-  }, [reference?.projectId])
+  }, [_bookId])
 
   useEffect(() => {
-    console.log(`useScripture reference changed`, { content, fetchParams })
-    const expectedBookId = reference?.projectId || ''
+    const expectedBookId = _bookId || ''
     const fetchedBookSame = fetchedBook && (fetchedBook === expectedBookId)
     let _versesForRef = []
 
@@ -319,7 +319,7 @@ export function useScripture({ // hook for fetching scripture
     } else {
       const _bookObjects = fetchedBookSame ? bookObjects : null
       _versesForRef = updateVersesForRef(_bookObjects)
-      console.log(`useScripture _bookObjects is ${!!_bookObjects} and books are the same ${fetchedBook} - clearing`)
+      console.log(`useScripture _bookObjects is ${!!_bookObjects} and books are the same ${fetchedBook} - clearing`, { content, fetchParams })
     }
 
     if (!isEqual(_versesForRef, versesForRef)) {

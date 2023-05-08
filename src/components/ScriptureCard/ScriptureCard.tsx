@@ -143,7 +143,11 @@ export default function ScriptureCard({
   }
 
   if (usingUserBranch) {
-    httpConfig = { ...httpConfig, cache: { maxAge: 0 } } // disable http caching
+    httpConfig = {
+      ...httpConfig,
+      cache: { maxAge: 0 },
+      noCache: true,
+    } // disable http caching
   }
 
   const {
