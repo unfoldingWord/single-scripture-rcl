@@ -640,6 +640,7 @@ export default function ScriptureCard({
     }
   }, [saveClicked])
 
+  // @ts-ignore
   const { chapter, verse } = _reference || {}
 
   React.useEffect(() => {

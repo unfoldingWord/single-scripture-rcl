@@ -50,11 +50,10 @@ export function useScripture({ // hook for fetching scripture
   wholeBook = false,
 } : Props) {
   const [state, setState_] = useState({
-    initialized: false,
     bookObjects: null,
-    versesForRef: [],
     fetchedBook: '',
     fetchParams: { resourceLink: '', reference: {} },
+    initialized: false,
     resourceState: {
       bibleJson: null,
       matchedVerse: null,
@@ -64,15 +63,16 @@ export function useScripture({ // hook for fetching scripture
       loadingContent: false,
       fetchResponse: null,
     },
+    versesForRef: [],
   })
 
   const {
-    initialized,
     bookObjects,
-    versesForRef,
     fetchedBook,
     fetchParams,
+    initialized,
     resourceState,
+    versesForRef,
   } = state
   const _bookId = reference?.projectId
 
@@ -144,12 +144,12 @@ export function useScripture({ // hook for fetching scripture
   // only use the results if readyToFetch
   const {
     bibleJson,
-    matchedVerse,
-    resource,
     content,
+    fetchResponse,
     loadingResource,
     loadingContent,
-    fetchResponse,
+    matchedVerse,
+    resource,
   } = resourceState
 
   useEffect(() => { // validate response to make sure from latest request
@@ -328,17 +328,17 @@ export function useScripture({ // hook for fetching scripture
   }, [reference])
 
   return {
-    title,
-    version,
-    reference: fetchParams?.reference,
-    resourceLink: fetchParams?.resourceLink,
-    matchedVerse,
     bookObjects,
-    resourceStatus,
     fetchResponse,
     getVersesForRef,
-    versesForRef,
-    updateVerse,
+    matchedVerse,
+    reference: fetchParams?.reference,
     reloadResource: _resourceResults?.actions.reloadResource,
+    resourceLink: fetchParams?.resourceLink,
+    resourceStatus,
+    title,
+    updateVerse,
+    version,
+    versesForRef,
   }
 }

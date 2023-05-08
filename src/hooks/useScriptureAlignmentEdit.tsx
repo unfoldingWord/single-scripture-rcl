@@ -111,13 +111,13 @@ export function useScriptureAlignmentEdit({
   reference,
   scriptureConfig,
   scriptureSettings,
+  setOriginalScriptureResource,
   setSavedChanges,
   sourceLanguage,
   startEditBranch,
   targetLanguage,
   title,
   workingResourceBranch,
-  setOriginalScriptureResource,
 } : ScriptureALignmentEditProps) {
   const [state, setState_] = React.useState({
     aligned: false,
@@ -202,6 +202,7 @@ export function useScriptureAlignmentEdit({
       }
       return verseObjects
     }
+    // @ts-ignore
     return originalScriptureResource?.verseObjects
   }, [originalScriptureResource?.versesForRef])
 
@@ -365,6 +366,7 @@ export function useScriptureAlignmentEdit({
    * @param {boolean} editing_ - if true, editor is shown, otherwise editor is hidden
    * @param {string} _newVerseText - optional verse text
    */
+  // eslint-disable-next-line require-await
   async function setEditing(editing_, _newVerseText = newVerseText) {
     if (enableEdit) {
       if (editing_ !== editing) {
@@ -418,8 +420,13 @@ export function useScriptureAlignmentEdit({
       ...state,
       ...newState,
     }
+
     // console.log(`callSetSavedState - new state`, _newState)
-    setSavedChanges && setSavedChanges(currentIndex, !unsavedChanges_, { getChanges, clearChanges, state: _newState })
+    setSavedChanges && setSavedChanges(currentIndex, !unsavedChanges_, {
+      getChanges,
+      clearChanges,
+      state: _newState,
+    })
   }
 
   React.useEffect(() => { // set saved changes whenever user edits verse text or alignments or if alignments are open

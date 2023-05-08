@@ -26,13 +26,13 @@ interface Props {
 }
 
 export function useScriptureSelector({
-  label,
-  options,
-  current,
   allowUserInput,
-  onChange,
+  current,
   deleteItem,
   initialPrompt,
+  label,
+  onChange,
+  options,
 }: Props) {
   function scriptureSelectorOnChange(newSelection, index) {
     onChange && onChange(newSelection, index, (success, item) => {
@@ -49,10 +49,10 @@ export function useScriptureSelector({
   }
 
   let { state, actions } = useComboBox({
+    allowUserInput,
+    current,
     label,
     options,
-    current,
-    allowUserInput,
     onChange: scriptureSelectorOnChange,
     initialPrompt,
   })
@@ -136,13 +136,13 @@ export function useScriptureSelector({
 
   return {
     state: {
-      value: state.value,
-      options: currentOptions,
       filterOptions: state.filterOptions,
-      getOptionLabel: state.getOptionLabel,
-      renderOption,
-      renderInput: state.renderInput,
       freeSolo: state.freeSolo,
+      getOptionLabel: state.getOptionLabel,
+      options: currentOptions,
+      renderInput: state.renderInput,
+      renderOption,
+      value: state.value,
     },
     actions: { onChange: actions.onChange },
   }

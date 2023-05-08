@@ -80,38 +80,38 @@ function isScriptureResource(subject) {
 }
 
 export function useScriptureSettings({
-  isNT,
-  title,
-  cardNum,
-  reference,
-  owner,
-  server,
   appRef,
-  languageId,
-  resourceId,
-  resourceLink,
-  useUserLocalStorage,
+  cardNum,
   disableWordPopover,
-  originalLanguageOwner,
-  setUrlError,
-  httpConfig,
   greekRepoUrl,
   hebrewRepoUrl,
-  wholeBook = false,
+  httpConfig,
+  isNT,
+  languageId,
+  originalLanguageOwner,
+  owner,
+  reference,
+  resourceId,
+  resourceLink,
   readyForFetch = false,
+  server,
+  setUrlError,
+  title,
+  useUserLocalStorage,
+  wholeBook = false,
 }) {
   const bookId = reference?.projectId
   const isNewTestament = isNT(bookId)
   const scriptureDefaultSettings = getScriptureObject({
-    title,
-    server,
+    disableWordPopover,
+    languageId,
+    originalLanguageOwner,
     owner,
     ref: appRef,
-    languageId,
     resourceId,
     resourceLink,
-    disableWordPopover,
-    originalLanguageOwner,
+    server,
+    title,
   })
   const [versionHistory, saveVersionHist, refreshVersionHist] = useUserLocalStorage(KEY_SCRIPTURE_VER_HISTORY, [])
   const scriptureVersionHist = new ScriptureVersionHistory(versionHistory, saveVersionHist, refreshVersionHist)
@@ -306,9 +306,9 @@ export function useScriptureSettings({
   return {
     isNewTestament,
     scriptureConfig,
-    setScripture,
-    scriptureVersionHist,
     scriptureSettings,
+    scriptureVersionHist,
+    setScripture,
   }
 }
 
