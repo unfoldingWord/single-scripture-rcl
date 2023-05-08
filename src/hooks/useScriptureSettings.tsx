@@ -148,16 +148,16 @@ export function useScriptureSettings({
 
   const originalRepoUrl = isNewTestament ? greekRepoUrl : hebrewRepoUrl
   const scriptureConfig = useScriptureResources({
-    reference,
-    scriptureSettings,
-    isNewTestament,
-    originalRepoUrl,
+    appRef,
     currentLanguageId: languageId,
     currentOwner: owner,
     httpConfig,
-    appRef,
-    wholeBook,
+    isNewTestament,
+    originalRepoUrl,
     readyForFetch,
+    reference,
+    scriptureSettings,
+    wholeBook,
   })
 
   /**
@@ -259,15 +259,15 @@ export function useScriptureSettings({
           } else if (title && version) {
             // we succeeded in getting resource - use it
             newScripture = getScriptureObject({
-              title,
-              server: server_,
+              disableWordPopover,
+              languageId: resource.languageId,
+              originalLanguageOwner,
               owner: resource.username,
               ref: resource.ref || 'master',
-              languageId: resource.languageId,
               resourceId: resource.resourceId,
               resourceLink: cleanResourceLink(resource?.resourceLink),
-              disableWordPopover,
-              originalLanguageOwner,
+              server: server_,
+              title,
             })
             newScripture['userAdded'] = true
             scriptureVersionHist.addItemToHistory(newScripture) // persist in local storage
