@@ -151,9 +151,9 @@ export function useScripture({ // hook for fetching scripture
     fetchResponse,
   } = resourceState
 
-  useEffect(() => {
+  useEffect(() => { // validate response to make sure from latest request
     if (readyForFetch) {
-      const currentResourceState = _resourceResults.state
+      const currentResourceState = _resourceResults?.state
 
       if (!isEqual(currentResourceState, resourceState)) {
         const { content, fetchResponse } = currentResourceState
@@ -197,16 +197,17 @@ export function useScripture({ // hook for fetching scripture
             })) {
               console.log(`useScripture correct book, expectedBookId is ${expectedBookId}`, { sha, url })
               setState(newState)
-            } else {
-              console.log(`useScripture UNCHANGED correct book, expectedBookId is ${expectedBookId}`, { sha, url })
             }
           }
         } else {
-          console.log(`useScripture no content`)
+          if (!isEqual(currentResourceState, resourceState)) {
+            console.log(`useScripture state changed, but no content`, currentResourceState)
+            setState({ resourceState: currentResourceState })
+          }
         }
       }
     }
-  }, [readyForFetch, _resourceResults])
+  }, [readyForFetch, _resourceResults?.state])
 
   const { title, version } = parseResourceManifest(resource)
   const { languageId } = resource_ || {}

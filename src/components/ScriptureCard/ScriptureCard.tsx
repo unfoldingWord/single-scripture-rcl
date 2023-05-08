@@ -41,38 +41,38 @@ const label = 'Version'
 const style = { marginTop: '16px', width: '500px' }
 
 export default function ScriptureCard({
-  id,
-  isNT,
-  title,
-  server,
   appRef,
+  authentication,
+  bookIndex,
   cardNum,
   classes,
+  disableWordPopover,
+  fetchGlossesForVerse,
+  getLanguage,
+  getLexiconData,
+  greekRepoUrl,
+  hebrewRepoUrl,
+  httpConfig,
+  id,
+  isNT,
+  loggedInUser,
+  onMinimize,
+  onResourceError,
+  reference,
   resource: {
     owner,
     languageId,
     resourceId,
     originalLanguageOwner,
   },
-  getLanguage,
-  reference,
   resourceLink,
-  useUserLocalStorage,
-  disableWordPopover,
-  onResourceError,
-  httpConfig,
-  greekRepoUrl,
-  hebrewRepoUrl,
-  getLexiconData,
-  fetchGlossesForVerse,
-  translate,
-  onMinimize,
-  loggedInUser,
-  authentication,
-  setSavedChanges,
-  bookIndex,
   selectedQuote,
+  server,
+  setSavedChanges,
   setWordAlignerStatus,
+  translate,
+  title,
+  useUserLocalStorage,
 }) {
   const bookId = reference?.projectId
   const [state, setState_] = React.useState({
@@ -179,18 +179,6 @@ export default function ScriptureCard({
   const repo = `${scriptureConfig?.resource?.languageId}_${scriptureConfig?.resource?.projectId}`
   const reference_ = scriptureConfig?.reference || null
 
-  React.useEffect(() => {
-    console.log(`ScriptureCard book changed`, { bookId, owner, languageId, resourceId })
-    setState({ readyForFetch: false, checkForEditBranch: checkForEditBranch + 1 })
-  }, [bookId, owner, languageId, resourceId])
-
-  React.useEffect(() => {
-    if (!isEqual(reference, currentReference)) {
-      console.log(`ScriptureCard reference changed`, reference)
-      setState({ currentReference: reference })
-    }
-  }, [reference])
-
   React.useEffect(() => { // get the _sha from last scripture download
     const _sha = fetchResp_?.data?.sha || null
     const url = fetchResp_?.data?.download_url || null
@@ -205,9 +193,8 @@ export default function ScriptureCard({
   const cardResourceId = scriptureConfig?.resource?.projectId || resourceId
   // @ts-ignore
   let ref_ = scriptureConfig?.resource?.ref || appRef
-  const canUseEditBranch = loggedInUser && authentication &&
-    (resourceId !== ORIGINAL_SOURCE) &&
-    ((ref_ === 'master') || (ref_.includes(loggedInUser)) ) // not a version tag
+  const canUseEditBranch = !!(loggedInUser && authentication && (resourceId !== ORIGINAL_SOURCE) && // TRICKY if not original language and we have login data, then we can use the edit branch
+    ((ref_ === 'master') || (ref_.includes(loggedInUser)))) // also make sure not a version tag
 
   const {
     state: {
@@ -234,6 +221,25 @@ export default function ScriptureCard({
 
   const workingRef = canUseEditBranch ? workingResourceBranch : appRef
   let scriptureTitle
+
+  if (!canUseEditBranch && !readyForFetch) { // if bible not eligible for user branch, make sure it's ready
+    setState({ readyForFetch: true })
+  }
+
+  React.useEffect(() => {
+    console.log(`ScriptureCard book changed`, { bookId, owner, languageId, resourceId })
+
+    if (canUseEditBranch) { // if bible eligible for user branch, refresh it
+      setState({ readyForFetch: false, checkForEditBranch: checkForEditBranch + 1 })
+    }
+  }, [bookId, owner, languageId, resourceId])
+
+  React.useEffect(() => {
+    if (!isEqual(reference, currentReference)) {
+      console.log(`ScriptureCard reference changed`, reference)
+      setState({ currentReference: reference })
+    }
+  }, [reference])
 
   React.useEffect(() => { // waiting for branch fetch to complete
     console.log(`ScriptureCard branchDetermined is ${branchDetermined} and workingRef is ${workingRef} and readyForFetch is ${readyForFetch}`)
