@@ -20,13 +20,14 @@ import { getVerses } from 'bible-reference-range'
 import { ScripturePane, ScriptureSelector } from '..'
 import { useScriptureSettings } from '../../hooks/useScriptureSettings'
 import {
+  cleanupVerseObjects,
   fixOccurrence,
   getResourceLink,
   getResourceMessage,
   getScriptureVersionSettings,
   isOriginalBible,
-  cleanupVerseObjects,
 } from '../../utils/ScriptureSettings'
+import { delay } from '../../utils/delay'
 import { areMapsTheSame } from '../../utils/maps'
 import { Title } from '../ScripturePane/styled'
 import {
@@ -492,7 +493,9 @@ export default function ScriptureCard({
             readyForFetch: true,
             ref: userEditBranchName,
           })
-          scriptureConfig?.reloadResource()
+          delay(500).then(() => {
+            scriptureConfig?.reloadResource()
+          })
         } else {
           console.error('saveChangesToCloud() - saving changed scripture failed')
           setState({ startSave: false })
@@ -778,14 +781,18 @@ export default function ScriptureCard({
     }))
   }
 
-  const _versesForRef = scriptureConfig?.versesForRef
+  let _versesForRef = scriptureConfig?.versesForRef
+
+  if (!_versesForRef?.length) { // if empty of references, create single empty reference
+    _versesForRef = [{ ...reference }]
+  }
 
   React.useEffect(() => {
     console.log(`_versesForRef changed`, scriptureConfig)
   }, [_versesForRef])
 
   const renderedScripturePanes = _versesForRef?.map((_currentVerseData, index) => {
-    const initialVerseObjects = _currentVerseData?.verseData?.verseObjects || null
+    const initialVerseObjects = _currentVerseData?.verseData?.verseObjects || []
     // @ts-ignore
     const { chapter, verse } = _currentVerseData || {}
     const _reference = {

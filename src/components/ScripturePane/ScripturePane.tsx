@@ -123,7 +123,7 @@ function ScripturePane({
   } else if (determiningBranch) {
     resourceMsg = 'Pre-' + LOADING_RESOURCE
   } else {
-    getResourceMessage(resourceStatus, server, resourceLink, isNT)
+    resourceMsg = getResourceMessage(resourceStatus, server, resourceLink, isNT)
   }
 
   const { chapter, verse } = reference
@@ -143,6 +143,10 @@ function ScripturePane({
     ...scriptureAlignmentEditConfig,
     initialVerseText,
   }
+
+  React.useEffect(() => {
+    console.log(`ScripturePane: determiningBranch is ${determiningBranch}`, { reference, resourceLink })
+  }, [determiningBranch])
 
   const _scriptureAlignmentEdit = useScriptureAlignmentEdit(_scriptureAlignmentEditConfig)
   const {

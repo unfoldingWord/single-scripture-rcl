@@ -313,9 +313,9 @@ export function useScripture({ // hook for fetching scripture
     let _versesForRef = []
 
     if (!fetchedBookSame) {
-      if (expectedBookId) {
-        console.log(`useScripture expected book ${expectedBookId} but fetched book was ${fetchedBook} - clearing`)
-      }
+      // if (expectedBookId) {
+      //   console.log(`useScripture expected book ${expectedBookId} but fetched book was ${fetchedBook} - clearing`)
+      // }
     } else {
       const _bookObjects = fetchedBookSame ? bookObjects : null
       _versesForRef = updateVersesForRef(_bookObjects)
