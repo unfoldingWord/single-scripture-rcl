@@ -158,12 +158,13 @@ export function useScripture({ // hook for fetching scripture
 
       if (!isEqual(currentResourceState, resourceState)) {
         const { content, fetchResponse } = currentResourceState
-        console.log(`useScripture resources changed`, { content, fetchParams, fetchResponse })
+        // console.log(`useScripture resources changed`, { content, fetchParams, fetchResponse })
 
         if (content && fetchResponse) {
           const newState = { resourceState: currentResourceState }
-          console.log(`useScripture content changed`, { content, fetchParams, fetchResponse })
-          // TRICKY - responses from server can come back from previous requests.  So we make sure this response is for the latest request by making sure the response is for the current book
+          // console.log(`useScripture content changed`, { content, fetchParams, fetchResponse })
+
+          // TRICKY - responses from server can come back from previous requests.  So we make sure this response is for the current requested book
           let sameBook = false
           // @ts-ignore
           const expectedBookId = _bookId || ''
@@ -181,7 +182,7 @@ export function useScripture({ // hook for fetching scripture
           const url = fetchResponse?.data?.download_url || null
 
           if (!sameBook) {
-            console.log(`useScripture invalid book, expectedBookId is ${expectedBookId}, but received book name ${fetchedBook}`, { sha, url })
+            // console.log(`useScripture invalid book, expectedBookId is ${expectedBookId}, but received book name ${fetchedBook}`, { sha, url })
           } else {
             // @ts-ignore
             newState.bookObjects = content
@@ -193,7 +194,7 @@ export function useScripture({ // hook for fetching scripture
             if (!isEqual(newState, {
               bookObjects,
               versesForRef,
-              fetchedBook,
+              fetchedBook: expectedBookId,
               resourceState,
             })) {
               console.log(`useScripture correct book, expectedBookId is ${expectedBookId}`, { sha, url })

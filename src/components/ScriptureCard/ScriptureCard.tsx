@@ -777,19 +777,22 @@ export default function ScriptureCard({
   const updateVersesAlignmentStatus = (reference, aligned) => {
     setState_(prevState => ({
       ...prevState,
-      versesAlignmentStatus: {...prevState.versesAlignmentStatus, [`${reference.chapter}:${reference.verse}`]: aligned},
+      versesAlignmentStatus: { ...prevState.versesAlignmentStatus, [`${reference.chapter}:${reference.verse}`]: aligned },
     }))
   }
 
   let _versesForRef = scriptureConfig?.versesForRef
 
+  React.useEffect(() => {
+    if (_versesForRef?.length) {
+      const { reference, resourceLink } = scriptureConfig || {}
+      console.log(`ScriptureCard._versesForRef changed`, { reference, resourceLink })
+    }
+  }, [_versesForRef])
+
   if (!_versesForRef?.length) { // if empty of references, create single empty reference
     _versesForRef = [{ ...reference }]
   }
-
-  React.useEffect(() => {
-    console.log(`_versesForRef changed`, scriptureConfig)
-  }, [_versesForRef])
 
   const renderedScripturePanes = _versesForRef?.map((_currentVerseData, index) => {
     const initialVerseObjects = _currentVerseData?.verseData?.verseObjects || []
@@ -858,6 +861,7 @@ export default function ScriptureCard({
     if (versesAlignmentStatus) {
       allVersesAligned = Object.values(versesAlignmentStatus).every(alignStatus => alignStatus === true)
     }
+
     let alignIcon = null
     let alignButtonText = ''
     if (allVersesAligned) {
