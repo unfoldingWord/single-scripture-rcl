@@ -7,11 +7,10 @@ import { IconButton } from '@mui/material'
 import { RxLink2, RxLinkBreak2 } from 'react-icons/rx'
 import {
   Card,
-
-  useCardState,
-  useUserBranch,
   ERROR_STATE,
   MANIFEST_NOT_LOADED_ERROR,
+  useCardState,
+  useUserBranch,
 } from 'translation-helps-rcl'
 import { getQuoteMatchesInBookRef } from 'uw-quote-helpers'
 import { AlignmentHelpers, UsfmFileConversionHelpers } from 'word-aligner-rcl'
@@ -165,18 +164,18 @@ export default function ScriptureCard({
     appRef: ref,
     server,
     cardNum,
-    languageId,
-    resourceId,
-    resourceLink,
-    useUserLocalStorage,
     disableWordPopover,
-    originalLanguageOwner,
-    setUrlError: (error) => setState({ urlError: error }),
-    httpConfig,
     greekRepoUrl,
     hebrewRepoUrl,
-    wholeBook: true,
+    httpConfig,
+    languageId,
+    originalLanguageOwner,
     readyForFetch,
+    resourceId,
+    resourceLink,
+    setUrlError: (error) => setState({ urlError: error }),
+    useUserLocalStorage,
+    wholeBook: true,
   })
 
   const fetchResp_ = scriptureConfig?.fetchResponse
@@ -248,7 +247,7 @@ export default function ScriptureCard({
 
   React.useEffect(() => {
     if (!isEqual(reference, currentReference)) {
-      console.log(`ScriptureCard reference changed`, reference)
+      // console.log(`ScriptureCard reference changed`, reference)
       setState({ currentReference: reference })
     }
   }, [reference])
@@ -513,11 +512,11 @@ export default function ScriptureCard({
 
     if (startSave) {
       if (!editBranchReady) {
-        console.log(`saveChangesToCloud - edit branch not yet created`)
+        // console.log(`saveChangesToCloud - edit branch not yet created`)
       } else if (!sha) {
-        console.log(`saveChangesToCloud - save sha not yet ready`)
+        // console.log(`saveChangesToCloud - save sha not yet ready`)
       } else {
-        console.log(`saveChangesToCloud - calling _saveEdit()`)
+        // console.log(`saveChangesToCloud - calling _saveEdit()`)
         _saveEdit()
       }
     }
