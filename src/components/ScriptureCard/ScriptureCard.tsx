@@ -187,8 +187,15 @@ export default function ScriptureCard({
   React.useEffect(() => { // get the _sha from last scripture download
     const _sha = fetchResp_?.data?.sha || null
     const url = fetchResp_?.data?.download_url || null
+    let validBranch = true
 
-    if (_sha !== sha) {
+    if (_sha) { // TRICKY: since this fetch may be delayed - make sure it was for the current branch before using the sha
+      const parts = (url || '').split('/')
+      const fetchBranch = parts.length > 7 ? parts[7] : ''
+      validBranch = fetchBranch === ref
+    }
+
+    if (validBranch && _sha !== sha) {
       console.log(`ScriptureCard: for ${url} ${JSON.stringify(reference_)} new sha is ${_sha}`)
       setState({ sha: _sha })
     }
@@ -456,7 +463,8 @@ export default function ScriptureCard({
       ...authentication?.config,
       token: authentication?.token,
       // @ts-ignore
-      timeout: httpConfig?.serverTimeOut || httpConfig?.timeout || 5000,
+      timeout: httpConfig?.serverTimeOut || httpConfig?.timeout || 10000,
+      server,
     },
     author: loggedInUser,
     token: authentication?.token,
@@ -494,7 +502,7 @@ export default function ScriptureCard({
             ref: userEditBranchName,
           })
           delay(500).then(() => {
-            scriptureConfig?.reloadResource()
+            scriptureConfig?.reloadResource(sha)
           })
         } else {
           console.error('saveChangesToCloud() - saving changed scripture failed')
@@ -546,7 +554,7 @@ export default function ScriptureCard({
     return newUsfm
   }
 
-  React.useEffect(() => { // for each unsaved change, call into versePane to get latest changes for verse to save
+  React.useEffect(() => { // for each unsaved change, call into scripturePane to get latest changes for verse to save
     if (saveClicked) {
       let createEditBranch = !_usingUserBranch
 
@@ -562,11 +570,21 @@ export default function ScriptureCard({
 
       if (createEditBranch) { // if not using the user branch, create it
         console.log(`saveChangesToCloud - creating edit branch`)
-        setState({ editBranchReady: false, readyForFetch: false, sha: null }) // we will need a new sha for book/branch
-        startEditBranch().then((success) => {
-          if (success) {
+        setState({
+          editBranchReady: false,
+          readyForFetch: false,
+          sha: null,
+        }) // we will need a new sha for book/branch
+        startEditBranch().then((branch) => {
+          if (branch) {
             console.log(`saveChangesToCloud - edit branch created`)
-            setState({ editBranchReady: true, readyForFetch: true })
+            setState({
+              editBranchReady: true,
+              readyForFetch: true,
+              ref: branch,
+            })
+          } else {
+            console.log(`saveChangesToCloud - failed to create edit branch`)
           }
         })
       }

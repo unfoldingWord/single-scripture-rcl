@@ -41,6 +41,24 @@ interface Props {
   readyForFetch: boolean;
 }
 
+/**
+ * extract branch from resource link
+ * @param resourceLink
+ */
+function getBranchName(resourceLink: string) {
+  let branch = null
+  resourceLink = resourceLink || ''
+  const parts = resourceLink.split('?ref=')
+
+  if (parts.length > 1) { // if ref parameter found, get branch name after
+    branch = parts?.[1]
+  } else { // fall back to using useRsrc format such as "unfoldingWord/en/ust/master"
+    const _parts = resourceLink.split('/')
+    branch = _parts?.[3]
+  }
+  return branch
+}
+
 export function useScripture({ // hook for fetching scripture
   config,
   readyForFetch,
@@ -53,7 +71,9 @@ export function useScripture({ // hook for fetching scripture
     bookObjects: null,
     fetchedBook: '',
     fetchParams: { resourceLink: '', reference: {} },
+    ignoreSha: null,
     initialized: false,
+    fetched: false,
     resourceState: {
       bibleJson: null,
       matchedVerse: null,
@@ -70,6 +90,8 @@ export function useScripture({ // hook for fetching scripture
     bookObjects,
     fetchedBook,
     fetchParams,
+    fetched,
+    ignoreSha,
     initialized,
     resourceState,
     versesForRef,
@@ -123,7 +145,11 @@ export function useScripture({ // hook for fetching scripture
 
       if (!isEqual(newFetchParams, fetchParams)) {
         console.log(`useScripture - FETCHING new params ${resource_?.projectId} resourceLink is now ${resourceLink} and resourceLink_=${resourceLink_}`, newFetchParams)
-        setState({ fetchParams: newFetchParams })
+        setState({
+          fetchParams: newFetchParams,
+          fetched: false,
+          ignoreSha: null,
+        })
       }
     }
   }, [readyForFetch, _bookId, resourceLink_])
@@ -156,11 +182,16 @@ export function useScripture({ // hook for fetching scripture
     if (readyForFetch) {
       const currentResourceState = _resourceResults?.state
 
-      if (!isEqual(currentResourceState, resourceState)) {
-        const { content, fetchResponse } = currentResourceState
+      if (!fetched && !isEqual(currentResourceState, resourceState)) {
+        const {
+          content,
+          fetchResponse,
+          loadingContent,
+          loadingResource,
+        } = currentResourceState
         console.log(`useScripture resources changed`, { content, fetchParams, fetchResponse })
 
-        if (content && fetchResponse) {
+        if (!loadingContent && !loadingResource && content && fetchResponse) {
           const newState = { resourceState: currentResourceState }
           console.log(`useScripture content changed`, { content, fetchParams, fetchResponse })
 
@@ -179,17 +210,29 @@ export function useScripture({ // hook for fetching scripture
           }
 
           const sha = fetchResponse?.data?.sha || null
-          const url = fetchResponse?.data?.download_url || null
+          const url = fetchResponse?.data?.url || null
+
+          if (sameBook) { // also make sure it is the same branch
+            const fetchedBranch = getBranchName(url)
+            const fetchingBranch = getBranchName(fetchParams?.resourceLink)
+
+            if (fetchedBranch !== fetchingBranch) {
+              console.log(`useScripture invalid branch, expected branch is ${fetchingBranch}, but fetchedBranch is ${fetchedBranch}`, { sha, url })
+              sameBook = false
+            }
+          }
+
+          if (ignoreSha === sha) {
+            console.log(`useScripture - the sha is the same as the ignore sha ${sha}`, { sha, url })
+            sameBook = false
+          }
 
           if (!sameBook) {
             console.log(`useScripture invalid book, expectedBookId is ${expectedBookId}, but received book name ${fetchedBook}`, { sha, url })
           } else {
-            // @ts-ignore
-            newState.bookObjects = content
-            // @ts-ignore
-            newState.versesForRef = updateVersesForRef(content)
-            // @ts-ignore
-            newState.fetchedBook = expectedBookId
+            newState['bookObjects'] = content
+            newState['versesForRef'] = updateVersesForRef(content)
+            newState['fetchedBook'] = expectedBookId
 
             if (!isEqual(newState, {
               bookObjects,
@@ -198,6 +241,8 @@ export function useScripture({ // hook for fetching scripture
               resourceState,
             })) {
               console.log(`useScripture correct book, expectedBookId is ${expectedBookId}`, { sha, url })
+              newState['fetched'] = true
+              newState['ignoreSha'] = null
               setState(newState)
             }
           }
@@ -292,6 +337,24 @@ export function useScripture({ // hook for fetching scripture
     return null
   }
 
+  /**
+   * force reload of current resource
+   * @param {string|undefined} ignoreSha - optional sha to ignore
+   */
+  function reloadResource(ignoreSha) {
+    const _reloadResource = _resourceResults?.actions.reloadResource
+
+    if (_reloadResource) {
+      const newState = { fetched: false }
+
+      if (ignoreSha) { // TRICKY - if the response was for this sha (which was the previous sha) then we need to ignore it
+        newState['ignoreSha'] = ignoreSha
+      }
+      setState( newState)
+      _reloadResource()
+    }
+  }
+
   // @ts-ignore
   const currentBookRef = fetchParams?.reference?.projectId
 
@@ -334,7 +397,7 @@ export function useScripture({ // hook for fetching scripture
     getVersesForRef,
     matchedVerse,
     reference: fetchParams?.reference,
-    reloadResource: _resourceResults?.actions.reloadResource,
+    reloadResource,
     resourceLink: fetchParams?.resourceLink,
     resourceStatus,
     title,
