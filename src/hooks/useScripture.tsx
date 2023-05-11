@@ -158,11 +158,11 @@ export function useScripture({ // hook for fetching scripture
 
       if (!isEqual(currentResourceState, resourceState)) {
         const { content, fetchResponse } = currentResourceState
-        // console.log(`useScripture resources changed`, { content, fetchParams, fetchResponse })
+        console.log(`useScripture resources changed`, { content, fetchParams, fetchResponse })
 
         if (content && fetchResponse) {
           const newState = { resourceState: currentResourceState }
-          // console.log(`useScripture content changed`, { content, fetchParams, fetchResponse })
+          console.log(`useScripture content changed`, { content, fetchParams, fetchResponse })
 
           // TRICKY - responses from server can come back from previous requests.  So we make sure this response is for the current requested book
           let sameBook = false
@@ -182,7 +182,7 @@ export function useScripture({ // hook for fetching scripture
           const url = fetchResponse?.data?.download_url || null
 
           if (!sameBook) {
-            // console.log(`useScripture invalid book, expectedBookId is ${expectedBookId}, but received book name ${fetchedBook}`, { sha, url })
+            console.log(`useScripture invalid book, expectedBookId is ${expectedBookId}, but received book name ${fetchedBook}`, { sha, url })
           } else {
             // @ts-ignore
             newState.bookObjects = content
@@ -314,9 +314,9 @@ export function useScripture({ // hook for fetching scripture
     let _versesForRef = []
 
     if (!fetchedBookSame) {
-      // if (expectedBookId) {
-      //   console.log(`useScripture expected book ${expectedBookId} but fetched book was ${fetchedBook} - clearing`)
-      // }
+      if (expectedBookId) {
+        console.log(`useScripture expected book ${expectedBookId} but fetched book was ${fetchedBook} - clearing`)
+      }
     } else {
       const _bookObjects = fetchedBookSame ? bookObjects : null
       _versesForRef = updateVersesForRef(_bookObjects)
