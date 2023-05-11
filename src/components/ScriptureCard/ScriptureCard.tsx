@@ -3,9 +3,11 @@ import * as PropTypes from 'prop-types'
 import { core, SelectionsContextProvider } from 'scripture-resources-rcl'
 import usfmjs from 'usfm-js'
 import { useEdit } from 'gitea-react-toolkit'
+import { IconButton } from '@mui/material'
+import { RxLink2, RxLinkBreak2 } from 'react-icons/rx'
 import {
   Card,
-  isValidUserWorkingBranch,
+
   useCardState,
   useUserBranch,
   ERROR_STATE,
@@ -18,70 +20,70 @@ import { getVerses } from 'bible-reference-range'
 import { ScripturePane, ScriptureSelector } from '..'
 import { useScriptureSettings } from '../../hooks/useScriptureSettings'
 import {
+  cleanupVerseObjects,
   fixOccurrence,
   getResourceLink,
   getResourceMessage,
   getScriptureVersionSettings,
   isOriginalBible,
-  cleanupVerseObjects,
 } from '../../utils/ScriptureSettings'
+import { delay } from '../../utils/delay'
 import { areMapsTheSame } from '../../utils/maps'
 import { Title } from '../ScripturePane/styled'
 import {
-  delay,
   NT_ORIG_LANG,
   ORIGINAL_SOURCE,
   OT_ORIG_LANG,
 } from '../../utils'
+import { VerseSelectorPopup } from '../VerseSelectorPopup'
 
 const KEY_FONT_SIZE_BASE = 'scripturePaneFontSize_'
 const label = 'Version'
 const style = { marginTop: '16px', width: '500px' }
 
 export default function ScriptureCard({
-  id,
-  isNT,
-  title,
-  server,
   appRef,
+  authentication,
+  bookIndex,
   cardNum,
   classes,
+  disableWordPopover,
+  fetchGlossesForVerse,
+  getLanguage,
+  getLexiconData,
+  greekRepoUrl,
+  hebrewRepoUrl,
+  httpConfig,
+  id,
+  isNT,
+  loggedInUser,
+  onMinimize,
+  onResourceError,
+  reference,
   resource: {
     owner,
     languageId,
     resourceId,
     originalLanguageOwner,
   },
-  getLanguage,
-  reference: {
-    verse,
-    chapter,
-    projectId: bookId,
-  },
   resourceLink,
-  useUserLocalStorage,
-  disableWordPopover,
-  onResourceError,
-  httpConfig,
-  greekRepoUrl,
-  hebrewRepoUrl,
-  getLexiconData,
-  fetchGlossesForVerse,
-  translate,
-  onMinimize,
-  loggedInUser,
-  authentication,
-  setSavedChanges,
-  bookIndex,
   selectedQuote,
+  server,
+  setSavedChanges,
   setWordAlignerStatus,
+  translate,
+  title,
+  useUserLocalStorage,
 }) {
+  const bookId = reference?.projectId
   const [state, setState_] = React.useState({
+    checkForEditBranch: 0,
+    currentReference: null,
     editBranchReady: false,
-    fetchResource: { bookId, appRef },
     haveUnsavedChanges: false,
     lastSelectedQuote: null,
     originalVerseObjects: null,
+    readyForFetch: false,
     ref: appRef,
     saveClicked: false,
     saveContent: null,
@@ -92,25 +94,33 @@ export default function ScriptureCard({
     usingUserBranch: false,
     unsavedChangesList: {},
     versesForRef: null,
+    showAlignmentPopup: false,
+    verseSelectedForAlignment: null,
+    versesAlignmentStatus: null,
     verseObjectsMap: new Map(),
   })
   const {
+    checkForEditBranch,
+    currentReference,
     editBranchReady,
-    fetchResource,
     haveUnsavedChanges,
     lastSelectedQuote,
     originalVerseObjects,
+    readyForFetch,
     ref,
     saveClicked,
     saveContent,
     selections,
     sha,
+    showAlignmentPopup,
     startSave,
     urlError,
     usingUserBranch,
     unsavedChangesList,
-    versesForRef,
     verseObjectsMap,
+    verseSelectedForAlignment,
+    versesAlignmentStatus,
+    versesForRef,
   } = state
 
   const [fontSize, setFontSize] = useUserLocalStorage(KEY_FONT_SIZE_BASE + cardNum, 100)
@@ -134,7 +144,11 @@ export default function ScriptureCard({
   }
 
   if (usingUserBranch) {
-    httpConfig = { ...httpConfig, cache: { maxAge: 0 } } // disable http caching
+    httpConfig = {
+      ...httpConfig,
+      cache: { maxAge: 0 },
+      noCache: true,
+    } // disable http caching
   }
 
   const {
@@ -146,13 +160,11 @@ export default function ScriptureCard({
   } = useScriptureSettings({
     isNT,
     title,
-    verse,
     owner,
-    bookId: fetchResource?.bookId,
-    appRef: fetchResource?.appRef,
+    reference: currentReference,
+    appRef: ref,
     server,
     cardNum,
-    chapter,
     languageId,
     resourceId,
     resourceLink,
@@ -164,6 +176,7 @@ export default function ScriptureCard({
     greekRepoUrl,
     hebrewRepoUrl,
     wholeBook: true,
+    readyForFetch,
   })
 
   const fetchResp_ = scriptureConfig?.fetchResponse
@@ -185,34 +198,15 @@ export default function ScriptureCard({
   const cardResourceId = scriptureConfig?.resource?.projectId || resourceId
   // @ts-ignore
   let ref_ = scriptureConfig?.resource?.ref || appRef
-  const canUseEditBranch = loggedInUser && authentication &&
-    (resourceId !== ORIGINAL_SOURCE) &&
-    ((ref_ === 'master') || (ref_.includes(loggedInUser)) ) // not a version tag
-
-  React.useEffect(() => { // make sure we don't change resource until both bookId and branch name are ready
-    if (bookId && ref ) {
-      let _ref = ref
-
-      if (canUseEditBranch && ref !== 'master') {
-        if (!isValidUserWorkingBranch(loggedInUser, ref, bookId)) {
-          _ref = 'master' // switch back to master branch
-        }
-      }
-
-      const newFetchResource = { bookId, appRef: _ref }
-
-      if (!isEqual(newFetchResource, fetchResource)) {
-        console.log(`ScriptureCard: for ${reference_} updating to ${JSON.stringify(newFetchResource)} from ${JSON.stringify(fetchResource)}`)
-        setState( { fetchResource: newFetchResource })
-      }
-    }
-  }, [bookId, ref])
+  const canUseEditBranch = !!(loggedInUser && authentication && (resourceId !== ORIGINAL_SOURCE) && // TRICKY if not original language and we have login data, then we can use the edit branch
+    ((ref_ === 'master') || (ref_.includes(loggedInUser)))) // also make sure not a version tag
 
   const {
     state: {
-      workingResourceBranch,
+      branchDetermined,
       userEditBranchName,
       usingUserBranch: _usingUserBranch,
+      workingResourceBranch,
     },
     actions: { startEdit: startEditBranch },
   } = useUserBranch({
@@ -221,6 +215,7 @@ export default function ScriptureCard({
     bookId,
     cardId: id,
     cardResourceId,
+    checkForEditBranch,
     languageId,
     loggedInUser: canUseEditBranch ? loggedInUser : null,
     owner,
@@ -232,19 +227,38 @@ export default function ScriptureCard({
   const workingRef = canUseEditBranch ? workingResourceBranch : appRef
   let scriptureTitle
 
+  if (!canUseEditBranch && !readyForFetch) { // if bible not eligible for user branch, make sure it's ready
+    setState({ readyForFetch: true })
+  }
+
+  React.useEffect(() => {
+    console.log(`ScriptureCard book changed`, { bookId, owner, languageId, resourceId })
+
+    if (canUseEditBranch) { // if bible eligible for user branch, refresh it
+      setState({ readyForFetch: false, checkForEditBranch: checkForEditBranch + 1 })
+    }
+  }, [bookId, owner, languageId, resourceId])
+
+  React.useEffect(() => {
+    if (!isEqual(reference, currentReference)) {
+      console.log(`ScriptureCard reference changed`, reference)
+      setState({ currentReference: reference })
+    }
+  }, [reference])
+
+  React.useEffect(() => { // waiting for branch fetch to complete
+    console.log(`ScriptureCard branchDetermined is ${branchDetermined} and workingRef is ${workingRef} and readyForFetch is ${readyForFetch}`)
+
+    if (!readyForFetch && branchDetermined ) {
+      setState({ readyForFetch: true, ref: workingRef })
+    }
+  }, [branchDetermined])
+
   React.useEffect(() => { // select correct working ref - could be master, user branch, or release
     if (_usingUserBranch !== usingUserBranch) {
       setState({ usingUserBranch: _usingUserBranch })
     }
   }, [_usingUserBranch, usingUserBranch])
-
-  React.useEffect(() => { // select correct working ref - could be master, user branch, or release
-    let workingRef_ = workingRef || appRef
-
-    if (ref !== workingRef_) {
-      setState({ ref: workingRef_ })
-    }
-  }, [workingRef, ref, appRef])
 
   React.useEffect(() => { // update display status if error
     const error = scriptureConfig?.resourceStatus?.[ERROR_STATE]
@@ -286,7 +300,7 @@ export default function ScriptureCard({
   const languageId_ = scriptureConfig?.resource?.languageId
   const language = getLanguage({ languageId: languageId_ })
   const direction = (language?.direction) || 'ltr'
-  const reference = { ...scriptureConfig.reference }
+  const _reference = { ...scriptureConfig.reference }
 
   const isHebrew = (languageId_ === 'hbo')
   const fontFactor = isHebrew ? 1.4 : 1 // we automatically scale up font size for Hebrew
@@ -347,7 +361,7 @@ export default function ScriptureCard({
   const scriptureAlignmentEditConfig = {
     authentication: canUseEditBranch ? authentication : null,
     bookIndex,
-    currentVerseRef: reference,
+    currentVerseRef: _reference,
     enableEdit,
     enableAlignment,
     httpConfig,
@@ -464,7 +478,6 @@ export default function ScriptureCard({
       await onSaveEdit(userEditBranchName).then((success) => { // push changed to server
         if (success) {
           console.log(`saveChangesToCloud() - save scripture edits success`)
-          setState({ startSave: false })
           const unsavedCardIndices = Object.keys(unsavedChangesList)
 
           if (unsavedCardIndices?.length) {
@@ -475,7 +488,14 @@ export default function ScriptureCard({
           }
 
           console.info('saveChangesToCloud() - Reloading resource')
-          scriptureConfig?.reloadResource()
+          setState({
+            startSave: false,
+            readyForFetch: true,
+            ref: userEditBranchName,
+          })
+          delay(500).then(() => {
+            scriptureConfig?.reloadResource()
+          })
         } else {
           console.error('saveChangesToCloud() - saving changed scripture failed')
           setState({ startSave: false })
@@ -542,14 +562,11 @@ export default function ScriptureCard({
 
       if (createEditBranch) { // if not using the user branch, create it
         console.log(`saveChangesToCloud - creating edit branch`)
-        setState({ editBranchReady: false, sha: null }) // we will need a new sha for book/branch
+        setState({ editBranchReady: false, readyForFetch: false, sha: null }) // we will need a new sha for book/branch
         startEditBranch().then((success) => {
           if (success) {
             console.log(`saveChangesToCloud - edit branch created`)
-            setState({ sha: null })
-            delay(1000).then(() => { // add delay to wait for server after branch created
-              setState({ editBranchReady: true, sha: null })
-            })
+            setState({ editBranchReady: true, readyForFetch: true })
           }
         })
       }
@@ -625,6 +642,9 @@ export default function ScriptureCard({
       }
     }
   }, [saveClicked])
+
+  // @ts-ignore
+  const { chapter, verse } = _reference || {}
 
   React.useEffect(() => {
     const _versesForRef = scriptureConfig?.versesForRef
@@ -750,12 +770,36 @@ export default function ScriptureCard({
     }
   }, [owner, resourceId, bookId, languageId_, scriptureConfig?.versesForRef, originalVerseObjects, selectedQuote])
 
-  const renderedScripturePanes = versesForRef?.map((_currentVerseData, index) => {
-    const initialVerseObjects = _currentVerseData?.verseData?.verseObjects || null
+  React.useEffect(() => {
+    setState({ versesAlignmentStatus: null })
+  }, [verse])
+
+  const updateVersesAlignmentStatus = (reference, aligned) => {
+    setState_(prevState => ({
+      ...prevState,
+      versesAlignmentStatus: { ...prevState.versesAlignmentStatus, [`${reference.chapter}:${reference.verse}`]: aligned },
+    }))
+  }
+
+  let _versesForRef = scriptureConfig?.versesForRef
+
+  React.useEffect(() => {
+    if (_versesForRef?.length) {
+      const { reference, resourceLink } = scriptureConfig || {}
+      console.log(`ScriptureCard._versesForRef changed`, { reference, resourceLink })
+    }
+  }, [_versesForRef])
+
+  if (!_versesForRef?.length) { // if empty of references, create single empty reference
+    _versesForRef = [{ ...reference }]
+  }
+
+  const renderedScripturePanes = _versesForRef?.map((_currentVerseData, index) => {
+    const initialVerseObjects = _currentVerseData?.verseData?.verseObjects || []
     // @ts-ignore
     const { chapter, verse } = _currentVerseData || {}
     const _reference = {
-      ...reference,
+      ..._versesForRef,
       chapter,
       verse,
     }
@@ -766,11 +810,18 @@ export default function ScriptureCard({
       reference: _reference,
     }
 
+    let isVerseSelectedForAlignment = false
+
+    if (verseSelectedForAlignment) {
+      isVerseSelectedForAlignment = verseSelectedForAlignment.chapter === chapter && verseSelectedForAlignment.verse === verse
+    }
+
     return (
       <ScripturePane
         {...scriptureConfig}
         contentStyle={contentStyle}
         currentIndex={index}
+        determiningBranch={!readyForFetch}
         direction={direction}
         disableWordPopover={disableWordPopover_}
         fontSize={fontSize}
@@ -785,12 +836,62 @@ export default function ScriptureCard({
         setWordAlignerStatus={setWordAlignerStatus}
         server={server}
         translate={translate}
+        isVerseSelectedForAlignment={isVerseSelectedForAlignment}
+        onAlignmentFinish={() => setState({ verseSelectedForAlignment: null })}
+        updateVersesAlignmentStatus={updateVersesAlignmentStatus}
         setOriginalScriptureResource={!index && setOriginalScriptureResource}
       />
     )
   })
 
+  const handleAlignButtonClick = () => {
+    if (versesForRef?.length > 1) {
+      setState({ showAlignmentPopup: true })
+    } else if (versesForRef?.length === 1) {
+      setState({ verseSelectedForAlignment: versesForRef[0] })
+    }
+  }
+
+  const onRenderToolbar = ({ items }) => {
+    const newItems = [...items]
+
+    let allVersesAligned = false
+
+    // Check if all values in versesAlignmentStatus are true
+    if (versesAlignmentStatus) {
+      allVersesAligned = Object.values(versesAlignmentStatus).every(alignStatus => alignStatus === true)
+    }
+
+    let alignIcon = null
+    let alignButtonText = ''
+    if (allVersesAligned) {
+      alignIcon = <RxLink2 id={`valid_icon_${resourceId}`} color='#BBB'/>
+      alignButtonText = 'Alignment is Valid'
+    } else {
+      alignIcon = <RxLinkBreak2 id={`invalid_alignment_icon_${resourceId}`} color='#000'/>
+      alignButtonText = 'Alignment is Invalid'
+    }
+
+    if (setWordAlignerStatus && resourceId !== 'ORIGINAL_SOURCE') {
+      newItems.push(
+        <IconButton
+          id={`alignment_icon_${resourceId}`}
+          key='checking-button'
+          onClick={handleAlignButtonClick}
+          title={alignButtonText}
+          aria-label={alignButtonText}
+          style={{ cursor: 'pointer' }}
+        >
+          {alignIcon}
+        </IconButton>
+      )
+    }
+
+    return newItems
+  }
+
   return (
+
     <SelectionsContextProvider
       selections={selections}
       onSelections={newSelections => {
@@ -822,11 +923,23 @@ export default function ScriptureCard({
         editable={enableEdit || enableAlignment}
         saved={startSave || !haveUnsavedChanges}
         onSaveEdit={() => setState({ saveClicked: true })}
+        onRenderToolbar={onRenderToolbar}
       >
         <div id="scripture-pane-list">
           {renderedScripturePanes}
         </div>
       </Card>
+      <VerseSelectorPopup
+        resourceId={resourceId}
+        open={showAlignmentPopup}
+        onClose={() => setState({ showAlignmentPopup: false })}
+        versesForRef={versesForRef}
+        versesAlignmentStatus={versesAlignmentStatus}
+        onVerseSelect={(verse) => setState({
+          verseSelectedForAlignment: verse,
+          showAlignmentPopup: false
+        })}
+      />
     </SelectionsContextProvider>
   )
 }

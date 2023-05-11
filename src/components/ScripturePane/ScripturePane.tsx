@@ -2,10 +2,8 @@ import * as React from 'react'
 import useDeepCompareEffect from 'use-deep-compare-effect'
 import { VerseObjects } from 'scripture-resources-rcl'
 import { UsfmFileConversionHelpers } from 'word-aligner-rcl'
-import { RxLink2, RxLinkBreak2 } from 'react-icons/rx'
-import { IconButton } from '@mui/material'
 import { ScriptureReference } from '../../types'
-import { getResourceMessage } from '../../utils'
+import { getResourceMessage, LOADING_RESOURCE } from '../../utils'
 import { ScriptureALignmentEditProps, useScriptureAlignmentEdit } from "../../hooks/useScriptureAlignmentEdit";
 import { Container, Content } from './styled'
 
@@ -14,6 +12,8 @@ interface Props {
   contentStyle: any;
   // index number for this scripture pane
   currentIndex: number,
+  // waiting to determine branch
+  determiningBranch: boolean,
   /** language direction to use **/
   direction: string|undefined;
   /** if true then do not display lexicon popover on hover **/
@@ -44,6 +44,12 @@ interface Props {
   setWordAlignerStatus: Function;
   /** optional function for localization */
   translate: Function;
+  /** whether or not this current verse has been selected for alignment */
+  isVerseSelectedForAlignment: boolean;
+  /** function to be called when verse alignment has finished */
+  onAlignmentFinish: Function;
+  /** function to be called to update verse alignment status */
+  updateVersesAlignmentStatus: Function;
   /** This is a callback for original scripture resource */
   setOriginalScriptureResource: Function;
 }
@@ -70,24 +76,28 @@ const TextAreaStyle = {
 }
 
 function ScripturePane({
-  reference,
-  refStyle,
-  direction,
   currentIndex,
   contentStyle,
+  determiningBranch,
+  direction,
   disableWordPopover,
-  resourceStatus,
-  resourceLink,
-  server,
-  isNT,
   fontSize,
   getLexiconData,
-  translate,
+  isNT,
+  isVerseSelectedForAlignment,
+  onAlignmentFinish,
+  reference,
+  refStyle,
+  resourceStatus,
+  resourceLink,
   saving,
   scriptureAlignmentEditConfig,
+  setOriginalScriptureResource,
   setSavedChanges,
   setWordAlignerStatus,
-  setOriginalScriptureResource,
+  server,
+  translate,
+  updateVersesAlignmentStatus,
 } : Props) {
   const [state, setState_] = React.useState({
     doingAlignment: false,
@@ -105,7 +115,17 @@ function ScripturePane({
   }
 
   const [initialVerseText, setInitialVerseText] = React.useState(null)
-  const resourceMsg = saving ? 'Saving Changes...' : getResourceMessage(resourceStatus, server, resourceLink, isNT)
+
+  let resourceMsg = null
+
+  if (saving) {
+    resourceMsg = 'Saving Changes...'
+  } else if (determiningBranch) {
+    resourceMsg = 'Pre-' + LOADING_RESOURCE
+  } else {
+    resourceMsg = getResourceMessage(resourceStatus, server, resourceLink, isNT)
+  }
+
   const { chapter, verse } = reference
   direction = direction || 'ltr'
 
@@ -123,6 +143,10 @@ function ScripturePane({
     ...scriptureAlignmentEditConfig,
     initialVerseText,
   }
+
+  React.useEffect(() => {
+    console.log(`ScripturePane: determiningBranch is ${determiningBranch}`, { reference, resourceLink })
+  }, [determiningBranch])
 
   const _scriptureAlignmentEdit = useScriptureAlignmentEdit(_scriptureAlignmentEditConfig)
   const {
@@ -143,6 +167,14 @@ function ScripturePane({
     },
   } = _scriptureAlignmentEdit
 
+  if (isVerseSelectedForAlignment && !alignerData && !doingAlignment) {
+    handleAlignmentClick()
+  }
+
+  React.useEffect(() => {
+    updateVersesAlignmentStatus(reference, aligned)
+  }, [aligned])
+
   React.useEffect(() => {
     if (originalScriptureResource) {
       setOriginalScriptureResource && setOriginalScriptureResource(originalScriptureResource)
@@ -156,6 +188,7 @@ function ScripturePane({
     } else if (doingAlignment) {
       setWordAlignerStatus && setWordAlignerStatus(_scriptureAlignmentEdit)
       setState({ doingAlignment: false })
+      onAlignmentFinish && onAlignmentFinish()
     }
   }, [_scriptureAlignmentEdit?.state?.alignerData])
 
@@ -222,21 +255,6 @@ function ScripturePane({
               />
             }
           </span>
-          {setWordAlignerStatus && //add scriptureAlignmentEditConfig?.enableAlignment 
-            <IconButton
-              key='checking-button'
-              onClick={() => handleAlignmentClick()}
-              title={titleText}
-              aria-label={titleText}
-              style={{ cursor: 'pointer' }}
-            >
-              {checkingState === 'valid' ? (
-                <RxLink2 id='valid_icon' color='#BBB' />
-              ) : (
-                <RxLinkBreak2 id='invalid_icon' color='#000' />
-              )}
-            </IconButton>
-          }
         </Content>
       }
     </Container>

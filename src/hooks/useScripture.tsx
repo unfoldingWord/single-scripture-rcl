@@ -1,7 +1,6 @@
 // @ts-ignore
 import {
   useEffect,
-  useMemo,
   useState,
 } from 'react'
 import {
@@ -18,6 +17,7 @@ import {
   SCRIPTURE_NOT_LOADED_ERROR,
 } from 'translation-helps-rcl'
 import { getVerses } from 'bible-reference-range'
+import * as isEqual from 'deep-equal'
 import { cleanupVerseObjects, getResourceLink } from '../utils/ScriptureSettings'
 import {
   ServerConfig,
@@ -37,76 +37,188 @@ interface Props {
   resource: ScriptureResource|undefined;
   /** if true then fetch the entire book */
   wholeBook: boolean;
+  /** if true then settings are ready for fetching data */
+  readyForFetch: boolean;
 }
 
 export function useScripture({ // hook for fetching scripture
   config,
+  readyForFetch,
   reference,
   resource: resource_,
   resourceLink: resourceLink_,
   wholeBook = false,
 } : Props) {
-  const [initialized, setInitialized] = useState(false)
-  const [bookObjects, setBookObjects] = useState(null)
-  const [versesForRef, setVersesForRef] = useState(null)
-  let resourceLink = resourceLink_
-
-  if (!resourceLink_ && resource_) {
-    const {
-      owner,
-      languageId,
-      projectId,
-      branch = 'master',
-      ref = null,
-    } = resource_ || {}
-    const ref_ = ref || branch
-
-    resourceLink = getResourceLink({
-      owner,
-      languageId,
-      resourceId: projectId,
-      ref: ref_,
-    })
-  }
-
-  useEffect(() => { // get the _sha from last scripture download
-    console.log(`for ${resource_?.projectId} resourceLink is now ${resourceLink}`)
-  }, [resourceLink])
-
-  const options = { getBibleJson: true }
-  const bookRef = useMemo(() => {
-    const bookRef = { ...reference }
-
-    if (wholeBook) {
-      delete bookRef.chapter // remove the chapter so the whole book is fetched
-    }
-    return bookRef
-  }, [reference, wholeBook])
-
-  const {
-    state: {
-      bibleJson,
-      matchedVerse,
-      resource,
-      content,
-      loadingResource,
-      loadingContent,
-      fetchResponse,
+  const [state, setState_] = useState({
+    bookObjects: null,
+    fetchedBook: '',
+    fetchParams: { resourceLink: '', reference: {} },
+    initialized: false,
+    resourceState: {
+      bibleJson: null,
+      matchedVerse: null,
+      resource: null,
+      content: null,
+      loadingResource: false,
+      loadingContent: false,
+      fetchResponse: null,
     },
-    actions: { reloadResource },
-  } = useRsrc({
-    config, reference: bookRef, resourceLink, options,
+    versesForRef: [],
   })
 
+  const {
+    bookObjects,
+    fetchedBook,
+    fetchParams,
+    initialized,
+    resourceState,
+    versesForRef,
+  } = state
+  const _bookId = reference?.projectId
+
+  function setState(newState) {
+    setState_(prevState => ({ ...prevState, ...newState }))
+  }
+
+  useEffect(() => {
+    if (readyForFetch) {
+      console.log(`useScripture - readyForFetch true, initializing`)
+      let resourceLink = readyForFetch && resourceLink_
+
+      if (!resourceLink_ && resource_) {
+        const {
+          owner,
+          languageId,
+          projectId,
+          branch = 'master',
+          ref = null,
+        } = resource_ || {}
+        const ref_ = ref || branch
+
+        resourceLink = getResourceLink({
+          owner,
+          languageId,
+          resourceId: projectId,
+          ref: ref_,
+        })
+      }
+
+      const bookRef = { ...reference }
+
+      if (wholeBook) {
+        delete bookRef.chapter // remove the chapter and verse so the whole book is fetched
+        delete bookRef.verse
+      }
+
+      if (resourceLink !== fetchParams?.resourceLink) {
+        console.log(`useScripture - for ${resource_?.projectId} resourceLink is now ${resourceLink} and resourceLink_=${resourceLink_}`)
+      } else if (bookRef !== fetchParams?.reference) {
+        console.log(`useScripture - book changed to ${resource_?.projectId} resourceLink is now ${resourceLink}`)
+      }
+
+      const newFetchParams = {
+        resourceLink,
+        reference: bookRef,
+      }
+
+      if (!isEqual(newFetchParams, fetchParams)) {
+        console.log(`useScripture - FETCHING new params ${resource_?.projectId} resourceLink is now ${resourceLink} and resourceLink_=${resourceLink_}`, newFetchParams)
+        setState({ fetchParams: newFetchParams })
+      }
+    }
+  }, [readyForFetch, _bookId, resourceLink_])
+
+  useEffect(() => {
+    console.log(`useScripture - for ${resource_?.projectId} readyForFetch is now ${readyForFetch}`)
+  }, [readyForFetch])
+
+  const options = { getBibleJson: true }
+
+  const _resourceResults = useRsrc({
+    config,
+    reference: fetchParams?.reference,
+    resourceLink: fetchParams?.resourceLink,
+    options,
+  })
+
+  // only use the results if readyToFetch
+  const {
+    bibleJson,
+    content,
+    fetchResponse,
+    loadingResource,
+    loadingContent,
+    matchedVerse,
+    resource,
+  } = resourceState
+
+  useEffect(() => { // validate response to make sure from latest request
+    if (readyForFetch) {
+      const currentResourceState = _resourceResults?.state
+
+      if (!isEqual(currentResourceState, resourceState)) {
+        const { content, fetchResponse } = currentResourceState
+        console.log(`useScripture resources changed`, { content, fetchParams, fetchResponse })
+
+        if (content && fetchResponse) {
+          const newState = { resourceState: currentResourceState }
+          console.log(`useScripture content changed`, { content, fetchParams, fetchResponse })
+
+          // TRICKY - responses from server can come back from previous requests.  So we make sure this response is for the current requested book
+          let sameBook = false
+          // @ts-ignore
+          const expectedBookId = _bookId || ''
+          const fetchedBook = content.name
+
+          if (fetchedBook && expectedBookId) {
+            const [name, ext] = fetchedBook.split('.')
+
+            if (ext.toLowerCase() === 'usfm') {
+              sameBook = name.toLowerCase().includes(expectedBookId.toLowerCase())
+            }
+          }
+
+          const sha = fetchResponse?.data?.sha || null
+          const url = fetchResponse?.data?.download_url || null
+
+          if (!sameBook) {
+            console.log(`useScripture invalid book, expectedBookId is ${expectedBookId}, but received book name ${fetchedBook}`, { sha, url })
+          } else {
+            // @ts-ignore
+            newState.bookObjects = content
+            // @ts-ignore
+            newState.versesForRef = updateVersesForRef(content)
+            // @ts-ignore
+            newState.fetchedBook = expectedBookId
+
+            if (!isEqual(newState, {
+              bookObjects,
+              versesForRef,
+              fetchedBook: expectedBookId,
+              resourceState,
+            })) {
+              console.log(`useScripture correct book, expectedBookId is ${expectedBookId}`, { sha, url })
+              setState(newState)
+            }
+          }
+        } else {
+          if (!isEqual(currentResourceState, resourceState)) {
+            console.log(`useScripture state changed, but no content`, currentResourceState)
+            setState({ resourceState: currentResourceState })
+          }
+        }
+      }
+    }
+  }, [readyForFetch, _resourceResults?.state])
+
   const { title, version } = parseResourceManifest(resource)
-  let { verseObjects } = bibleJson || {}
   const { languageId } = resource_ || {}
-  const loading = loadingResource || loadingContent
+  const loading = loadingResource || loadingContent || !readyForFetch
   const contentNotFoundError = !content
   const scriptureNotLoadedError = !bibleJson
   const manifestNotFoundError = !resource?.manifest
   const invalidManifestError = !title || !version || !languageId
-  const error = initialized && !loading &&
+  const error = readyForFetch && initialized && !loading &&
     (contentNotFoundError || scriptureNotLoadedError || manifestNotFoundError || invalidManifestError)
   const resourceStatus = {
     [LOADING_STATE]: loading,
@@ -119,16 +231,16 @@ export function useScripture({ // hook for fetching scripture
   }
 
   useEffect(() => {
-    if (!initialized) {
+    if (!readyForFetch) {
+      if (initialized) {
+        setState({ intialized: false })
+      }
+    } else if (!initialized) {
       if (loading) { // once first load has begun, we are initialized
-        setInitialized(true)
+        setState({ intialized: true })
       }
     }
-  }, [loading])
-
-  useEffect(() => {
-    console.log(`useScripture: resourceLink changed to resourceLink=${resourceLink} and resourceLink_=${resourceLink_}`)
-  }, [resourceLink])
+  }, [loading, readyForFetch])
 
   function getVersesForRef(ref, content_ = bookObjects) {
     if (content_) {
@@ -160,7 +272,7 @@ export function useScripture({ // hook for fetching scripture
         if (bookObjects_.chapters[chapter]) {
           bookObjects_.chapters[chapter] = { ...bookObjects_.chapters[chapter] } // shallow copy verses
           bookObjects_.chapters[chapter][verse] = verseData
-          setBookObjects(bookObjects_)
+          setState({ bookObjects: bookObjects_ })
           return bookObjects_
         }
       }
@@ -168,39 +280,66 @@ export function useScripture({ // hook for fetching scripture
     return null
   }
 
-  useEffect(() => {
-    if (bookObjects) {
+  function updateVersesForRef(_bookObjects = bookObjects) {
+    let newVersesForRef = []
+
+    if (_bookObjects) {
       const ref = `${reference.chapter}:${reference.verse}`
-      const versesForRef = getVersesForRef(ref, bookObjects)
-      setVersesForRef(versesForRef)
-    } else {
-      setVersesForRef(null)
+      newVersesForRef = getVersesForRef(ref, _bookObjects)
+      return newVersesForRef
     }
-  }, [bookObjects])
 
-  useEffect(() => {
-    setBookObjects(content)
-  }, [content])
-
-  if (languageId === 'el-x-koine' || languageId === 'hbo') {
-    verseObjects = core.occurrenceInjectVerseObjects(verseObjects)
-    verseObjects = cleanupVerseObjects(verseObjects)
+    return null
   }
 
+  // @ts-ignore
+  const currentBookRef = fetchParams?.reference?.projectId
+
+  useEffect(() => {
+    if (currentBookRef) {
+      console.log(`useScripture fetched book changed to ${currentBookRef}, ${resourceLink_}`, { content, fetchParams })
+      setState({ bookObjects: null })
+    }
+    // @ts-ignore
+  }, [currentBookRef])
+
+  useEffect(() => {
+    console.log(`useScripture book ref changed to ${_bookId}, ${resourceLink_}`)
+    // @ts-ignore
+  }, [_bookId])
+
+  useEffect(() => {
+    const expectedBookId = _bookId || ''
+    const fetchedBookSame = fetchedBook && (fetchedBook === expectedBookId)
+    let _versesForRef = []
+
+    if (!fetchedBookSame) {
+      if (expectedBookId) {
+        console.log(`useScripture expected book ${expectedBookId} but fetched book was ${fetchedBook} - clearing`)
+      }
+    } else {
+      const _bookObjects = fetchedBookSame ? bookObjects : null
+      _versesForRef = updateVersesForRef(_bookObjects)
+      console.log(`useScripture _bookObjects is ${!!_bookObjects} and books are the same ${fetchedBook} - clearing`, { content, fetchParams })
+    }
+
+    if (!isEqual(_versesForRef, versesForRef)) {
+      setState({ versesForRef: _versesForRef })
+    }
+  }, [reference])
+
   return {
-    title,
-    version,
-    reference,
-    resourceLink,
-    matchedVerse,
-    verseObjects,
     bookObjects,
-    resourceStatus,
     fetchResponse,
-    setBookObjects,
     getVersesForRef,
-    versesForRef,
+    matchedVerse,
+    reference: fetchParams?.reference,
+    reloadResource: _resourceResults?.actions.reloadResource,
+    resourceLink: fetchParams?.resourceLink,
+    resourceStatus,
+    title,
     updateVerse,
-    reloadResource,
+    version,
+    versesForRef,
   }
 }

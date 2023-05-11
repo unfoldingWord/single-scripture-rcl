@@ -111,13 +111,13 @@ export function useScriptureAlignmentEdit({
   reference,
   scriptureConfig,
   scriptureSettings,
+  setOriginalScriptureResource,
   setSavedChanges,
   sourceLanguage,
   startEditBranch,
   targetLanguage,
   title,
   workingResourceBranch,
-  setOriginalScriptureResource,
 } : ScriptureALignmentEditProps) {
   const [state, setState_] = React.useState({
     aligned: false,
@@ -179,15 +179,14 @@ export function useScriptureAlignmentEdit({
 
   // get original language for this alignment
   const originalScriptureResource = useScriptureResources({
-    bookId,
     scriptureSettings: originalScriptureSettings,
-    chapter: reference?.chapter,
-    verse: reference?.verse,
+    reference,
     isNewTestament,
     originalRepoUrl,
     currentLanguageId: originalScriptureSettings?.languageId,
     currentOwner: originalLanguageOwner,
     httpConfig,
+    readyForFetch: false,
   })
 
   const originalVerseObjects = React.useMemo(() => { // get the original language verseObjects
@@ -203,8 +202,9 @@ export function useScriptureAlignmentEdit({
       }
       return verseObjects
     }
+    // @ts-ignore
     return originalScriptureResource?.verseObjects
-  }, [originalScriptureResource?.verseObjects, originalScriptureResource?.versesForRef])
+  }, [originalScriptureResource?.versesForRef])
 
   React.useEffect(() => { // update alignment status when aligner is hidden
     const notEmpty = !!initialVerseObjects
@@ -357,7 +357,7 @@ export function useScriptureAlignmentEdit({
   function cancelAlignment() {
     console.log(`cancelAlignment()`)
     const targetVerseUSFM = getCurrentVerseUsfm(updatedVerseObjects, initialVerseObjects, verseTextChanged, newVerseText)
-    const aligned = isUsfmAligned(targetVerseUSFM, originalScriptureResource?.verseObjects)
+    const aligned = isUsfmAligned(targetVerseUSFM, originalVerseObjects)
     setState({ alignerData: null, aligned })
   }
 
@@ -366,6 +366,7 @@ export function useScriptureAlignmentEdit({
    * @param {boolean} editing_ - if true, editor is shown, otherwise editor is hidden
    * @param {string} _newVerseText - optional verse text
    */
+  // eslint-disable-next-line require-await
   async function setEditing(editing_, _newVerseText = newVerseText) {
     if (enableEdit) {
       if (editing_ !== editing) {
@@ -385,7 +386,7 @@ export function useScriptureAlignmentEdit({
    */
   function setVerseChanged(changed, newVerseText, _initialVerseText) {
     const { targetVerseText } = AlignmentHelpers.updateAlignmentsToTargetVerse(initialVerseObjects, newVerseText)
-    const aligned = isUsfmAligned(targetVerseText, originalScriptureResource?.verseObjects)
+    const aligned = isUsfmAligned(targetVerseText, originalVerseObjects)
     const _changed = newVerseText !== initialVerseText
 
     setState({
@@ -419,8 +420,13 @@ export function useScriptureAlignmentEdit({
       ...state,
       ...newState,
     }
+
     // console.log(`callSetSavedState - new state`, _newState)
-    setSavedChanges && setSavedChanges(currentIndex, !unsavedChanges_, { getChanges, clearChanges, state: _newState })
+    setSavedChanges && setSavedChanges(currentIndex, !unsavedChanges_, {
+      getChanges,
+      clearChanges,
+      state: _newState,
+    })
   }
 
   React.useEffect(() => { // set saved changes whenever user edits verse text or alignments or if alignments are open
