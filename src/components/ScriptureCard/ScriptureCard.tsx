@@ -40,6 +40,51 @@ const KEY_FONT_SIZE_BASE = 'scripturePaneFontSize_'
 const label = 'Version'
 const style = { marginTop: '16px', width: '500px' }
 
+/**
+ * create a short comparison verse ref object without all the verseData
+ * @param verseRef
+ */
+function compareObject(verseRef) {
+  const {
+    chapter,
+    verse,
+    verseData,
+  } = verseRef || {}
+  const verseObjects = verseData?.verseObjects?.length || 0
+  return {
+    chapter,
+    verse,
+    verseObjects,
+  }
+}
+
+/**
+ * compare two verse refs to see if they are substantially similar
+ * @param versesForRef1
+ * @param versesForRef2
+ */
+function areVersesSame(versesForRef1: any[], versesForRef2: any[]) {
+  versesForRef1 = versesForRef1 || []
+  versesForRef2 = versesForRef2 || []
+  let areSame = false
+
+  if (versesForRef1.length === versesForRef2.length) {
+    areSame = true
+
+    for (let i = 0, l= versesForRef1.length; i < l; i++) {
+      const verse1 = compareObject(versesForRef1[i])
+      const verse2 = compareObject(versesForRef2[i])
+      areSame = isEqual(verse1, verse2)
+
+      if (!areSame) {
+        break
+      }
+    }
+  }
+
+  return areSame
+}
+
 export default function ScriptureCard({
   appRef,
   authentication,
@@ -160,7 +205,7 @@ export default function ScriptureCard({
     isNT,
     title,
     owner,
-    reference: currentReference,
+    reference: currentReference || reference,
     appRef: ref,
     server,
     cardNum,
@@ -766,7 +811,9 @@ export default function ScriptureCard({
       newState.verseObjectsMap = _map
     }
 
-    if (!isEqual(Object.keys(versesForRef || {}), Object.keys(_versesForRef || {}))) {
+    const booksNotSame = reference?.projectId !== currentReference?.projectId
+
+    if (booksNotSame || !areVersesSame(versesForRef, _versesForRef)) {
       newState.versesForRef = _versesForRef
       newState.lastSelectedQuote = newSelectedQuote
       newState.selections = newSelections
@@ -815,22 +862,25 @@ export default function ScriptureCard({
     const initialVerseObjects = _currentVerseData?.verseData?.verseObjects || []
     // @ts-ignore
     const { chapter, verse } = _currentVerseData || {}
+    const projectId = currentReference?.projectId || reference?.projectId
     const _reference = {
       ..._versesForRef,
       chapter,
       verse,
+      projectId,
     }
     const _scriptureAlignmentEditConfig = {
       ...scriptureAlignmentEditConfig,
       currentIndex: index,
       initialVerseObjects,
       reference: _reference,
+      isNewTestament,
     }
 
     let isVerseSelectedForAlignment = false
 
     if (verseSelectedForAlignment) {
-      isVerseSelectedForAlignment = verseSelectedForAlignment.chapter === chapter && verseSelectedForAlignment.verse === verse
+      isVerseSelectedForAlignment = verseSelectedForAlignment.chapter == chapter && verseSelectedForAlignment.verse == verse
     }
 
     return (

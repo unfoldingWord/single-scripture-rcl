@@ -179,14 +179,15 @@ export function useScriptureAlignmentEdit({
 
   // get original language for this alignment
   const originalScriptureResource = useScriptureResources({
-    scriptureSettings: originalScriptureSettings,
-    reference,
-    isNewTestament,
-    originalRepoUrl,
     currentLanguageId: originalScriptureSettings?.languageId,
     currentOwner: originalLanguageOwner,
     httpConfig,
-    readyForFetch: false,
+    isNewTestament,
+    originalRepoUrl,
+    readyForFetch: true,
+    reference,
+    scriptureSettings: originalScriptureSettings,
+    wholeBook: true,
   })
 
   const originalVerseObjects = React.useMemo(() => { // get the original language verseObjects
@@ -203,7 +204,7 @@ export function useScriptureAlignmentEdit({
       return verseObjects
     }
     // @ts-ignore
-    return originalScriptureResource?.verseObjects
+    return originalScriptureResource?.versesForRef
   }, [originalScriptureResource?.versesForRef])
 
   React.useEffect(() => { // update alignment status when aligner is hidden
