@@ -13,13 +13,15 @@ import {
 } from '../types'
 import { getScriptureResourceSettings } from '../utils/ScriptureSettings'
 import { ORIGINAL_SOURCE } from '../utils'
-import useScriptureResources from './useScriptureResources'
+import { getVersesForRef } from './useScripture'
 
 interface StartEdit {
   (): Promise<string>;
 }
 
 export interface ScriptureALignmentEditProps {
+  // index to use for book (e.g. `01` for `GEN`)
+  bookIndex: string,
   // current verse selected from initialVerseObjects[]
   currentIndex: number,
   // reference for verse selected for alignment
@@ -42,6 +44,8 @@ export interface ScriptureALignmentEditProps {
   originalLanguageOwner: string,
   // url for the original language repo
   originalRepoUrl: string,
+  // original scripture bookObjects for current book
+  originalScriptureBookObjects: object,
   /** current reference **/
   reference: ScriptureReference;
   // details about the current scripture loaded
@@ -50,20 +54,16 @@ export interface ScriptureALignmentEditProps {
   scriptureSettings: { },
   // callback to save current verse edit and alignment changes
   setSavedChanges: Function,
-  // callback to create a user branch for saving edit data
-  startEditBranch: StartEdit,
-  // index to use for book (e.g. `01` for `GEN`)
-  bookIndex: string,
-  // branch name currently being used (e.g. `master` or user branch)
-  workingResourceBranch: string,
-  // current target language
-  targetLanguage: object,
   // source language
   sourceLanguage: string,
+  // callback to create a user branch for saving edit data
+  startEditBranch: StartEdit,
+  // current target language
+  targetLanguage: object,
   // title to show in alignment
   title: string,
-  // callback to return the original scripture for the book
-  setOriginalScriptureResource: Function,
+   // branch name currently being used (e.g. `master` or user branch)
+  workingResourceBranch: string,
 }
 
 /**
@@ -107,11 +107,11 @@ export function useScriptureAlignmentEdit({
   initialVerseText,
   isNewTestament,
   originalLanguageOwner,
+  originalScriptureBookObjects,
   originalRepoUrl,
   reference,
   scriptureConfig,
   scriptureSettings,
-  setOriginalScriptureResource,
   setSavedChanges,
   sourceLanguage,
   startEditBranch,
@@ -177,35 +177,25 @@ export function useScriptureAlignmentEdit({
     originalScriptureSettings.resourceLink = null
   }
 
-  // get original language for this alignment
-  const originalScriptureResource = useScriptureResources({
-    currentLanguageId: originalScriptureSettings?.languageId,
-    currentOwner: originalLanguageOwner,
-    httpConfig,
-    isNewTestament,
-    originalRepoUrl,
-    readyForFetch: true,
-    reference,
-    scriptureSettings: originalScriptureSettings,
-    wholeBook: true,
-  })
-
   const originalVerseObjects = React.useMemo(() => { // get the original language verseObjects
-    if (originalScriptureResource?.versesForRef?.length > 1) { // if multiple verses, then append them together
-      const verseObjects = []
+    const verseObjects = []
 
-      for (const verseReference of originalScriptureResource?.versesForRef) {
-        const origVerseObjects = verseReference?.verseData?.verseObjects
+    if (originalScriptureBookObjects) {
+      // @ts-ignore
+      const verses = getVersesForRef(reference, originalScriptureBookObjects, originalScriptureBookObjects?.languageId)
 
-        if (origVerseObjects) {
-          Array.prototype.push.apply(verseObjects, origVerseObjects)
+      if (verses?.length) {
+        for (const verseReference of verses) {
+          const origVerseObjects = verseReference?.verseData?.verseObjects
+
+          if (origVerseObjects) {
+            Array.prototype.push.apply(verseObjects, origVerseObjects)
+          }
         }
       }
-      return verseObjects
     }
-    // @ts-ignore
-    return originalScriptureResource?.versesForRef
-  }, [originalScriptureResource?.versesForRef])
+    return verseObjects
+  }, [originalScriptureBookObjects, reference])
 
   React.useEffect(() => { // update alignment status when aligner is hidden
     const notEmpty = !!initialVerseObjects
@@ -467,13 +457,12 @@ export function useScriptureAlignmentEdit({
       initialVerseText,
       initialVerseObjects,
       newVerseText,
+      reference,
       sourceLanguage,
       targetLanguage,
+      title,
       unsavedChanges,
       verseTextChanged,
-      reference,
-      title,
-      originalScriptureResource,
     },
   }
 }

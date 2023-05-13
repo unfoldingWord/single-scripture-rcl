@@ -59,6 +59,45 @@ function getBranchName(resourceLink: string) {
   return branch
 }
 
+/**
+ * get the verse objects for the reference string
+ * @param {string} refStr - in format <chapter>:<verse>
+ * @param {object} bookObjects - parsed usfm for book
+ * @param {string} languageId
+ * @return {array|null} - of verseObjects
+ */
+export function getVersesForRefStr(refStr, bookObjects, languageId) {
+  if (bookObjects) {
+    let verses = getVerses(bookObjects.chapters, refStr)
+
+    if (languageId === 'el-x-koine' || languageId === 'hbo') {
+      verses = verses.map(verse => {
+        if ( verse?.verseData?.verseObjects) {
+          let verseObjects_ = core.occurrenceInjectVerseObjects( verse.verseData.verseObjects)
+          verseObjects_ = cleanupVerseObjects(verseObjects_)
+          verse.verseData.verseObjects = verseObjects_
+        }
+        return verse
+      })
+    }
+
+    return verses
+  }
+  return null
+}
+
+/**
+ * get the verse objects for the reference object
+ * @param {object} reference
+ * @param {object} bookObjects - parsed usfm for book
+ * @param {string} languageId
+ * @return {array|null} - of verseObjects
+ */
+export function getVersesForRef(reference, bookObjects, languageId) {
+  const refStr = `${reference.chapter}:${reference.verse}`
+  return getVersesForRefStr(refStr, bookObjects, languageId)
+}
+
 export function useScripture({ // hook for fetching scripture
   config,
   readyForFetch,
@@ -287,22 +326,14 @@ export function useScripture({ // hook for fetching scripture
     }
   }, [loading, readyForFetch])
 
-  function getVersesForRef(ref, content_ = bookObjects) {
+  /**
+   * get verses for ref
+   * @param refStr
+   * @param content_
+   */
+  function _getVersesForRef(refStr, content_ = bookObjects) {
     if (content_) {
-      let verses = getVerses(content_.chapters, ref)
-
-      if (languageId === 'el-x-koine' || languageId === 'hbo') {
-        verses = verses.map(verse => {
-          if ( verse?.verseData?.verseObjects) {
-            let verseObjects_ = core.occurrenceInjectVerseObjects( verse.verseData.verseObjects)
-            verseObjects_ = cleanupVerseObjects(verseObjects_)
-            verse.verseData.verseObjects = verseObjects_
-          }
-          return verse
-        })
-      }
-
-      return verses
+      return getVersesForRefStr(refStr, content_, languageId)
     }
     return null
   }
@@ -329,8 +360,7 @@ export function useScripture({ // hook for fetching scripture
     let newVersesForRef = []
 
     if (_bookObjects) {
-      const ref = `${reference.chapter}:${reference.verse}`
-      newVersesForRef = getVersesForRef(ref, _bookObjects)
+      newVersesForRef = getVersesForRef(reference, _bookObjects, languageId)
       return newVersesForRef
     }
 
@@ -377,13 +407,13 @@ export function useScripture({ // hook for fetching scripture
     let _versesForRef = []
 
     if (!fetchedBookSame) {
-      if (expectedBookId && fetchedBook) {
-        console.log(`useScripture expected book ${expectedBookId} but fetched book was ${fetchedBook} - clearing`)
-      }
+      // if (expectedBookId && fetchedBook) {
+      //   console.log(`useScripture expected book ${expectedBookId} but fetched book was ${fetchedBook} - clearing`)
+      // }
     } else {
       const _bookObjects = fetchedBookSame ? bookObjects : null
       _versesForRef = updateVersesForRef(_bookObjects)
-      console.log(`useScripture _bookObjects is ${!!_bookObjects} and books are the same ${fetchedBook}`, { content, fetchParams })
+      // console.log(`useScripture _bookObjects is ${!!_bookObjects} and books are the same ${fetchedBook}`, { content, fetchParams })
     }
 
     if (!isEqual(_versesForRef, versesForRef)) {
@@ -394,7 +424,7 @@ export function useScripture({ // hook for fetching scripture
   return {
     bookObjects,
     fetchResponse,
-    getVersesForRef,
+    getVersesForRef: _getVersesForRef,
     matchedVerse,
     reference: fetchParams?.reference,
     reloadResource,

@@ -103,6 +103,7 @@ export default function ScriptureCard({
   loggedInUser,
   onMinimize,
   onResourceError,
+  originalScriptureBookObjects,
   reference,
   resource: {
     owner,
@@ -126,7 +127,6 @@ export default function ScriptureCard({
     editBranchReady: false,
     haveUnsavedChanges: false,
     lastSelectedQuote: null,
-    originalVerseObjects: null,
     readyForFetch: false,
     ref: appRef,
     saveClicked: false,
@@ -149,7 +149,6 @@ export default function ScriptureCard({
     editBranchReady,
     haveUnsavedChanges,
     lastSelectedQuote,
-    originalVerseObjects,
     readyForFetch,
     ref,
     saveClicked,
@@ -172,19 +171,6 @@ export default function ScriptureCard({
 
   function setState(newState) {
     setState_(prevState => ({ ...prevState, ...newState }))
-  }
-
-  function setOriginalScriptureResource(newResource) {
-    const newBookObjects = newResource?.bookObjects || {}
-    const bookId = newResource?.reference?.projectId
-    const _newBookObjects = {
-      ...newBookObjects,
-      bookId,
-    }
-
-    if (!isEqual(_newBookObjects, originalVerseObjects)) {
-      setState({ originalVerseObjects: _newBookObjects })
-    }
   }
 
   if (usingUserBranch) {
@@ -713,8 +699,8 @@ export default function ScriptureCard({
     let newSelections = new Map()
     let updateSelections = false
     const _map = newSelections
-    const originalBookId = originalVerseObjects?.bookId
-    const bookVerseObject = originalVerseObjects?.chapters
+    const originalBookId = originalScriptureBookObjects?.bookId
+    const bookVerseObject = originalScriptureBookObjects?.chapters
     let newSelectedQuote = null
 
     // if we have everything we need to calculate selections
@@ -832,7 +818,7 @@ export default function ScriptureCard({
     if (Object.keys(newState).length) {
       setState(newState)
     }
-  }, [owner, resourceId, bookId, languageId_, scriptureConfig?.versesForRef, originalVerseObjects, selectedQuote])
+  }, [owner, resourceId, bookId, languageId_, scriptureConfig?.versesForRef, originalScriptureBookObjects, selectedQuote])
 
   React.useEffect(() => {
     setState({ versesAlignmentStatus: null })
@@ -894,7 +880,10 @@ export default function ScriptureCard({
         fontSize={fontSize}
         getLexiconData={getLexiconData}
         isNT={isNT_}
+        isVerseSelectedForAlignment={isVerseSelectedForAlignment}
         key={index}
+        onAlignmentFinish={() => setState({ verseSelectedForAlignment: null })}
+        originalScriptureBookObjects={originalScriptureBookObjects}
         refStyle={refStyle}
         reference={_reference}
         saving={startSave}
@@ -903,10 +892,7 @@ export default function ScriptureCard({
         setWordAlignerStatus={setWordAlignerStatus}
         server={server}
         translate={translate}
-        isVerseSelectedForAlignment={isVerseSelectedForAlignment}
-        onAlignmentFinish={() => setState({ verseSelectedForAlignment: null })}
         updateVersesAlignmentStatus={updateVersesAlignmentStatus}
-        setOriginalScriptureResource={!index && setOriginalScriptureResource}
       />
     )
   })
@@ -1012,16 +998,53 @@ export default function ScriptureCard({
 }
 
 ScriptureCard.propTypes = {
+  /** repo branch or tag such as master */
+  appRef: PropTypes.string.isRequired,
+  /** authentication info */
+  authentication: PropTypes.object,
+  /** index for current book (e.g. '01' for 'gen')*/
+  bookIndex: PropTypes.string,
+  /** scripture card number (0 to 2 for example) */
+  cardNum: PropTypes.number.isRequired,
+  /** CSS classes */
+  classes: PropTypes.object,
+  /** if true then word data hover is shown */
+  disableWordPopover: PropTypes.bool,
+  /** function to pre-load lexicon data for verse */
+  fetchGlossesForVerse: PropTypes.func,
+  /** get language details */
+  getLanguage: PropTypes.func.isRequired,
+  /** function to get latest lexicon data */
+  getLexiconData: PropTypes.func,
+  /** optional url for greek repo */
+  greekRepoUrl: PropTypes.string,
+  /** optional url for hebrew repo */
+  hebrewRepoUrl: PropTypes.string,
+  /** optional http timeout in milliseconds for fetching resources, default is 0 (very long wait) */
+  httpConfig: PropTypes.object,
   /** html identifier to use for card */
   id: PropTypes.string,
   /** method to determine if NT or OT */
   isNT: PropTypes.func.isRequired,
-  /** title for scripture card */
-  title: PropTypes.string.isRequired,
-  /** get language details */
-  getLanguage: PropTypes.func.isRequired,
-  /** scripture card number (0 to 2 for example) */
-  cardNum: PropTypes.number.isRequired,
+  /** user-name */
+  loggedInUser: PropTypes.string,
+  /** function to minimize the card (optional) */
+  onMinimize: PropTypes.func,
+  /** optional callback if error loading resource, parameter returned are:
+   *    ({string} errorMessage, {boolean} isAccessError, {object} resourceStatus)
+   *      - isAccessError - is true if this was an error trying to access file
+   *      - resourceStatus - is object containing details about problems fetching resource */
+  onResourceError: PropTypes.func,
+  /** the original scripture bookObjects for current book */
+  originalScriptureBookObjects: PropTypes.object,
+  reference: PropTypes.shape({
+    /** projectId (bookID) to use */
+    projectId: PropTypes.string.isRequired,
+    /** current chapter number */
+    chapter: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
+    /** current verse number */
+    verse: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
+  }),
   /** resource object */
   resource: PropTypes.shape({
     /** resource language to use */
@@ -1033,55 +1056,20 @@ ScriptureCard.propTypes = {
     /** repo owner for original languages such as unfoldingWord */
     originalLanguageOwner: PropTypes.string.isRequired,
   }),
-  reference: PropTypes.shape({
-    /** projectId (bookID) to use */
-    projectId: PropTypes.string.isRequired,
-    /** current chapter number */
-    chapter: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
-    /** current verse number */
-    verse: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
-  }),
-  /** server (e.g. 'https://git.door43.org') */
-  server: PropTypes.string.isRequired,
-  /** repo branch or tag such as master */
-  appRef: PropTypes.string.isRequired,
-  /** if true then word data hover is shown */
-  disableWordPopover: PropTypes.bool,
-  /** CSS classes */
-  classes: PropTypes.object,
   /** resourceLink */
   resourceLink: PropTypes.any,
-  /** use method for using local storage specific for user */
-  useUserLocalStorage: PropTypes.func.isRequired,
-  /** optional callback if error loading resource, parameter returned are:
-   *    ({string} errorMessage, {boolean} isAccessError, {object} resourceStatus)
-   *      - isAccessError - is true if this was an error trying to access file
-   *      - resourceStatus - is object containing details about problems fetching resource */
-  onResourceError: PropTypes.func,
-  /** optional http timeout in milliseconds for fetching resources, default is 0 (very long wait) */
-  httpConfig: PropTypes.object,
-  /** optional url for greek repo */
-  greekRepoUrl: PropTypes.string,
-  /** optional url for hebrew repo */
-  hebrewRepoUrl: PropTypes.string,
-  /** function to get latest lexicon data */
-  getLexiconData: PropTypes.func,
-  /** function to pre-load lexicon data for verse */
-  fetchGlossesForVerse: PropTypes.func,
-  /** optional function for localization */
-  translate: PropTypes.func,
-  /** function to minimize the card (optional) */
-  onMinimize: PropTypes.func,
-  /** user-name */
-  loggedInUser: PropTypes.string,
-  /** authentication info */
-  authentication: PropTypes.object,
-  /** function to set state in app that there are unsaved changes */
-  setSavedChanges: PropTypes.func,
-  /** index for current book (e.g. '01' for 'gen')*/
-  bookIndex: PropTypes.string,
-  /** callback to update word aligner state */
-  setWordAlignerStatus: PropTypes.func,
   /**This is currently selected quote */
   selectedQuote: PropTypes.object,
+  /** server (e.g. 'https://git.door43.org') */
+  server: PropTypes.string.isRequired,
+  /** function to set state in app that there are unsaved changes */
+  setSavedChanges: PropTypes.func,
+  /** callback to update word aligner state */
+  setWordAlignerStatus: PropTypes.func,
+  /** title for scripture card */
+  title: PropTypes.string.isRequired,
+  /** optional function for localization */
+  translate: PropTypes.func,
+  /** use method for using local storage specific for user */
+  useUserLocalStorage: PropTypes.func.isRequired,
 }

@@ -24,6 +24,12 @@ interface Props {
   getLexiconData: Function;
   /** true if browsing NT */
   isNT: boolean;
+  /** whether or not this current verse has been selected for alignment */
+  isVerseSelectedForAlignment: boolean;
+  /** function to be called when verse alignment has finished */
+  onAlignmentFinish: Function;
+  // original scripture bookObjects for current book
+  originalScriptureBookObjects: object,
   /** current reference **/
   reference: ScriptureReference;
   /** optional styles to use for reference **/
@@ -44,14 +50,8 @@ interface Props {
   setWordAlignerStatus: Function;
   /** optional function for localization */
   translate: Function;
-  /** whether or not this current verse has been selected for alignment */
-  isVerseSelectedForAlignment: boolean;
-  /** function to be called when verse alignment has finished */
-  onAlignmentFinish: Function;
   /** function to be called to update verse alignment status */
   updateVersesAlignmentStatus: Function;
-  /** This is a callback for original scripture resource */
-  setOriginalScriptureResource: Function;
 }
 
 const MessageStyle = {
@@ -86,13 +86,13 @@ function ScripturePane({
   isNT,
   isVerseSelectedForAlignment,
   onAlignmentFinish,
+  originalScriptureBookObjects,
   reference,
   refStyle,
   resourceStatus,
   resourceLink,
   saving,
   scriptureAlignmentEditConfig,
-  setOriginalScriptureResource,
   setSavedChanges,
   setWordAlignerStatus,
   server,
@@ -142,6 +142,7 @@ function ScripturePane({
   const _scriptureAlignmentEditConfig = {
     ...scriptureAlignmentEditConfig,
     initialVerseText,
+    originalScriptureBookObjects,
   }
 
   React.useEffect(() => {
@@ -163,7 +164,6 @@ function ScripturePane({
       editing,
       unsavedChanges,
       newVerseText,
-      originalScriptureResource,
     },
   } = _scriptureAlignmentEdit
 
@@ -174,12 +174,6 @@ function ScripturePane({
   React.useEffect(() => {
     updateVersesAlignmentStatus(reference, aligned)
   }, [aligned])
-
-  React.useEffect(() => {
-    if (originalScriptureResource) {
-      setOriginalScriptureResource && setOriginalScriptureResource(originalScriptureResource)
-    }
-  },[originalScriptureResource])
 
   React.useEffect(() => {
     if (alignerData && !doingAlignment) {
@@ -219,9 +213,6 @@ function ScripturePane({
   function onBlur(event: React.ChangeEvent<HTMLTextAreaElement>) {
     setEditing(false, newText)
   }
-
-  const checkingState = aligned ? 'valid' : 'invalid'
-  const titleText = checkingState === 'valid' ? 'Alignment is Valid' : 'Alignment is Invalid'
 
   return (
     <Container style={{ direction, width: '100%', paddingBottom: '0.5em' }}>
