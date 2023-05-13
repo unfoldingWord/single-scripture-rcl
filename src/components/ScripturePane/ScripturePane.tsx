@@ -126,7 +126,11 @@ function ScripturePane({
     resourceMsg = getResourceMessage(resourceStatus, server, resourceLink, isNT)
   }
 
-  const { chapter, verse } = reference
+  const {
+    chapter,
+    verse,
+    projectId,
+  } = reference
   direction = direction || 'ltr'
 
   refStyle = refStyle || {
@@ -173,7 +177,7 @@ function ScripturePane({
 
   React.useEffect(() => {
     updateVersesAlignmentStatus(reference, aligned)
-  }, [aligned])
+  }, [aligned, chapter, verse, projectId])
 
   React.useEffect(() => {
     if (alignerData && !doingAlignment) {

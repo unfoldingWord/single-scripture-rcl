@@ -138,13 +138,21 @@ export function useScriptureAlignmentEdit({
     updatedVerseObjects,
     verseTextChanged,
   } = state
+  const chapter = reference?.chapter
+  const verse = reference?.verse
+  const projectId = reference?.projectId
+  const basicReference = { // only has the three basic fields
+    chapter,
+    verse,
+    projectId,
+  }
 
   function setState(newState) {
     setState_(prevState => ({ ...prevState, ...newState }))
   }
 
   function clearChanges() {
-    // console.log(`clearChanges() - ${JSON.stringify(reference)}`)
+    // console.log(`clearChanges() - ${JSON.stringify(basicReference)}`)
     const clearState = {
       ...state,
       alignerData: null,
@@ -156,7 +164,7 @@ export function useScriptureAlignmentEdit({
     }
 
     if (!isEqual(state, clearState)) {
-      // console.log(`reference changed, reset edit/alignment state variables`)
+      // console.log(`clearChanges() - reference changed, reset edit/alignment state variables`)
       setState(clearState)
     }
   }
@@ -168,7 +176,7 @@ export function useScriptureAlignmentEdit({
 
   // @ts-ignore
   httpConfig = httpConfig || {}
-  const bookId = reference?.projectId
+  const bookId = projectId
   const originalScriptureSettings = getScriptureResourceSettings(
     bookId, originalScriptureSettings_, isNewTestament, originalRepoUrl,
   )
@@ -182,7 +190,7 @@ export function useScriptureAlignmentEdit({
 
     if (originalScriptureBookObjects) {
       // @ts-ignore
-      const verses = getVersesForRef(reference, originalScriptureBookObjects, originalScriptureBookObjects?.languageId)
+      const verses = getVersesForRef(basicReference, originalScriptureBookObjects, originalScriptureBookObjects?.languageId)
 
       if (verses?.length) {
         for (const verseReference of verses) {
@@ -195,7 +203,7 @@ export function useScriptureAlignmentEdit({
       }
     }
     return verseObjects
-  }, [originalScriptureBookObjects, reference])
+  }, [originalScriptureBookObjects, chapter, verse, projectId])
 
   React.useEffect(() => { // update alignment status when aligner is hidden
     const notEmpty = !!initialVerseObjects
@@ -457,7 +465,7 @@ export function useScriptureAlignmentEdit({
       initialVerseText,
       initialVerseObjects,
       newVerseText,
-      reference,
+      reference: basicReference,
       sourceLanguage,
       targetLanguage,
       title,

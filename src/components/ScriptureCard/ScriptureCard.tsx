@@ -92,7 +92,6 @@ export default function ScriptureCard({
   cardNum,
   classes,
   disableWordPopover,
-  fetchGlossesForVerse,
   getLanguage,
   getLexiconData,
   greekRepoUrl,
@@ -337,7 +336,7 @@ export default function ScriptureCard({
   const languageId_ = scriptureConfig?.resource?.languageId
   const language = getLanguage({ languageId: languageId_ })
   const direction = (language?.direction) || 'ltr'
-  const _reference = { ...scriptureConfig.reference }
+  const _reference = currentReference || reference
 
   const isHebrew = (languageId_ === 'hbo')
   const fontFactor = isHebrew ? 1.4 : 1 // we automatically scale up font size for Hebrew
@@ -370,27 +369,6 @@ export default function ScriptureCard({
   if (disableWordPopover === undefined) { // if not specified, then determine if original language resource
     disableWordPopover_ = !usingOriginalBible
   }
-
-  React.useEffect(() => { // pre-cache glosses on verse change
-    const fetchGlossDataForVerse = async () => {
-      let verseObjects = []
-
-      // get verse objects of all the verses
-      for (const verseRef of scriptureConfig?.versesForRef || []) {
-        const _verseObjects = verseRef?.verseData?.verseObjects
-        verseObjects = verseObjects.concat(_verseObjects)
-      }
-
-      if (!disableWordPopover && verseObjects?.length && fetchGlossesForVerse) {
-        // eslint-disable-next-line no-await-in-loop
-        await fetchGlossesForVerse(verseObjects, languageId_)
-      }
-    }
-
-    if (usingOriginalBible) {
-      fetchGlossDataForVerse()
-    }
-  }, [ versesForRef, languageId_ ])
 
   const enableEdit = !usingOriginalBible
   const enableAlignment = !usingOriginalBible
@@ -822,7 +800,7 @@ export default function ScriptureCard({
 
   React.useEffect(() => {
     setState({ versesAlignmentStatus: null })
-  }, [verse])
+  }, [_reference])
 
   const updateVersesAlignmentStatus = (reference, aligned) => {
     setState_(prevState => ({
@@ -1010,8 +988,6 @@ ScriptureCard.propTypes = {
   classes: PropTypes.object,
   /** if true then word data hover is shown */
   disableWordPopover: PropTypes.bool,
-  /** function to pre-load lexicon data for verse */
-  fetchGlossesForVerse: PropTypes.func,
   /** get language details */
   getLanguage: PropTypes.func.isRequired,
   /** function to get latest lexicon data */
