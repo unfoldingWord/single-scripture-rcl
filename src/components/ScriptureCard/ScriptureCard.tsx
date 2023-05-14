@@ -798,8 +798,12 @@ export default function ScriptureCard({
     }
   }, [owner, resourceId, bookId, languageId_, scriptureConfig?.versesForRef, originalScriptureBookObjects, selectedQuote])
 
-  React.useEffect(() => {
-    setState({ versesAlignmentStatus: null })
+  React.useEffect(() => { // clear settings on verse change
+    setState({
+      versesAlignmentStatus: null,
+      unsavedChangesList: {},
+      haveUnsavedChanges: false,
+    })
   }, [_reference])
 
   const updateVersesAlignmentStatus = (reference, aligned) => {
@@ -895,6 +899,7 @@ export default function ScriptureCard({
 
     let alignIcon = null
     let alignButtonText = ''
+
     if (allVersesAligned) {
       alignIcon = <RxLink2 id={`valid_icon_${resourceId}`} color='#BBB'/>
       alignButtonText = 'Alignment is Valid'
@@ -922,7 +927,6 @@ export default function ScriptureCard({
   }
 
   return (
-
     <SelectionsContextProvider
       selections={selections}
       onSelections={newSelections => {

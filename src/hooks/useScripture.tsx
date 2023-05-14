@@ -397,11 +397,6 @@ export function useScripture({ // hook for fetching scripture
   }, [currentBookRef])
 
   useEffect(() => {
-    console.log(`useScripture book ref changed to ${_bookId}, ${resourceLink_}`)
-    // @ts-ignore
-  }, [_bookId])
-
-  useEffect(() => {
     const expectedBookId = _bookId || ''
     const fetchedBookSame = fetchedBook && (fetchedBook === expectedBookId)
     let _versesForRef = []

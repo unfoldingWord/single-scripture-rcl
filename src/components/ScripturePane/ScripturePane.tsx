@@ -156,6 +156,7 @@ function ScripturePane({
   const _scriptureAlignmentEdit = useScriptureAlignmentEdit(_scriptureAlignmentEditConfig)
   const {
     actions: {
+      clearChanges,
       handleAlignmentClick,
       setEditing,
       setVerseChanged,
@@ -203,6 +204,7 @@ function ScripturePane({
 
   useDeepCompareEffect(() => {
     const verseText = UsfmFileConversionHelpers.getUsfmForVerseContent({ verseObjects: initialVerseObjects })
+    clearChanges()
     setInitialVerseText(verseText)
   }, [{ reference, initialVerseObjects }])
 

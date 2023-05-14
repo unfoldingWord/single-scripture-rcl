@@ -450,6 +450,7 @@ export function useScriptureAlignmentEdit({
   return {
     actions: {
       cancelAlignment,
+      clearChanges,
       getChanges,
       handleAlignmentClick,
       onAlignmentsChange,
