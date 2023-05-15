@@ -109,7 +109,11 @@ export function useScripture({ // hook for fetching scripture
   const [state, setState_] = useState({
     bookObjects: null,
     fetchedBook: '',
-    fetchParams: { resourceLink: '', reference: {} },
+    fetchParams: {
+      resourceLink: '',
+      reference: {},
+      config: {},
+    },
     ignoreSha: null,
     initialized: false,
     fetched: false,
@@ -180,6 +184,7 @@ export function useScripture({ // hook for fetching scripture
       const newFetchParams = {
         resourceLink,
         reference: bookRef,
+        config,
       }
 
       if (!isEqual(newFetchParams, fetchParams)) {
@@ -200,7 +205,7 @@ export function useScripture({ // hook for fetching scripture
   const options = { getBibleJson: true }
 
   const _resourceResults = useRsrc({
-    config,
+    config: fetchParams?.config,
     reference: fetchParams?.reference,
     resourceLink: fetchParams?.resourceLink,
     options,
@@ -232,7 +237,12 @@ export function useScripture({ // hook for fetching scripture
 
         if (!loadingContent && !loadingResource && content && fetchResponse) {
           const newState = { resourceState: currentResourceState }
-          // console.log(`useScripture content changed`, { content, fetchParams, fetchResponse })
+
+          console.log(`useScripture content changed`, {
+            content,
+            fetchParams,
+            fetchResponse,
+          })
 
           // TRICKY - responses from server can come back from previous requests.  So we make sure this response is for the current requested book
           let sameBook = false
@@ -256,18 +266,18 @@ export function useScripture({ // hook for fetching scripture
             const fetchingBranch = getBranchName(fetchParams?.resourceLink)
 
             if (fetchedBranch !== fetchingBranch) {
-              // console.log(`useScripture invalid branch, expected branch is ${fetchingBranch}, but fetchedBranch is ${fetchedBranch}`, { sha, url })
+              console.log(`useScripture invalid branch, expected branch is ${fetchingBranch}, but fetchedBranch is ${fetchedBranch}`, { sha, url })
               sameBook = false
             }
           }
 
           if (ignoreSha === sha) {
-            // console.log(`useScripture - the sha is the same as the ignore sha ${sha}`, { sha, url })
+            console.log(`useScripture - the sha is the same as the ignore sha ${sha}`, { sha, url })
             sameBook = false
           }
 
           if (!sameBook) {
-            // console.log(`useScripture invalid book, expectedBookId is ${expectedBookId}, but received book name ${fetchedBook}`, { sha, url })
+            console.log(`useScripture invalid book, expectedBookId is ${expectedBookId}, but received book name ${fetchedBook}`, { sha, url })
           } else {
             newState['bookObjects'] = content
             newState['versesForRef'] = updateVersesForRef(content)
@@ -395,6 +405,11 @@ export function useScripture({ // hook for fetching scripture
     }
     // @ts-ignore
   }, [currentBookRef])
+
+  useEffect(() => {
+    console.log(`useScripture book ref changed to ${_bookId}, ${resourceLink_}`)
+    // @ts-ignore
+  }, [_bookId])
 
   useEffect(() => {
     const expectedBookId = _bookId || ''

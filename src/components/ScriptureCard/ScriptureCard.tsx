@@ -563,27 +563,30 @@ export default function ScriptureCard({
   }
 
   React.useEffect(() => { // for each unsaved change, call into scripturePane to get latest changes for verse to save
-    if (saveClicked) {
-      let createEditBranch = !_usingUserBranch
+    async function getReadyForSave() {
+      if (saveClicked) {
+        let createEditBranch = !_usingUserBranch
 
-      if (!createEditBranch) { // if already using the user branch
-        if (workingResourceBranch !== userEditBranchName) {
-          console.warn(`saveChangesToCloud - state conflict - should be in user branch ${userEditBranchName}, but actually using ${workingResourceBranch}`)
-          createEditBranch = true
-        } else {
-          console.log(`saveChangesToCloud - already using edit branch: ${workingResourceBranch}`)
-          setState({ editBranchReady: true })
+        if (!createEditBranch) { // if already using the user branch
+          if (workingResourceBranch !== userEditBranchName) {
+            console.warn(`saveChangesToCloud - state conflict - should be in user branch ${userEditBranchName}, but actually using ${workingResourceBranch}`)
+            createEditBranch = true
+          } else {
+            console.log(`saveChangesToCloud - already using edit branch: ${workingResourceBranch}`)
+            setState({ editBranchReady: true })
+          }
         }
-      }
 
-      if (createEditBranch) { // if not using the user branch, create it
-        console.log(`saveChangesToCloud - creating edit branch`)
-        setState({
-          editBranchReady: false,
-          readyForFetch: false,
-          sha: null,
-        }) // we will need a new sha for book/branch
-        startEditBranch().then((branch) => {
+        if (createEditBranch) { // if not yet using the user branch, create it
+          console.log(`saveChangesToCloud - creating edit branch`)
+          setState({
+            editBranchReady: false,
+            readyForFetch: false,
+            sha: null,
+          }) // we will need a new sha for book/branch
+
+          const branch = await startEditBranch()
+
           if (branch) {
             console.log(`saveChangesToCloud - edit branch created`)
             setState({
@@ -594,83 +597,86 @@ export default function ScriptureCard({
           } else {
             console.log(`saveChangesToCloud - failed to create edit branch`)
           }
-        })
-      }
-
-      const unsavedCardIndices = Object.keys(unsavedChangesList)
-
-      if (unsavedCardIndices?.length) {
-        let bibleUsfm = core.getResponseData(scriptureConfig?.fetchResponse)
-        let mergeFail = false
-        let cardNum = 0
-
-        for (const cardIndex of unsavedCardIndices) {
-          cardNum = parseInt(cardIndex)
-          const { getChanges, state } = unsavedChangesList[cardNum]
-
-          if (getChanges) {
-            let newUsfm
-            const {
-              ref,
-              updatedVerseObjects,
-            } = getChanges(state)
-
-            if (updatedVerseObjects && bibleUsfm) { // just replace verse
-              newUsfm = mergeVerseObjectsIntoBibleUsfm(bibleUsfm, ref, updatedVerseObjects, cardNum)
-            }
-
-            if (newUsfm) {
-              bibleUsfm = newUsfm
-            } else {
-              mergeFail = true
-              break
-            }
-          }
         }
 
-        if (mergeFail) { // if we failed to merge, fallback to brute force verse objects to USFM
-          console.log(`saveChangesToCloud(${cardNum}) - verse not found, falling back to inserting verse object`)
-          let newBookJson
+        console.log(`saveChangesToCloud - getting verse changes`)
+        const unsavedCardIndices = Object.keys(unsavedChangesList)
+
+        if (unsavedCardIndices?.length) {
+          let bibleUsfm = core.getResponseData(scriptureConfig?.fetchResponse)
+          let mergeFail = false
+          let cardNum = 0
 
           for (const cardIndex of unsavedCardIndices) {
-            const cardNum = parseInt(cardIndex)
+            cardNum = parseInt(cardIndex)
             const { getChanges, state } = unsavedChangesList[cardNum]
 
             if (getChanges) {
               let newUsfm
               const {
-                newVerseText,
                 ref,
                 updatedVerseObjects,
               } = getChanges(state)
 
-              if (updatedVerseObjects && !newUsfm) {
-                let targetVerseObjects_ = null
+              if (updatedVerseObjects && bibleUsfm) { // just replace verse
+                newUsfm = mergeVerseObjectsIntoBibleUsfm(bibleUsfm, ref, updatedVerseObjects, cardNum)
+              }
 
-                if (ref) {
-                  if (newVerseText) {
-                    const { targetVerseObjects } = AlignmentHelpers.updateAlignmentsToTargetVerse(updatedVerseObjects, newVerseText)
-                    targetVerseObjects_ = targetVerseObjects
-                  } else {
-                    targetVerseObjects_ = updatedVerseObjects
-                  }
-                  newBookJson = targetVerseObjects_ && scriptureConfig?.updateVerse(ref.chapter, ref.verse, { verseObjects: targetVerseObjects_ })
-                }
+              if (newUsfm) {
+                bibleUsfm = newUsfm
+              } else {
+                mergeFail = true
+                break
               }
             }
           }
 
-          bibleUsfm = usfmjs.toUSFM(newBookJson, { forcedNewLines: true })
-        }
+          if (mergeFail) { // if we failed to merge, fallback to brute force verse objects to USFM
+            console.log(`saveChangesToCloud(${cardNum}) - verse not found, falling back to inserting verse object`)
+            let newBookJson
 
-        console.log(`saveChangesToCloud() - saving new USFM: ${bibleUsfm.substring(0, 100)}...`)
-        setState({ saveContent: bibleUsfm, startSave: true, saveClicked: false })
+            for (const cardIndex of unsavedCardIndices) {
+              const cardNum = parseInt(cardIndex)
+              const { getChanges, state } = unsavedChangesList[cardNum]
+
+              if (getChanges) {
+                let newUsfm
+                const {
+                  newVerseText,
+                  ref,
+                  updatedVerseObjects,
+                } = getChanges(state)
+
+                if (updatedVerseObjects && !newUsfm) {
+                  let targetVerseObjects_ = null
+
+                  if (ref) {
+                    if (newVerseText) {
+                      const { targetVerseObjects } = AlignmentHelpers.updateAlignmentsToTargetVerse(updatedVerseObjects, newVerseText)
+                      targetVerseObjects_ = targetVerseObjects
+                    } else {
+                      targetVerseObjects_ = updatedVerseObjects
+                    }
+                    newBookJson = targetVerseObjects_ && scriptureConfig?.updateVerse(ref.chapter, ref.verse, {verseObjects: targetVerseObjects_})
+                  }
+                }
+              }
+            }
+
+            bibleUsfm = usfmjs.toUSFM(newBookJson, {forcedNewLines: true})
+          }
+
+          console.log(`saveChangesToCloud() - saving new USFM: ${bibleUsfm.substring(0, 100)}...`)
+          setState({saveContent: bibleUsfm, startSave: true, saveClicked: false})
+        }
       }
     }
+
+    getReadyForSave()
   }, [saveClicked])
 
   // @ts-ignore
-  const { chapter, verse } = _reference || {}
+  const { chapter } = _reference || {}
 
   React.useEffect(() => {
     const _versesForRef = scriptureConfig?.versesForRef
