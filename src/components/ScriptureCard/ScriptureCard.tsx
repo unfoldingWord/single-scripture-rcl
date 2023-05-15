@@ -78,6 +78,8 @@ export default function ScriptureCard({
   addVerseRange,
   setWordAlignerStatus,
   updateMergeState,
+  setCardsLoading,
+  setCardsSaving
 }) {
   const [state, setState_] = React.useState({
     haveUnsavedChanges: false,
@@ -206,24 +208,13 @@ export default function ScriptureCard({
     }
   } = _useBranchMerger;
 
-  React.useEffect(() => {
-    if (cardResourceId) {
-      updateMergeState && updateMergeState(
-        cardResourceId,
-        mergeFromMaster,
-        mergeToMaster,
-        mergeFromMasterIntoUserBranch,
-        mergeToMasterFromUserBranch,
-      )
-    }
-  },[cardResourceId, mergeFromMaster, mergeToMaster])
-
   const updateButtonProps = useContentUpdateProps({
     isSaving: startSave,
     useBranchMerger: _useBranchMerger,
     reloadContent: scriptureConfig?.reloadResource
   });
   const {
+    callUpdateUserBranch,
     isErrorDialogOpen,
     onCloseErrorDialog,
     isLoading,
@@ -232,6 +223,26 @@ export default function ScriptureCard({
     dialogLink,
     dialogLinkTooltip
   } = updateButtonProps;
+
+  React.useEffect(() => {
+    if (cardResourceId) {
+      updateMergeState && updateMergeState(
+        cardResourceId,
+        mergeFromMaster,
+        mergeToMaster,
+        callUpdateUserBranch,
+        mergeToMasterFromUserBranch,
+      )
+    }
+  },[cardResourceId, mergeFromMaster, mergeToMaster])
+
+  React.useEffect(() => {
+    if (isLoading) {
+      setCardsLoading(prevCardsLoading => [...prevCardsLoading, cardResourceId])
+    } else {
+      setCardsLoading(prevCardsLoading => prevCardsLoading.filter(cardId => cardId !== cardResourceId))
+    }
+  }, [isLoading])
 
   const workingRef = canUseEditBranch ? workingResourceBranch : appRef
   let scriptureTitle
@@ -479,6 +490,7 @@ export default function ScriptureCard({
           scriptureConfig?.reloadResource()
         } else {
           console.error('saveChangesToCloud() - saving changed scripture failed')
+          setCardsSaving(prevCardsSaving => prevCardsSaving.filter(cardId => cardId !== cardResourceId))
           setState({ startSave: false })
         }
       })
@@ -486,6 +498,7 @@ export default function ScriptureCard({
 
     if (startSave) {
       console.log(`saveChangesToCloud - calling _saveEdit()`)
+      setCardsSaving(prevCardsSaving => [...prevCardsSaving, cardResourceId])
       _saveEdit()
     }
   }, [startSave])
@@ -870,6 +883,10 @@ ScriptureCard.propTypes = {
   addVerseRange: PropTypes.func,
   /** callback to update word aligner state */
   setWordAlignerStatus: PropTypes.func,
-  /**callback to update the card's merge state in app */
+  /** callback to update the card's merge state in app */
   updateMergeState: PropTypes.func,
+  /** callback to update loading state */
+  setAreResourcesLoading: PropTypes.func,
+  /** callback to update saving state*/
+  setAreResourcesSaving: PropTypes.func,
 }
