@@ -77,7 +77,7 @@
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-icons": "^4.8.0",
-    "react-styleguidist": "^11.1.5",
+    "react-styleguidist": "11.2.0",
     "scripture-resources-rcl": "^5.2.0",
     "style-loader": "^2.0.0",
     "tc-ui-toolkit": "^5.3.3",

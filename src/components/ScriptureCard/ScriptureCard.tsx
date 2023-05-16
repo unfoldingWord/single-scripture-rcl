@@ -451,6 +451,7 @@ export default function ScriptureCard({
   }
 
   function getBookName() {
+    // @ts-ignore
     const bookCaps = scriptureConfig?.reference?.projectId ? scriptureConfig.reference.projectId.toUpperCase() : ''
     return `${bookIndex}-${bookCaps}.usfm`
   }
