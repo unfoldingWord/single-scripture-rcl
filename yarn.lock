@@ -4962,6 +4962,11 @@ depd@~1.1.2:
   resolved "https://registry.yarnpkg.com/depd/-/depd-1.1.2.tgz#9bcd52e14c097763e749b274c4346ed2e560b5a9"
   integrity sha1-m81S4UwJd2PnSbJ0xDRu0uVgtak=
 
+dequal@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/dequal/-/dequal-1.0.0.tgz#41c6065e70de738541c82cdbedea5292277a017e"
+  integrity sha512-/Nd1EQbQbI9UbSHrMiKZjFLrXSnU328iQdZKPQf78XQI6C+gutkFUeoHpG5J08Ioa6HeRbRNFpSIclh1xyG0mw==
+
 dequal@^2.0.2:
   version "2.0.2"
   resolved "https://registry.yarnpkg.com/dequal/-/dequal-2.0.2.tgz#85ca22025e3a87e65ef75a7a437b35284a7e319d"
@@ -6595,19 +6600,22 @@ gitea-react-toolkit@1.11.0:
     use-deep-compare-effect "^1.3.1"
     utf8 "3.0.0"
 
-gitea-react-toolkit@1.9.3:
-  version "1.9.3"
-  resolved "https://registry.yarnpkg.com/gitea-react-toolkit/-/gitea-react-toolkit-1.9.3.tgz#0f1467087fbb814aa68f6f6bc695407c76cd3966"
-  integrity sha512-JubGD8xmLFTSa4unszKIohVxq/6N04mISkA7XekyuPhH1Bm3GBBScETO5zUyZD2x7YeOnUyqCo4lBNKS/6HD9Q==
+gitea-react-toolkit@2.2.1:
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/gitea-react-toolkit/-/gitea-react-toolkit-2.2.1.tgz#e13191ae6e3089d12d0f2eeaa69ce49c740651a2"
+  integrity sha512-9VPuWOHQv+z+H2j+GRhShVPKRC1O+qVNWcoashjpXhd1IS4lF820YIl/YDacFa7SvgOpm/sOZ3MPVnxcGIG4aA==
   dependencies:
     awesome-debounce-promise "2.1.0"
     axios "0.19.0"
     axios-cache-adapter "2.4.1"
     base-64 "0.1.0"
+    deep-equal "^2.0.5"
+    js-base64 "^3.7.2"
     jszip "^3.5.0"
     localforage "1.7.3"
-    markdown-translatable "1.3.1"
+    markdown-translatable "1.3.1-rc.1"
     prop-types "15.7.2"
+    use-deep-compare "^1.1.0"
     use-deep-compare-effect "^1.3.1"
     utf8 "3.0.0"
 
@@ -8413,6 +8421,11 @@ jest@^26.6.3:
     import-local "^3.0.2"
     jest-cli "^26.6.3"
 
+js-base64@^3.7.2:
+  version "3.7.5"
+  resolved "https://registry.yarnpkg.com/js-base64/-/js-base64-3.7.5.tgz#21e24cf6b886f76d6f5f165bfcd69cc55b9e3fca"
+  integrity sha512-3MEt5DTINKqfScXKfJFrRbxkrnk2AxPWGBL/ycjz4dK8iqiSJ06UxD8jh8xuh6p10TX4t2+7FsBYVxxQbMg+qA==
+
 "js-tokens@^3.0.0 || ^4.0.0", js-tokens@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/js-tokens/-/js-tokens-4.0.0.tgz#19203fb59991df98e3a287050d4647cdeaf32499"
@@ -9249,6 +9262,34 @@ markdown-translatable@1.3.1:
   version "1.3.1"
   resolved "https://registry.yarnpkg.com/markdown-translatable/-/markdown-translatable-1.3.1.tgz#29393f8650be38885c7991f2e2e661bbe9d000ae"
   integrity sha512-oZieaVOCjxZISyGDvcpb3XsJsnPvKd4xCULFQawQ/L395EwGHFERG6gCH65b3w3HjkLEWhdPknWf1BLK6Mu6Tg==
+  dependencies:
+    deep-freeze "^0.0.1"
+    md5 "^2.2.1"
+    prop-types "^15.7.2"
+    react-headroom "^3.1.0"
+    react-markdown "4.0.6"
+    showdown "^1.9.1"
+    turndown "^7.0.0"
+    turndown-plugin-gfm "^1.0.2"
+
+markdown-translatable@1.3.1-rc.1:
+  version "1.3.1-rc.1"
+  resolved "https://registry.yarnpkg.com/markdown-translatable/-/markdown-translatable-1.3.1-rc.1.tgz#498a264d544f87511465ae06dd454565be1daabb"
+  integrity sha512-Cn6GFYHZTAQOBy+XCtweOzDVMmshTjIgd2z9oex9DlNWVqlHO54yEvXduFg4YOl4qgTxkdeH+i3Z3VA+01d71w==
+  dependencies:
+    deep-freeze "^0.0.1"
+    md5 "^2.2.1"
+    prop-types "^15.7.2"
+    react-headroom "^3.1.0"
+    react-markdown "4.0.6"
+    showdown "^1.9.1"
+    turndown "^7.0.0"
+    turndown-plugin-gfm "^1.0.2"
+
+markdown-translatable@2.1.1:
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/markdown-translatable/-/markdown-translatable-2.1.1.tgz#da5f0d6b42e73eada0314300362bb5818ecd5cb8"
+  integrity sha512-HYcHo76ooko6Z9bxaLERS6g/B9LXqnIP6kPyMGE3LwPOD/Nk60Q05mec+Zim8k5JswFvXsSOOJXt14jQXKb/3w==
   dependencies:
     deep-freeze "^0.0.1"
     md5 "^2.2.1"
@@ -11756,22 +11797,26 @@ schema-utils@^3.0.0:
     ajv "^6.12.5"
     ajv-keywords "^3.5.2"
 
-scripture-resources-rcl@^5.2.0:
-  version "5.2.0"
-  resolved "https://registry.yarnpkg.com/scripture-resources-rcl/-/scripture-resources-rcl-5.2.0.tgz#28813922ef038b8c748067baab0b1507126e9d99"
-  integrity sha512-26kRyCsFO5uDx0iDiStwniRrQna3f1uuRHZ9CaY8zYPG+JWioMNElUP8ms2i+d8tRGN/tE2NN99y2CIcJQldAQ==
+scripture-resources-rcl@^5.4.1-beta.9:
+  version "5.4.1-beta.9"
+  resolved "https://registry.yarnpkg.com/scripture-resources-rcl/-/scripture-resources-rcl-5.4.1-beta.9.tgz#afa2dc40687de729ffe4612bb936c024c39eb6ca"
+  integrity sha512-BWHSgK9I1fl4XwDGBJYWta4R+K4rnCETgklqz6jf+T4k5QlV7KqFnDq3BRGC4Hyh5JCcOx3iZyws8uu21i2sAg==
   dependencies:
+    bible-reference-range "^1.0.1"
     deep-freeze "^0.0.1"
-    gitea-react-toolkit "1.9.3"
+    gitea-react-toolkit "2.2.1"
     js-yaml-parser "^1.0.0"
-    lodash "^4.17.15"
-    markdown-translatable "1.3.1"
+    lodash "^4.17.21"
+    markdown-translatable "2.1.1"
     nyc "^15.0.0-beta.3"
-    prop-types "^15.7.2"
+    prop-types "^15.8.1"
     react-waypoint "^9.0.2"
     string-punctuation-tokenizer "2.1.2"
+    tc-ui-toolkit "^5.3.3"
     use-deep-compare-effect "^1.3.1"
-    usfm-js "^2.0.2"
+    usfm-js "3.4.0"
+    word-aligner "^1.0.0"
+    xregexp "^4.1.1"
 
 select-hose@^2.0.0:
   version "2.0.0"
@@ -13357,22 +13402,29 @@ use-deep-compare-effect@^1.3.1:
     "@types/react" "^17.0.0"
     dequal "^2.0.2"
 
+use-deep-compare@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/use-deep-compare/-/use-deep-compare-1.1.0.tgz#85580dde751f68400bf6ef7e043c7f986595cef8"
+  integrity sha512-6yY3zmKNCJ1jjIivfZMZMReZjr8e6iC6Uqtp701jvWJ6ejC/usXD+JjmslZDPJQgX8P4B1Oi5XSLHkOLeYSJsA==
+  dependencies:
+    dequal "1.0.0"
+
 use@^3.1.0:
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/use/-/use-3.1.1.tgz#d50c8cac79a19fbc20f2911f56eb973f4e10070f"
   integrity sha512-cwESVXlO3url9YWlFW/TA9cshCEhtu7IKJ/p5soJ/gGpj7vbvFrAY/eIioQ6Dw23KjZhYgiIo8HOs1nQ2vr/oQ==
 
+usfm-js@3.4.0:
+  version "3.4.0"
+  resolved "https://registry.yarnpkg.com/usfm-js/-/usfm-js-3.4.0.tgz#d3a00634b7219163b2bf41dc9dd83d976ec7ef26"
+  integrity sha512-8pCtMxzb/E3/4PPLLpf9KK10vza1I1/4tZJaDhJ+ycTGfg5JfT6GmDTxYFd6Nw81sbS0CVoyyG89a5ff6yHCzA==
+  dependencies:
+    lodash.clonedeep "^4.5.0"
+
 usfm-js@3.4.2:
   version "3.4.2"
   resolved "https://registry.yarnpkg.com/usfm-js/-/usfm-js-3.4.2.tgz#a4232cffe38c9f521246b007a4045648cbcf419a"
   integrity sha512-i5nGxGwFhkOWd7xgfVWQ6GTkCpksfy5AUIwNJcwanTn3ua5J1nwl3pjApCDA6x1B++8ICkcQMUt0FB/bkKdE2g==
-  dependencies:
-    lodash.clonedeep "^4.5.0"
-
-usfm-js@^2.0.2:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/usfm-js/-/usfm-js-2.1.0.tgz#2d5b200d491d87a9c443728436f8ef07fb0c8730"
-  integrity sha512-DemzdzAwrVeuzRwnZYOKvAle/U2ZUUf04NQSVDgqZCSFyH7hVhe2/PWC7jT2DKnPMYoa0IxnG3XGbuOPXgZ/oQ==
   dependencies:
     lodash.clonedeep "^4.5.0"
 

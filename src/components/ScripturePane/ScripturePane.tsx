@@ -177,7 +177,7 @@ function ScripturePane({
   }
 
   React.useEffect(() => {
-    updateVersesAlignmentStatus(reference, aligned)
+    updateVersesAlignmentStatus && updateVersesAlignmentStatus(reference, aligned)
   }, [aligned, chapter, verse, projectId])
 
   React.useEffect(() => {
