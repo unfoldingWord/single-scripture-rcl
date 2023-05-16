@@ -13,13 +13,15 @@ import {
 } from '../types'
 import { getScriptureResourceSettings } from '../utils/ScriptureSettings'
 import { ORIGINAL_SOURCE } from '../utils'
-import useScriptureResources from './useScriptureResources'
+import { getVersesForRef } from './useScripture'
 
 interface StartEdit {
   (): Promise<string>;
 }
 
 export interface ScriptureALignmentEditProps {
+  // index to use for book (e.g. `01` for `GEN`)
+  bookIndex: string,
   // current verse selected from initialVerseObjects[]
   currentIndex: number,
   // reference for verse selected for alignment
@@ -42,6 +44,8 @@ export interface ScriptureALignmentEditProps {
   originalLanguageOwner: string,
   // url for the original language repo
   originalRepoUrl: string,
+  // original scripture bookObjects for current book
+  originalScriptureBookObjects: object,
   /** current reference **/
   reference: ScriptureReference;
   // details about the current scripture loaded
@@ -50,20 +54,16 @@ export interface ScriptureALignmentEditProps {
   scriptureSettings: { },
   // callback to save current verse edit and alignment changes
   setSavedChanges: Function,
-  // callback to create a user branch for saving edit data
-  startEditBranch: StartEdit,
-  // index to use for book (e.g. `01` for `GEN`)
-  bookIndex: string,
-  // branch name currently being used (e.g. `master` or user branch)
-  workingResourceBranch: string,
-  // current target language
-  targetLanguage: object,
   // source language
   sourceLanguage: string,
+  // callback to create a user branch for saving edit data
+  startEditBranch: StartEdit,
+  // current target language
+  targetLanguage: object,
   // title to show in alignment
   title: string,
-  // callback to return the original scripture for the book
-  setOriginalScriptureResource: Function,
+   // branch name currently being used (e.g. `master` or user branch)
+  workingResourceBranch: string,
 }
 
 /**
@@ -107,6 +107,7 @@ export function useScriptureAlignmentEdit({
   initialVerseText,
   isNewTestament,
   originalLanguageOwner,
+  originalScriptureBookObjects,
   originalRepoUrl,
   reference,
   scriptureConfig,
@@ -117,7 +118,6 @@ export function useScriptureAlignmentEdit({
   targetLanguage,
   title,
   workingResourceBranch,
-  setOriginalScriptureResource,
 } : ScriptureALignmentEditProps) {
   const [state, setState_] = React.useState({
     aligned: false,
@@ -138,13 +138,21 @@ export function useScriptureAlignmentEdit({
     updatedVerseObjects,
     verseTextChanged,
   } = state
+  const chapter = reference?.chapter
+  const verse = reference?.verse
+  const projectId = reference?.projectId
+  const basicReference = { // only has the three basic fields
+    chapter,
+    verse,
+    projectId,
+  }
 
   function setState(newState) {
     setState_(prevState => ({ ...prevState, ...newState }))
   }
 
   function clearChanges() {
-    console.log(`clearChanges() - ${JSON.stringify(reference)}`)
+    // console.log(`clearChanges() - ${JSON.stringify(basicReference)}`)
     const clearState = {
       ...state,
       alignerData: null,
@@ -156,7 +164,7 @@ export function useScriptureAlignmentEdit({
     }
 
     if (!isEqual(state, clearState)) {
-      console.log(`reference changed, reset edit/alignment state variables`)
+      // console.log(`clearChanges() - reference changed, reset edit/alignment state variables`)
       setState(clearState)
     }
   }
@@ -168,7 +176,7 @@ export function useScriptureAlignmentEdit({
 
   // @ts-ignore
   httpConfig = httpConfig || {}
-  const bookId = reference?.projectId
+  const bookId = projectId
   const originalScriptureSettings = getScriptureResourceSettings(
     bookId, originalScriptureSettings_, isNewTestament, originalRepoUrl,
   )
@@ -177,34 +185,25 @@ export function useScriptureAlignmentEdit({
     originalScriptureSettings.resourceLink = null
   }
 
-  // get original language for this alignment
-  const originalScriptureResource = useScriptureResources({
-    bookId,
-    scriptureSettings: originalScriptureSettings,
-    chapter: reference?.chapter,
-    verse: reference?.verse,
-    isNewTestament,
-    originalRepoUrl,
-    currentLanguageId: originalScriptureSettings?.languageId,
-    currentOwner: originalLanguageOwner,
-    httpConfig,
-  })
-
   const originalVerseObjects = React.useMemo(() => { // get the original language verseObjects
-    if (originalScriptureResource?.versesForRef?.length > 1) { // if multiple verses, then append them together
-      const verseObjects = []
+    const verseObjects = []
 
-      for (const verseReference of originalScriptureResource?.versesForRef) {
-        const origVerseObjects = verseReference?.verseData?.verseObjects
+    if (originalScriptureBookObjects) {
+      // @ts-ignore
+      const verses = getVersesForRef(basicReference, originalScriptureBookObjects, originalScriptureBookObjects?.languageId)
 
-        if (origVerseObjects) {
-          Array.prototype.push.apply(verseObjects, origVerseObjects)
+      if (verses?.length) {
+        for (const verseReference of verses) {
+          const origVerseObjects = verseReference?.verseData?.verseObjects
+
+          if (origVerseObjects) {
+            Array.prototype.push.apply(verseObjects, origVerseObjects)
+          }
         }
       }
-      return verseObjects
     }
-    return originalScriptureResource?.verseObjects
-  }, [originalScriptureResource?.verseObjects, originalScriptureResource?.versesForRef])
+    return verseObjects
+  }, [originalScriptureBookObjects, chapter, verse, projectId])
 
   React.useEffect(() => { // update alignment status when aligner is hidden
     const notEmpty = !!initialVerseObjects
@@ -357,7 +356,7 @@ export function useScriptureAlignmentEdit({
   function cancelAlignment() {
     console.log(`cancelAlignment()`)
     const targetVerseUSFM = getCurrentVerseUsfm(updatedVerseObjects, initialVerseObjects, verseTextChanged, newVerseText)
-    const aligned = isUsfmAligned(targetVerseUSFM, originalScriptureResource?.verseObjects)
+    const aligned = isUsfmAligned(targetVerseUSFM, originalVerseObjects)
     setState({ alignerData: null, aligned })
   }
 
@@ -366,12 +365,9 @@ export function useScriptureAlignmentEdit({
    * @param {boolean} editing_ - if true, editor is shown, otherwise editor is hidden
    * @param {string} _newVerseText - optional verse text
    */
+  // eslint-disable-next-line require-await
   async function setEditing(editing_, _newVerseText = newVerseText) {
     if (enableEdit) {
-      if (editing_ && !editing) {
-        await startEditBranch()
-      }
-
       if (editing_ !== editing) {
         _newVerseText = _newVerseText || initialVerseText
         const newState = { editing: editing_, newVerseText: _newVerseText }
@@ -389,7 +385,7 @@ export function useScriptureAlignmentEdit({
    */
   function setVerseChanged(changed, newVerseText, _initialVerseText) {
     const { targetVerseText } = AlignmentHelpers.updateAlignmentsToTargetVerse(initialVerseObjects, newVerseText)
-    const aligned = isUsfmAligned(targetVerseText, originalScriptureResource?.verseObjects)
+    const aligned = isUsfmAligned(targetVerseText, originalVerseObjects)
     const _changed = newVerseText !== initialVerseText
 
     setState({
@@ -423,8 +419,13 @@ export function useScriptureAlignmentEdit({
       ...state,
       ...newState,
     }
+
     // console.log(`callSetSavedState - new state`, _newState)
-    setSavedChanges && setSavedChanges(currentIndex, !unsavedChanges_, { getChanges, clearChanges, state: _newState })
+    setSavedChanges && setSavedChanges(currentIndex, !unsavedChanges_, {
+      getChanges,
+      clearChanges,
+      state: _newState,
+    })
   }
 
   React.useEffect(() => { // set saved changes whenever user edits verse text or alignments or if alignments are open
@@ -449,6 +450,7 @@ export function useScriptureAlignmentEdit({
   return {
     actions: {
       cancelAlignment,
+      clearChanges,
       getChanges,
       handleAlignmentClick,
       onAlignmentsChange,
@@ -464,13 +466,12 @@ export function useScriptureAlignmentEdit({
       initialVerseText,
       initialVerseObjects,
       newVerseText,
+      reference: basicReference,
       sourceLanguage,
       targetLanguage,
+      title,
       unsavedChanges,
       verseTextChanged,
-      reference,
-      title,
-      originalScriptureResource,
     },
   }
 }
