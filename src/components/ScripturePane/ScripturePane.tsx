@@ -173,6 +173,7 @@ function ScripturePane({
   } = _scriptureAlignmentEdit
 
   if (isVerseSelectedForAlignment && !alignerData && !doingAlignment) {
+    console.log(`ScripturePane - verse selected for alignment`)
     handleAlignmentClick()
   }
 
@@ -181,6 +182,8 @@ function ScripturePane({
   }, [aligned, chapter, verse, projectId])
 
   React.useEffect(() => {
+    console.log(`ScripturePane - updated alignment state `, { alignerData, doingAlignment })
+
     if (alignerData && !doingAlignment) {
       setWordAlignerStatus && setWordAlignerStatus(_scriptureAlignmentEdit)
       setState({ doingAlignment: true })
@@ -188,6 +191,8 @@ function ScripturePane({
       setWordAlignerStatus && setWordAlignerStatus(_scriptureAlignmentEdit)
       setState({ doingAlignment: false })
       onAlignmentFinish && onAlignmentFinish()
+    } else {
+      console.warn(`ScripturePane - alignment cleared with doingAlignment true `)
     }
   }, [_scriptureAlignmentEdit?.state?.alignerData])
 
