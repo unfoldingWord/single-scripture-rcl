@@ -1,5 +1,5 @@
 import * as React from 'react'
-import useDeepCompareEffectNoCheck from 'use-deep-compare-effect'
+import useDeepCompareEffect from 'use-deep-compare-effect'
 import { VerseObjects } from 'scripture-resources-rcl'
 import { UsfmFileConversionHelpers } from 'word-aligner-rcl'
 import { ScriptureReference } from '../../types'
@@ -202,7 +202,7 @@ function ScripturePane({
     fontSize: calculatedFontSize,
   }
 
-  useDeepCompareEffectNoCheck(() => {
+  useDeepCompareEffect(() => {
     const verseText = UsfmFileConversionHelpers.getUsfmForVerseContent({ verseObjects: initialVerseObjects })
     clearChanges()
     setInitialVerseText(verseText)

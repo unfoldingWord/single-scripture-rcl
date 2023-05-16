@@ -12,6 +12,7 @@ import {
   useCardState,
   useUserBranch,
 } from 'translation-helps-rcl'
+// @ts-ignore
 import { getQuoteMatchesInBookRef } from 'uw-quote-helpers'
 import { AlignmentHelpers, UsfmFileConversionHelpers } from 'word-aligner-rcl'
 import * as isEqual from 'deep-equal'
