@@ -373,7 +373,8 @@ export function useScriptureAlignmentEdit({
         _newVerseText = _newVerseText || initialVerseText
         const newState = { editing: editing_, newVerseText: _newVerseText }
         setState(newState)
-        callSetSavedState((_newVerseText !== initialVerseText), newState )
+        const _alignmentsChanged = (updatedVerseObjects && !isEqual(initialVerseObjects, updatedVerseObjects))
+        callSetSavedState((_newVerseText !== initialVerseText) || _alignmentsChanged, newState )
       }
     }
   }
