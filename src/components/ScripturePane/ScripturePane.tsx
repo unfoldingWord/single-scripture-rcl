@@ -187,7 +187,7 @@ function ScripturePane({
       setState({ doingAlignment: true })
     } else {
       if (!doingAlignment) {
-        console.log(`ScripturePane - alignerData went false unhandled`, { alignerData, doingAlignment })
+        console.log(`ScripturePane - alignerData went false unexpected`, { alignerData, doingAlignment })
       }
 
       setWordAlignerStatus && setWordAlignerStatus(_scriptureAlignmentEdit)
