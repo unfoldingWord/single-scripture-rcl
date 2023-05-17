@@ -132,6 +132,11 @@ function ScripturePane({
     projectId,
   } = reference
   direction = direction || 'ltr'
+  const basicReference = {
+    chapter,
+    verse,
+    projectId,
+  }
 
   refStyle = refStyle || {
     fontFamily: 'Noto Sans',
@@ -148,10 +153,6 @@ function ScripturePane({
     initialVerseText,
     originalScriptureBookObjects,
   }
-
-  React.useEffect(() => {
-    console.log(`ScripturePane: determiningBranch is ${determiningBranch}`, { reference, resourceLink })
-  }, [determiningBranch])
 
   const _scriptureAlignmentEdit = useScriptureAlignmentEdit(_scriptureAlignmentEditConfig)
   const {
@@ -173,7 +174,7 @@ function ScripturePane({
   } = _scriptureAlignmentEdit
 
   if (isVerseSelectedForAlignment && !alignerData && !doingAlignment) {
-    console.log(`ScripturePane - verse selected for alignment`, reference)
+    console.log(`ScripturePane - verse selected for alignment`, basicReference)
     handleAlignmentClick()
   }
 
@@ -187,7 +188,7 @@ function ScripturePane({
       setState({ doingAlignment: true })
     } else {
       if (!doingAlignment) {
-        console.log(`ScripturePane - alignerData went false unexpected`, { alignerData, doingAlignment })
+        console.log(`ScripturePane - alignerData went false unexpected`, { basicReference, alignerData, doingAlignment })
       }
 
       setWordAlignerStatus && setWordAlignerStatus(_scriptureAlignmentEdit)
@@ -211,7 +212,7 @@ function ScripturePane({
     const verseText = UsfmFileConversionHelpers.getUsfmForVerseContent({ verseObjects: initialVerseObjects })
     clearChanges()
     setInitialVerseText(verseText)
-  }, [{ reference, initialVerseObjects }])
+  }, [{ basicReference, initialVerseObjects }])
 
   function onTextChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
     const newVerseText = event?.target?.value
