@@ -343,6 +343,7 @@ export function useScriptureAlignmentEdit({
       setState(newState)
       callSetSavedState(true, newState )
     } else {
+      console.log(`saveAlignment() - no alignment changes`)
       setState({
         alignerData: null,
         editing: false,
