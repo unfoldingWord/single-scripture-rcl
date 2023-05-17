@@ -152,7 +152,7 @@ export function useScriptureAlignmentEdit({
   }
 
   function clearChanges() {
-    // console.log(`clearChanges() - ${JSON.stringify(basicReference)}`)
+    console.log(`clearChanges() - ${JSON.stringify(basicReference)}`)
     const clearState = {
       ...state,
       alignerData: null,
@@ -164,7 +164,7 @@ export function useScriptureAlignmentEdit({
     }
 
     if (!isEqual(state, clearState)) {
-      // console.log(`clearChanges() - reference changed, reset edit/alignment state variables`)
+      console.log(`clearChanges() - reference changed, reset edit/alignment state variables`)
       setState(clearState)
     }
   }
