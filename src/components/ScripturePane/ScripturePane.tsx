@@ -212,6 +212,7 @@ function ScripturePane({
     const verseText = UsfmFileConversionHelpers.getUsfmForVerseContent({ verseObjects: initialVerseObjects })
     clearChanges()
     setInitialVerseText(verseText)
+    setState({newText:null})
   }, [{ basicReference, initialVerseObjects }])
 
   function onTextChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
