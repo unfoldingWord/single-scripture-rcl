@@ -371,10 +371,29 @@ export function useScriptureAlignmentEdit({
     if (enableEdit) {
       if (editing_ !== editing) {
         _newVerseText = _newVerseText || initialVerseText
-        const newState = { editing: editing_, newVerseText: _newVerseText }
+        let _updatedVerseObjects = updatedVerseObjects
+        const _changed = _newVerseText !== initialVerseText
+        const newState = {
+          editing: editing_,
+          newVerseText: _newVerseText,
+          verseTextChanged: _changed,
+        }
+
+        if (!_changed) {
+          // fallback to make sure text from verseObjects matches current text
+          const verseText = UsfmFileConversionHelpers.getUsfmForVerseContent({ verseObjects: currentVerseObjects } )
+
+          if (verseText !== _newVerseText) { // if text from verse objects does not match latest text
+            // apply alignment to current text
+            const { targetVerseObjects } = AlignmentHelpers.updateAlignmentsToTargetVerse(currentVerseObjects, _newVerseText)
+            _updatedVerseObjects = targetVerseObjects // update verseObjects to match current text
+            newState['updatedVerseObjects'] = _updatedVerseObjects
+          }
+        }
+
         setState(newState)
-        const _alignmentsChanged = (updatedVerseObjects && !isEqual(initialVerseObjects, updatedVerseObjects))
-        callSetSavedState((_newVerseText !== initialVerseText) || _alignmentsChanged, newState )
+        const _alignmentsChanged = (_updatedVerseObjects && !isEqual(initialVerseObjects, _updatedVerseObjects))
+        callSetSavedState(_changed || _alignmentsChanged, newState )
       }
     }
   }
@@ -386,7 +405,7 @@ export function useScriptureAlignmentEdit({
    * @param {string} _initialVerseText - initial verse text
    */
   function setVerseChanged(changed, newVerseText, _initialVerseText) {
-    const { targetVerseText } = AlignmentHelpers.updateAlignmentsToTargetVerse(initialVerseObjects, newVerseText)
+    const { targetVerseText } = AlignmentHelpers.updateAlignmentsToTargetVerse(currentVerseObjects, newVerseText)
     const aligned = isUsfmAligned(targetVerseText, originalVerseObjects)
     const _changed = newVerseText !== initialVerseText
 

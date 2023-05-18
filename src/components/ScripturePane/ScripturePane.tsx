@@ -178,6 +178,18 @@ function ScripturePane({
     handleAlignmentClick()
   }
 
+  const verseChanged = React.useMemo(() => {
+    return (newVerseText !== newText)
+  }, [newVerseText, newText])
+
+  React.useEffect(() => {
+    if (newVerseText !== newText) {
+      console.log(`ScripturePane - new verse text diverged`, { newVerseText, newText })
+    } else {
+      console.log(`ScripturePane - new verse text converged`, { newVerseText })
+    }
+  }, [verseChanged])
+
   React.useEffect(() => {
     updateVersesAlignmentStatus && updateVersesAlignmentStatus(reference, aligned)
   }, [aligned, chapter, verse, projectId])
@@ -212,7 +224,7 @@ function ScripturePane({
     const verseText = UsfmFileConversionHelpers.getUsfmForVerseContent({ verseObjects: initialVerseObjects })
     clearChanges()
     setInitialVerseText(verseText)
-    setState({newText:null})
+    setState({ newText: null })
   }, [{ basicReference, initialVerseObjects }])
 
   function onTextChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
