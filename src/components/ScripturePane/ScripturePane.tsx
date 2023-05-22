@@ -178,17 +178,17 @@ function ScripturePane({
     handleAlignmentClick()
   }
 
-  const verseChanged = React.useMemo(() => {
-    return (newVerseText !== newText)
-  }, [newVerseText, newText])
-
-  React.useEffect(() => {
-    if (newVerseText !== newText) {
-      console.log(`ScripturePane - new verse text diverged`, { newVerseText, newText })
-    } else {
-      console.log(`ScripturePane - new verse text converged`, { newVerseText })
-    }
-  }, [verseChanged])
+  // const verseChanged = React.useMemo(() => {
+  //   return (newVerseText !== newText)
+  // }, [newVerseText, newText])
+  //
+  // React.useEffect(() => {
+  //   if (newVerseText !== newText) {
+  //     console.log(`ScripturePane - new verse text diverged`, { newVerseText, newText })
+  //   } else {
+  //     console.log(`ScripturePane - new verse text converged`, { newVerseText })
+  //   }
+  // }, [verseChanged])
 
   React.useEffect(() => {
     updateVersesAlignmentStatus && updateVersesAlignmentStatus(reference, aligned)

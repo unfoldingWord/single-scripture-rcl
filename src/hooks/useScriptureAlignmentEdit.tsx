@@ -372,14 +372,14 @@ export function useScriptureAlignmentEdit({
       if (editing_ !== editing) {
         _newVerseText = _newVerseText || initialVerseText
         let _updatedVerseObjects = updatedVerseObjects
-        const _changed = _newVerseText !== initialVerseText
+        const verseTextChanged = _newVerseText !== initialVerseText
         const newState = {
           editing: editing_,
           newVerseText: _newVerseText,
-          verseTextChanged: _changed,
+          verseTextChanged,
         }
 
-        if (!_changed) {
+        if (!verseTextChanged) {
           // fallback to make sure text from verseObjects matches current text
           const verseText = UsfmFileConversionHelpers.getUsfmForVerseContent({ verseObjects: currentVerseObjects } )
 
@@ -393,7 +393,7 @@ export function useScriptureAlignmentEdit({
 
         setState(newState)
         const _alignmentsChanged = (_updatedVerseObjects && !isEqual(initialVerseObjects, _updatedVerseObjects))
-        callSetSavedState(_changed || _alignmentsChanged, newState )
+        callSetSavedState(verseTextChanged || _alignmentsChanged, newState )
       }
     }
   }
@@ -407,10 +407,10 @@ export function useScriptureAlignmentEdit({
   function setVerseChanged(changed, newVerseText, _initialVerseText) {
     const { targetVerseText } = AlignmentHelpers.updateAlignmentsToTargetVerse(currentVerseObjects, newVerseText)
     const aligned = isUsfmAligned(targetVerseText, originalVerseObjects)
-    const _changed = newVerseText !== initialVerseText
+    const verseTextChanged = newVerseText !== initialVerseText
 
     setState({
-      verseTextChanged: _changed,
+      verseTextChanged,
       newVerseText,
       aligned,
     })
