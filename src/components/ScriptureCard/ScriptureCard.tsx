@@ -223,7 +223,6 @@ export default function ScriptureCard({
   const { isLoading: isMergeLoading, callMergeUserBranch } = useMasterMergeProps({
     isSaving: startSave,
     useBranchMerger: _useBranchMerger,
-    reloadContent: scriptureConfig?.reloadResource,
   })
 
   React.useEffect(() => {
