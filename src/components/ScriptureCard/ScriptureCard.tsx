@@ -727,8 +727,9 @@ export default function ScriptureCard({
             bibleUsfm = usfmjs.toUSFM(newBookJson, {forcedNewLines: true})
           }
 
-        console.log(`saveChangesToCloud() - saving new USFM: ${bibleUsfm.substring(0, 100)}...`)
-        setState({ saveContent: bibleUsfm, startSave: true, saveClicked: false })
+          console.log(`saveChangesToCloud() - saving new USFM: ${bibleUsfm.substring(0, 100)}...`)
+          setState({saveContent: bibleUsfm, startSave: true, saveClicked: false})
+        }
       }
     }
 
@@ -902,13 +903,6 @@ export default function ScriptureCard({
   const mergeFromMasterColor = mergeFromMasterHasConflicts ? 'black' : (needToMergeFromMaster ? 'black' : 'lightgray')
   const mergeToMasterTitle = mergeToMasterHasConflicts ? 'Merge Conflicts for share with master' : 'No merge conflicts for share with master'
   const mergeToMasterColor = mergeToMasterHasConflicts ? 'black' : 'black'
-
-  const updateVersesAlignmentStatus = (reference, aligned) => {
-    setState_(prevState => ({
-      ...prevState,
-      versesAlignmentStatus: {...prevState.versesAlignmentStatus, [`${reference.chapter}:${reference.verse}`]: aligned},
-    }))
-  }
 
   const renderedScripturePanes = _versesForRef?.map((_currentVerseData, index) => {
     const initialVerseObjects = _currentVerseData?.verseData?.verseObjects || []
