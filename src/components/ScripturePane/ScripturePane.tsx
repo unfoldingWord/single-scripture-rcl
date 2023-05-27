@@ -128,8 +128,8 @@ function ScripturePane({
 
   const {
     chapter,
-    verse,
     projectId,
+    verse,
   } = reference
   direction = direction || 'ltr'
   const basicReference = {

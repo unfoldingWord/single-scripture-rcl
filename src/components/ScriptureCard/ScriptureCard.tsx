@@ -3,7 +3,7 @@ import * as PropTypes from 'prop-types'
 import { core, SelectionsContextProvider } from 'scripture-resources-rcl'
 import usfmjs from 'usfm-js'
 import { useEdit } from 'gitea-react-toolkit'
-import { MdUpdate, MdUpdateDisabled } from 'react-icons/md'
+import { MdUpdateDisabled } from 'react-icons/md'
 import { FiShare } from 'react-icons/fi'
 import { IconButton } from '@mui/material'
 import { RxLink2, RxLinkBreak2 } from 'react-icons/rx'
@@ -278,15 +278,16 @@ export default function ScriptureCard({
     },
     actions: {
       updateUserBranch: mergeFromMasterIntoUserBranch,
-      mergeMasterBranch: mergeToMasterFromUserBranch
-    }
-  } = _useBranchMerger;
+      mergeMasterBranch: mergeToMasterFromUserBranch,
+    },
+  } = _useBranchMerger
 
   const updateButtonProps = useContentUpdateProps({
     isSaving: startSave,
     useBranchMerger: _useBranchMerger,
     reloadContent: scriptureConfig?.reloadResource
-  });
+  })
+
   const {
     callUpdateUserBranch,
     isErrorDialogOpen,
@@ -295,8 +296,8 @@ export default function ScriptureCard({
     dialogMessage,
     dialogTitle,
     dialogLink,
-    dialogLinkTooltip
-  } = updateButtonProps;
+    dialogLinkTooltip,
+  } = updateButtonProps
 
   React.useEffect(() => {
     if (cardResourceId) {
@@ -980,10 +981,10 @@ export default function ScriptureCard({
     let alignButtonText = ''
 
     if (allVersesAligned) {
-      alignIcon = <RxLink2 id={`valid_icon_${resourceId}`} color='#BBB'/>
+      alignIcon = <RxLink2 id={`valid_icon_${resourceId}`} color='#BBB' />
       alignButtonText = 'Alignment is Valid'
     } else {
-      alignIcon = <RxLinkBreak2 id={`invalid_alignment_icon_${resourceId}`} color='#000'/>
+      alignIcon = <RxLinkBreak2 id={`invalid_alignment_icon_${resourceId}`} color='#000' />
       alignButtonText = 'Alignment is Invalid'
     }
 
@@ -1151,6 +1152,10 @@ ScriptureCard.propTypes = {
   setAreResourcesLoading: PropTypes.func,
   /** callback to update saving state*/
   setAreResourcesSaving: PropTypes.func,
+  /** callback to report card loading status */
+  setCardsLoading: PropTypes.func,
+  /** callback to report card savinging status */
+  setCardsSaving: PropTypes.func,
   /** function to set state in app that there are unsaved changes */
   setSavedChanges: PropTypes.func,
   /** callback to update word aligner state */
