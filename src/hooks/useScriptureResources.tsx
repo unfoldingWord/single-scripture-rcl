@@ -1,12 +1,11 @@
+import { useEffect } from 'react'
 import { useScripture } from '..'
 import { getScriptureResourceSettings } from '../utils/ScriptureSettings'
 
 /**
  * hook to get a scripture resource
- * @param {string} bookId
  * @param {object} scriptureSettings - info about the scripture being referenced
- * @param {string} chapter
- * @param {string} verse
+ * @param {object} reference
  * @param {boolean} isNewTestament
  * @param {string} originalRepoUrl - optional path to repo for original language
  * @param {string} currentLanguageId - optional over-ride for transient case where language in scripture settings have not yet updated
@@ -14,33 +13,35 @@ import { getScriptureResourceSettings } from '../utils/ScriptureSettings'
  * @param {object} httpConfig - optional config settings for fetches (timeout, cache, etc.)
  * @param {string} appRef - app default, points to specific ref that could be a branch or tag
  * @param {boolean} wholeBook - if true then fetch the entire book
+ * @param {boolean} readyForFetch - true if ready for fetching
  */
 export function useScriptureResources({
-  bookId,
-  scriptureSettings,
-  chapter,
-  verse,
-  isNewTestament,
-  originalRepoUrl,
+  appRef = 'master',
   currentLanguageId = null,
   currentOwner = null,
   httpConfig = {},
-  appRef = 'master',
+  isNewTestament,
+  originalRepoUrl,
+  readyForFetch = false,
+  reference,
+  scriptureSettings,
   wholeBook = false,
 }) {
+  const bookId = reference?.projectId
+
   if (appRef !== scriptureSettings.ref) {
     scriptureSettings = { ...scriptureSettings, ref: appRef }
   }
+
+  useEffect(() => {
+    console.log(`useScriptureResources: appRef changed to scriptureSettings.ref=${scriptureSettings.ref} and appRef=${appRef}`)
+  }, [appRef, scriptureSettings.ref])
 
   const scriptureSettings_ = getScriptureResourceSettings(bookId, scriptureSettings, isNewTestament,
     originalRepoUrl, currentLanguageId, currentOwner) // convert any default settings strings
 
   const scriptureConfig_ = {
-    reference: {
-      projectId: bookId,
-      chapter: chapter,
-      verse: verse,
-    },
+    reference,
     resource: {
       languageId: scriptureSettings_.languageId,
       projectId: scriptureSettings_.resourceId,
@@ -54,6 +55,7 @@ export function useScriptureResources({
     },
     disableWordPopover: scriptureSettings_.disableWordPopover,
     wholeBook,
+    readyForFetch,
   }
 
   // @ts-ignore
