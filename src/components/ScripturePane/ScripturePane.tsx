@@ -116,7 +116,7 @@ function ScripturePane({
 
   const [initialVerseText, setInitialVerseText] = React.useState(null)
 
-  let resourceMessage = null
+  let resourceMessage = ''
 
   if (saving) {
     resourceMessage = 'Saving Changes...'

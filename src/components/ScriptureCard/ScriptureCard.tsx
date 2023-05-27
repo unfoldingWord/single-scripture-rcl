@@ -569,6 +569,7 @@ export default function ScriptureCard({
             ref: userEditBranchName,
           })
           delay(500).then(() => {
+            setCardsSaving(prevCardsSaving => prevCardsSaving.filter(cardId => cardId !== cardResourceId))
             scriptureConfig?.reloadResource(sha)
           })
         } else {
@@ -586,8 +587,8 @@ export default function ScriptureCard({
         // console.log(`saveChangesToCloud - save sha not yet ready`)
       } else {
         // console.log(`saveChangesToCloud - calling _saveEdit()`)
-        _saveEdit()
         setCardsSaving(prevCardsSaving => [...prevCardsSaving, cardResourceId])
+        _saveEdit()
       }
     }
   }, [startSave, editBranchReady, sha])
