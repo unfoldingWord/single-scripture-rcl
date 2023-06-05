@@ -1,1 +1,1 @@
-export { default as VerseSelectorPopup } from './VerseSelectorPopup';
+export { default as VerseSelectorPopup } from './VerseSelectorPopup'
