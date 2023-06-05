@@ -182,6 +182,7 @@ export default function ScriptureCard({
     },
     actions: {
       startEdit: startEditBranch,
+      finishEdit,
     },
   } = useUserBranch({
     owner,
@@ -207,7 +208,7 @@ export default function ScriptureCard({
   const updateButtonProps = useContentUpdateProps({
     isSaving: startSave,
     useBranchMerger: _useBranchMerger,
-    reloadContent: scriptureConfig?.reloadResource
+    onUpdate: scriptureConfig?.reloadResource
   });
   const {
     callUpdateUserBranch,
@@ -220,9 +221,16 @@ export default function ScriptureCard({
     dialogLinkTooltip
   } = updateButtonProps;
 
+  const onMerge = () => {
+    finishEdit()
+    setState({ ref: appRef })
+    // scriptureConfig?.reloadResource()
+  }
+
   const { isLoading: isMergeLoading, callMergeUserBranch } = useMasterMergeProps({
     isSaving: startSave,
     useBranchMerger: _useBranchMerger,
+    onMerge,
   })
 
   React.useEffect(() => {
@@ -482,6 +490,7 @@ export default function ScriptureCard({
       await onSaveEdit(branch).then((success) => { // push changed to server
         if (success) {
           console.log(`saveChangesToCloud() - save scripture edits success`)
+          setCardsSaving(prevCardsSaving => prevCardsSaving.filter(cardId => cardId !== cardResourceId))
           setState({
             startSave: false,
           })
@@ -612,6 +621,7 @@ export default function ScriptureCard({
         }
 
         console.log(`saveChangesToCloud() - saving new USFM: ${bibleUsfm.substring(0, 100)}...`)
+        setCardsSaving(prevCardsSaving => [...prevCardsSaving, cardResourceId])
         setState({ saveContent: bibleUsfm, startSave: true, saveClicked: false })
       }
     }
