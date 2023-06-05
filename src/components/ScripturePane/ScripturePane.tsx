@@ -3,8 +3,8 @@ import useDeepCompareEffect from 'use-deep-compare-effect'
 import { VerseObjects } from 'scripture-resources-rcl'
 import { UsfmFileConversionHelpers } from 'word-aligner-rcl'
 import { ScriptureReference } from '../../types'
-import { getResourceMessage } from '../../utils'
-import { ScriptureALignmentEditProps, useScriptureAlignmentEdit } from "../../hooks/useScriptureAlignmentEdit";
+import { getResourceMessage, LOADING_RESOURCE } from '../../utils'
+import { ScriptureALignmentEditProps, useScriptureAlignmentEdit } from '../../hooks/useScriptureAlignmentEdit'
 import { Container, Content } from './styled'
 
 interface Props {
@@ -12,6 +12,8 @@ interface Props {
   contentStyle: any;
   // index number for this scripture pane
   currentIndex: number,
+  // waiting to determine branch
+  determiningBranch: boolean,
   /** language direction to use **/
   direction: string|undefined;
   /** if true then do not display lexicon popover on hover **/
@@ -22,6 +24,12 @@ interface Props {
   getLexiconData: Function;
   /** true if browsing NT */
   isNT: boolean;
+  /** whether or not this current verse has been selected for alignment */
+  isVerseSelectedForAlignment: boolean;
+  /** function to be called when verse alignment has finished */
+  onAlignmentFinish: Function;
+  // original scripture bookObjects for current book
+  originalScriptureBookObjects: object,
   /** current reference **/
   reference: ScriptureReference;
   /** optional styles to use for reference **/
@@ -42,10 +50,6 @@ interface Props {
   setWordAlignerStatus: Function;
   /** optional function for localization */
   translate: Function;
-  /** whether or not this current verse has been selected for alignment */
-  isVerseSelectedForAlignment: boolean;
-  /** function to be called when verse alignment has finished */
-  onAlignmentFinish: Function;
   /** function to be called to update verse alignment status */
   updateVersesAlignmentStatus: Function;
 }
@@ -72,25 +76,27 @@ const TextAreaStyle = {
 }
 
 function ScripturePane({
-  reference,
-  refStyle,
-  direction,
   currentIndex,
   contentStyle,
+  determiningBranch,
+  direction,
   disableWordPopover,
-  resourceStatus,
-  resourceLink,
-  server,
-  isNT,
   fontSize,
   getLexiconData,
-  translate,
+  isNT,
+  isVerseSelectedForAlignment,
+  onAlignmentFinish,
+  originalScriptureBookObjects,
+  reference,
+  refStyle,
+  resourceStatus,
+  resourceLink,
   saving,
   scriptureAlignmentEditConfig,
   setSavedChanges,
   setWordAlignerStatus,
-  isVerseSelectedForAlignment,
-  onAlignmentFinish,
+  server,
+  translate,
   updateVersesAlignmentStatus,
 } : Props) {
   const [state, setState_] = React.useState({
@@ -111,14 +117,26 @@ function ScripturePane({
   const [initialVerseText, setInitialVerseText] = React.useState(null)
 
   let resourceMessage = ''
+
   if (saving) {
     resourceMessage = 'Saving Changes...'
+  } else if (determiningBranch) {
+    resourceMessage = 'Pre-' + LOADING_RESOURCE
   } else {
     resourceMessage = getResourceMessage(resourceStatus, server, resourceLink, isNT)
   }
 
-  const { chapter, verse } = reference
+  const {
+    chapter,
+    projectId,
+    verse,
+  } = reference
   direction = direction || 'ltr'
+  const basicReference = {
+    chapter,
+    verse,
+    projectId,
+  }
 
   refStyle = refStyle || {
     fontFamily: 'Noto Sans',
@@ -133,11 +151,13 @@ function ScripturePane({
   const _scriptureAlignmentEditConfig = {
     ...scriptureAlignmentEditConfig,
     initialVerseText,
+    originalScriptureBookObjects,
   }
 
   const _scriptureAlignmentEdit = useScriptureAlignmentEdit(_scriptureAlignmentEditConfig)
   const {
     actions: {
+      clearChanges,
       handleAlignmentClick,
       setEditing,
       setVerseChanged,
@@ -154,18 +174,35 @@ function ScripturePane({
   } = _scriptureAlignmentEdit
 
   if (isVerseSelectedForAlignment && !alignerData && !doingAlignment) {
+    console.log(`ScripturePane - verse selected for alignment`, basicReference)
     handleAlignmentClick()
   }
 
+  // const verseChanged = React.useMemo(() => {
+  //   return (newVerseText !== newText)
+  // }, [newVerseText, newText])
+  //
+  // React.useEffect(() => {
+  //   if (newVerseText !== newText) {
+  //     console.log(`ScripturePane - new verse text diverged`, { newVerseText, newText })
+  //   } else {
+  //     console.log(`ScripturePane - new verse text converged`, { newVerseText })
+  //   }
+  // }, [verseChanged])
+
   React.useEffect(() => {
     updateVersesAlignmentStatus && updateVersesAlignmentStatus(reference, aligned)
-  }, [aligned])
+  }, [aligned, chapter, verse, projectId])
 
   React.useEffect(() => {
     if (alignerData && !doingAlignment) {
       setWordAlignerStatus && setWordAlignerStatus(_scriptureAlignmentEdit)
       setState({ doingAlignment: true })
-    } else if (doingAlignment) {
+    } else {
+      if (!doingAlignment) {
+        console.log(`ScripturePane - alignerData went false unexpected`, { basicReference, alignerData, doingAlignment })
+      }
+
       setWordAlignerStatus && setWordAlignerStatus(_scriptureAlignmentEdit)
       setState({ doingAlignment: false })
       onAlignmentFinish && onAlignmentFinish()
@@ -185,13 +222,15 @@ function ScripturePane({
 
   useDeepCompareEffect(() => {
     const verseText = UsfmFileConversionHelpers.getUsfmForVerseContent({ verseObjects: initialVerseObjects })
+    clearChanges()
     setInitialVerseText(verseText)
-  }, [{ reference, initialVerseObjects }])
+    setState({ newText: null })
+  }, [{ basicReference, initialVerseObjects }])
 
   function onTextChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
     const newVerseText = event?.target?.value
     const changed = newVerseText !== initialVerseText
-    console.log(`SP.onTextChange`, { changed, newText: newVerseText, initialVerseText })
+    // console.log(`SP.onTextChange`, { changed, newText: newVerseText, initialVerseText })
     setVerseChanged(changed, newVerseText, initialVerseText)
     setState({ newText: newVerseText })
   }
@@ -199,9 +238,6 @@ function ScripturePane({
   function onBlur(event: React.ChangeEvent<HTMLTextAreaElement>) {
     setEditing(false, newText)
   }
-
-  const checkingState = aligned ? 'valid' : 'invalid'
-  const titleText = checkingState === 'valid' ? 'Alignment is Valid' : 'Alignment is Invalid'
 
   return (
     <Container style={{ direction, width: '100%', paddingBottom: '0.5em' }}>
