@@ -962,7 +962,7 @@ export default function ScriptureCard({
         getCustomComponent={getScriptureSelector}
         hideMarkdownToggle
         onMenuClose={onMenuClose}
-        onMinimize={onMinimize ? () => onMinimize(id) : null}
+        onMinimize={onMinimize ? () => onMinimize(id, scriptureTitle) : null}
         editable={enableEdit || enableAlignment}
         saved={startSave || !haveUnsavedChanges}
         onSaveEdit={() => setState({ saveClicked: true })}
