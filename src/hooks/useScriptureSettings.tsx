@@ -80,38 +80,38 @@ function isScriptureResource(subject) {
 }
 
 export function useScriptureSettings({
-  isNT,
-  title,
-  cardNum,
-  chapter,
-  verse,
-  bookId,
-  owner,
-  server,
   appRef,
-  languageId,
-  resourceId,
-  resourceLink,
-  useUserLocalStorage,
+  cardNum,
   disableWordPopover,
-  originalLanguageOwner,
-  setUrlError,
-  httpConfig,
   greekRepoUrl,
   hebrewRepoUrl,
+  httpConfig,
+  isNT,
+  languageId,
+  originalLanguageOwner,
+  owner,
+  reference,
+  resourceId,
+  resourceLink,
+  readyForFetch = false,
+  server,
+  setUrlError,
+  title,
+  useUserLocalStorage,
   wholeBook = false,
 }) {
+  const bookId = reference?.projectId
   const isNewTestament = isNT(bookId)
   const scriptureDefaultSettings = getScriptureObject({
-    title,
-    server,
+    disableWordPopover,
+    languageId,
+    originalLanguageOwner,
     owner,
     ref: appRef,
-    languageId,
     resourceId,
     resourceLink,
-    disableWordPopover,
-    originalLanguageOwner,
+    server,
+    title,
   })
   const [versionHistory, saveVersionHist, refreshVersionHist] = useUserLocalStorage(KEY_SCRIPTURE_VER_HISTORY, [])
   const scriptureVersionHist = new ScriptureVersionHistory(versionHistory, saveVersionHist, refreshVersionHist)
@@ -148,16 +148,15 @@ export function useScriptureSettings({
 
   const originalRepoUrl = isNewTestament ? greekRepoUrl : hebrewRepoUrl
   const scriptureConfig = useScriptureResources({
-    bookId,
-    scriptureSettings,
-    chapter,
-    verse,
-    isNewTestament,
-    originalRepoUrl,
+    appRef,
     currentLanguageId: languageId,
     currentOwner: owner,
     httpConfig,
-    appRef,
+    isNewTestament,
+    originalRepoUrl,
+    readyForFetch,
+    reference,
+    scriptureSettings,
     wholeBook,
   })
 
@@ -236,11 +235,7 @@ export function useScriptureSettings({
       // make sure it exists
       core.resourceFromResourceLink({
         resourceLink: url_,
-        reference: {
-          projectId: bookId,
-          chapter: chapter,
-          verse: verse,
-        },
+        reference,
         config: {
           server: server_,
           cache: { maxAge: 1 * 60 * 60 * 1000 }, // 1 hr
@@ -264,15 +259,15 @@ export function useScriptureSettings({
           } else if (title && version) {
             // we succeeded in getting resource - use it
             newScripture = getScriptureObject({
-              title,
-              server: server_,
+              disableWordPopover,
+              languageId: resource.languageId,
+              originalLanguageOwner,
               owner: resource.username,
               ref: resource.ref || 'master',
-              languageId: resource.languageId,
               resourceId: resource.resourceId,
               resourceLink: cleanResourceLink(resource?.resourceLink),
-              disableWordPopover,
-              originalLanguageOwner,
+              server: server_,
+              title,
             })
             newScripture['userAdded'] = true
             scriptureVersionHist.addItemToHistory(newScripture) // persist in local storage
@@ -311,9 +306,9 @@ export function useScriptureSettings({
   return {
     isNewTestament,
     scriptureConfig,
-    setScripture,
-    scriptureVersionHist,
     scriptureSettings,
+    scriptureVersionHist,
+    setScripture,
   }
 }
 
