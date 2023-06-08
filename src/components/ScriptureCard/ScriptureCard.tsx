@@ -284,8 +284,12 @@ export default function ScriptureCard({
   const updateButtonProps = useContentUpdateProps({
     isSaving: startSave,
     useBranchMerger: _useBranchMerger,
-    onUpdate: scriptureConfig?.reloadResource
+    onUpdate: () => {
+      setState({ readyForFetch: true })
+      delay(500).then(() => scriptureConfig?.reloadResource(sha))
+    },
   });
+
   const {
     callUpdateUserBranch,
     isErrorDialogOpen,
@@ -300,7 +304,6 @@ export default function ScriptureCard({
   const onMerge = () => {
     finishEdit()
     setState({ ref: appRef })
-    // scriptureConfig?.reloadResource()
   }
 
   const { isLoading: isMergeLoading, callMergeUserBranch } = useMasterMergeProps({
@@ -912,6 +915,7 @@ export default function ScriptureCard({
     if (_versesForRef?.length) {
       const { reference, resourceLink } = scriptureConfig || {}
       console.log(`ScriptureCard._versesForRef changed`, { reference, resourceLink })
+      setState({ versesForRef: _versesForRef })
     }
   }, [_versesForRef])
 
