@@ -475,6 +475,7 @@ export default function ScriptureCard({
       // @ts-ignore
       timeout: httpConfig?.serverTimeOut || httpConfig?.timeout || 10000,
       server,
+      dontCreateBranch: true,
     },
     author: loggedInUser,
     token: authentication?.token,
@@ -486,7 +487,7 @@ export default function ScriptureCard({
   React.useEffect(() => { // when we get a save saveError
     if (saveError && isSaveError) {
       console.log(`save error`, saveError)
-      // onResourceError && onResourceError(null, false, null, `Error saving ${languageId_}_${resourceId} ${saveError}`, true)
+      onResourceError && onResourceError(null, false, null, `Error saving ${languageId_}_${resourceId} ${saveError}`, true)
     }
   }, [saveError, isSaveError])
 
