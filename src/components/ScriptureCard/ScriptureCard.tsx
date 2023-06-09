@@ -56,7 +56,7 @@ function compareObject(verseRef) {
     verse,
     verseData,
   } = verseRef || {}
-  const verseObjects = verseData?.verseObjects?.length || 0
+  const verseObjects = verseData?.verseObjects?.length ? JSON.stringify(verseData.verseObjects) : ""
   return {
     chapter,
     verse,
@@ -182,13 +182,11 @@ export default function ScriptureCard({
     setState_(prevState => ({ ...prevState, ...newState }))
   }
 
-  if (usingUserBranch) {
-    httpConfig = {
-      ...httpConfig,
-      cache: { maxAge: 0 },
-      noCache: true,
-    } // disable http caching
-  }
+  httpConfig = {
+    ...httpConfig,
+    cache: { maxAge: 0 },
+    noCache: true,
+  } // disable http caching
 
   const {
     isNewTestament,
@@ -285,7 +283,6 @@ export default function ScriptureCard({
     isSaving: startSave,
     useBranchMerger: _useBranchMerger,
     onUpdate: () => {
-      setState({ readyForFetch: true })
       delay(500).then(() => scriptureConfig?.reloadResource(sha))
     },
   });
@@ -304,6 +301,9 @@ export default function ScriptureCard({
   const onMerge = () => {
     finishEdit()
     setState({ ref: appRef })
+    delay(500).then(() => {
+      scriptureConfig?.reloadResource()
+    })
   }
 
   const { isLoading: isMergeLoading, callMergeUserBranch } = useMasterMergeProps({
@@ -892,7 +892,15 @@ export default function ScriptureCard({
     if (Object.keys(newState).length) {
       setState(newState)
     }
-  }, [owner, resourceId, bookId, languageId_, scriptureConfig?.versesForRef, originalScriptureBookObjects, selectedQuote])
+  }, [
+    owner,
+    resourceId,
+    bookId,
+    languageId_,
+    scriptureConfig?.versesForRef,
+    originalScriptureBookObjects,
+    selectedQuote,
+  ])
 
   React.useEffect(() => { // clear settings on verse change
     setState({
@@ -915,7 +923,6 @@ export default function ScriptureCard({
     if (_versesForRef?.length) {
       const { reference, resourceLink } = scriptureConfig || {}
       console.log(`ScriptureCard._versesForRef changed`, { reference, resourceLink })
-      setState({ versesForRef: _versesForRef })
     }
   }, [_versesForRef])
 
