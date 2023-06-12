@@ -3,8 +3,6 @@ import * as PropTypes from 'prop-types'
 import { core, SelectionsContextProvider } from 'scripture-resources-rcl'
 import usfmjs from 'usfm-js'
 import { useEdit } from 'gitea-react-toolkit'
-import { MdUpdateDisabled } from 'react-icons/md'
-import { FiShare } from 'react-icons/fi'
 import { IconButton } from '@mui/material'
 import { RxLink2, RxLinkBreak2 } from 'react-icons/rx'
 import {
@@ -16,6 +14,7 @@ import {
   useBranchMerger,
   useCardState,
   useContentUpdateProps,
+  useMasterMergeProps,
   useUserBranch,
 } from 'translation-helps-rcl'
 // @ts-ignore
@@ -57,7 +56,7 @@ function compareObject(verseRef) {
     verse,
     verseData,
   } = verseRef || {}
-  const verseObjects = verseData?.verseObjects?.length || 0
+  const verseObjects = verseData?.verseObjects?.length ? JSON.stringify(verseData.verseObjects) : ""
   return {
     chapter,
     verse,
@@ -120,14 +119,15 @@ export default function ScriptureCard({
   resourceLink,
   selectedQuote,
   server,
-  setCardsLoading,
-  setCardsSaving,
   setSavedChanges,
   setWordAlignerStatus,
   translate,
   title,
   useUserLocalStorage,
   updateMergeState,
+  setCardsLoadingUpdate,
+  setCardsLoadingMerge,
+  setCardsSaving
 }) {
   const bookId = reference?.projectId
   const [state, setState_] = React.useState({
@@ -182,13 +182,11 @@ export default function ScriptureCard({
     setState_(prevState => ({ ...prevState, ...newState }))
   }
 
-  if (usingUserBranch) {
-    httpConfig = {
-      ...httpConfig,
-      cache: { maxAge: 0 },
-      noCache: true,
-    } // disable http caching
-  }
+  httpConfig = {
+    ...httpConfig,
+    cache: { maxAge: 0 },
+    noCache: true,
+  } // disable http caching
 
   const {
     isNewTestament,
@@ -254,7 +252,10 @@ export default function ScriptureCard({
       usingUserBranch: _usingUserBranch,
       workingResourceBranch,
     },
-    actions: { startEdit: startEditBranch },
+    actions: {
+      startEdit: startEditBranch,
+      finishEdit,
+    },
   } = useUserBranch({
     appRef,
     authentication: canUseEditBranch ? authentication : null,
@@ -276,28 +277,40 @@ export default function ScriptureCard({
       mergeStatus: mergeToMaster,
       updateStatus: mergeFromMaster,
     },
-    actions: {
-      updateUserBranch: mergeFromMasterIntoUserBranch,
-      mergeMasterBranch: mergeToMasterFromUserBranch,
-    },
-  } = _useBranchMerger
+  } = _useBranchMerger;
 
   const updateButtonProps = useContentUpdateProps({
     isSaving: startSave,
     useBranchMerger: _useBranchMerger,
-    reloadContent: scriptureConfig?.reloadResource
-  })
+    onUpdate: () => {
+      delay(500).then(() => scriptureConfig?.reloadResource(sha))
+    },
+  });
 
   const {
     callUpdateUserBranch,
     isErrorDialogOpen,
     onCloseErrorDialog,
-    isLoading,
+    isLoading: isUpdateLoading,
     dialogMessage,
     dialogTitle,
     dialogLink,
     dialogLinkTooltip,
   } = updateButtonProps
+
+  const onMerge = () => {
+    finishEdit()
+    setState({ ref: appRef })
+    delay(500).then(() => {
+      scriptureConfig?.reloadResource()
+    })
+  }
+
+  const { isLoading: isMergeLoading, callMergeUserBranch } = useMasterMergeProps({
+    isSaving: startSave,
+    useBranchMerger: _useBranchMerger,
+    onMerge,
+  })
 
   React.useEffect(() => {
     if (cardResourceId) {
@@ -306,18 +319,26 @@ export default function ScriptureCard({
         mergeFromMaster,
         mergeToMaster,
         callUpdateUserBranch,
-        mergeToMasterFromUserBranch,
+        callMergeUserBranch,
       )
     }
   },[cardResourceId, mergeFromMaster, mergeToMaster])
 
   React.useEffect(() => {
-    if (isLoading) {
-      setCardsLoading(prevCardsLoading => [...prevCardsLoading, cardResourceId])
+    if (isUpdateLoading) {
+      setCardsLoadingUpdate?.(prevCardsLoading => [...prevCardsLoading, cardResourceId])
     } else {
-      setCardsLoading(prevCardsLoading => prevCardsLoading.filter(cardId => cardId !== cardResourceId))
+      setCardsLoadingUpdate?.(prevCardsLoading => prevCardsLoading.filter(cardId => cardId !== cardResourceId))
     }
-  }, [isLoading])
+  }, [isUpdateLoading])
+
+  React.useEffect(() => {
+    if (isMergeLoading) {
+      setCardsLoadingMerge?.(prevCardsLoading => [...prevCardsLoading, cardResourceId])
+    } else {
+      setCardsLoadingMerge?.(prevCardsLoading => prevCardsLoading.filter(cardId => cardId !== cardResourceId))
+    }
+  }, [isMergeLoading])
 
   const workingRef = canUseEditBranch ? workingResourceBranch : appRef
   let scriptureTitle
@@ -554,6 +575,11 @@ export default function ScriptureCard({
       await onSaveEdit(userEditBranchName).then((success) => { // push changed to server
         if (success) {
           console.log(`saveChangesToCloud() - save scripture edits success`)
+          setCardsSaving(prevCardsSaving => prevCardsSaving.filter(cardId => cardId !== cardResourceId))
+          setState({
+            startSave: false,
+          })
+
           const unsavedCardIndices = Object.keys(unsavedChangesList)
 
           if (unsavedCardIndices?.length) {
@@ -730,6 +756,7 @@ export default function ScriptureCard({
           }
 
           console.log(`saveChangesToCloud() - saving new USFM: ${bibleUsfm.substring(0, 100)}...`)
+          setCardsSaving(prevCardsSaving => [...prevCardsSaving, cardResourceId])
           setState({saveContent: bibleUsfm, startSave: true, saveClicked: false})
         }
       }
@@ -865,7 +892,15 @@ export default function ScriptureCard({
     if (Object.keys(newState).length) {
       setState(newState)
     }
-  }, [owner, resourceId, bookId, languageId_, scriptureConfig?.versesForRef, originalScriptureBookObjects, selectedQuote])
+  }, [
+    owner,
+    resourceId,
+    bookId,
+    languageId_,
+    scriptureConfig?.versesForRef,
+    originalScriptureBookObjects,
+    selectedQuote,
+  ])
 
   React.useEffect(() => { // clear settings on verse change
     setState({
@@ -895,19 +930,8 @@ export default function ScriptureCard({
     _versesForRef = [{ ...reference }]
   }
 
-  const needToMergeFromMaster = mergeFromMaster?.mergeNeeded
-  const mergeFromMasterHasConflicts = mergeFromMaster?.conflict
-  const mergeToMasterHasConflicts = mergeToMaster?.conflict
-
-  // eslint-disable-next-line no-nested-ternary
-  const mergeFromMasterTitle = mergeFromMasterHasConflicts ? 'Merge Conflicts for update from master' : (needToMergeFromMaster ? 'Update from master' : 'No merge conflicts for update with master')
-  // eslint-disable-next-line no-nested-ternary
-  const mergeFromMasterColor = mergeFromMasterHasConflicts ? 'black' : (needToMergeFromMaster ? 'black' : 'lightgray')
-  const mergeToMasterTitle = mergeToMasterHasConflicts ? 'Merge Conflicts for share with master' : 'No merge conflicts for share with master'
-  const mergeToMasterColor = mergeToMasterHasConflicts ? 'black' : 'black'
-
-  const renderedScripturePanes = _versesForRef?.map((_currentVerseData, index) => {
-    const initialVerseObjects = _currentVerseData?.verseData?.verseObjects || []
+  const renderedScripturePanes = versesForRef?.map((_currentVerseData, index) => {
+    const initialVerseObjects = _currentVerseData?.verseData?.verseObjects || null
     // @ts-ignore
     const { chapter, verse } = _currentVerseData || {}
     const projectId = currentReference?.projectId || reference?.projectId
@@ -1005,31 +1029,12 @@ export default function ScriptureCard({
 
     newItems.push(
       <>
-        <UpdateBranchButton {...updateButtonProps} isLoading={isLoading || startSave}/>
-        <ErrorDialog title={dialogTitle} content={dialogMessage} open={isErrorDialogOpen} onClose={onCloseErrorDialog} isLoading={ isLoading || startSave } link={dialogLink} linkTooltip={dialogLinkTooltip} />
+        <UpdateBranchButton {...updateButtonProps} isLoading={isUpdateLoading || startSave}/>
+        <ErrorDialog title={dialogTitle} content={dialogMessage} open={isErrorDialogOpen} onClose={onCloseErrorDialog} isLoading={ isUpdateLoading || startSave } link={dialogLink} linkTooltip={dialogLinkTooltip} />
       </>
     )
 
-    if (mergeToMaster) {
-      newItems.push(
-        <IconButton
-          className={classes.margin}
-          key='share-to-master'
-          onClick={mergeToMasterFromUserBranch}
-          title={mergeToMasterTitle}
-          aria-label={mergeToMasterTitle}
-          style={{ cursor: 'pointer' }}
-        >
-          {mergeToMasterHasConflicts ?
-            <MdUpdateDisabled id='share-to-master-icon' color={mergeToMasterColor} />
-            :
-            <FiShare id='share-to-master-icon' color={mergeToMasterColor} />
-          }
-        </IconButton>
-      )
-    }
-
-    return newItems
+    return newItems;
   }
 
   return (
