@@ -381,7 +381,7 @@ export function useScripture({ // hook for fetching scripture
    * force reload of current resource
    * @param {string|undefined} ignoreSha - optional sha to ignore
    */
-  function reloadResource(ignoreSha) {
+  function reloadResource(ignoreSha = null) {
     const _reloadResource = _resourceResults?.actions.reloadResource
 
     if (_reloadResource) {
