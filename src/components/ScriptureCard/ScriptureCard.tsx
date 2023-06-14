@@ -598,7 +598,9 @@ export default function ScriptureCard({
               ref: branch,
             })
           } else {
-            console.log(`saveChangesToCloud - failed to create edit branch`)
+            console.error('saveChangesToCloud() - error creating edit branch')
+            onResourceError && onResourceError(null, false, null, `Error creating edit branch ${languageId_}_${resourceId}`, true)
+            return
           }
         }
 
