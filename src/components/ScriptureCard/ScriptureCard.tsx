@@ -516,9 +516,8 @@ export default function ScriptureCard({
             scriptureConfig?.reloadResource(sha)
           })
         } else {
-          console.error('saveChangesToCloud() - error creating edit branch')
+          console.error('saveChangesToCloud() - saving changed scripture failed')
           setState({ startSave: false })
-          onResourceError && onResourceError(null, false, null, `Error creating edit branch ${languageId_}_${resourceId}`, true)
         }
       })
     }
@@ -599,7 +598,9 @@ export default function ScriptureCard({
               ref: branch,
             })
           } else {
-            console.log(`saveChangesToCloud - failed to create edit branch`)
+            console.error('saveChangesToCloud() - error creating edit branch')
+            onResourceError && onResourceError(null, false, null, `Error creating edit branch ${languageId_}_${resourceId}`, true)
+            return
           }
         }
 
