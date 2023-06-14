@@ -600,6 +600,7 @@ export default function ScriptureCard({
           } else {
             console.error('saveChangesToCloud() - error creating edit branch')
             onResourceError && onResourceError(null, false, null, `Error creating edit branch ${languageId_}_${resourceId}`, true)
+            setState({ saveClicked: false })
             return
           }
         }
