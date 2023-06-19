@@ -376,14 +376,6 @@ export default function ScriptureCard({
     }
   }, [_usingUserBranch, usingUserBranch])
 
-  React.useEffect(() => { // select correct working ref - could be master, user branch, or release
-    let workingRef_ = workingRef || appRef
-
-    if (ref !== workingRef_) {
-      setState({ ref: workingRef_ })
-    }
-  }, [workingRef, ref, appRef])
-
   React.useEffect(() => { // update display status if error
     const error = scriptureConfig?.resourceStatus?.[ERROR_STATE]
 
