@@ -127,7 +127,7 @@ export default function ScriptureCard({
   translate,
   title,
   useUserLocalStorage,
-  updateMergeState
+  updateMergeState,
 }) {
   const bookId = reference?.projectId
   const [state, setState_] = React.useState({
@@ -566,13 +566,6 @@ export default function ScriptureCard({
   React.useEffect(() => { // when we get a save saveError
     if (saveError && isSaveError) {
       console.log(`save error`, saveError)
-      // onResourceError && onResourceError(null, false, null, `Error saving ${languageId_}_${resourceId} ${saveError}`, true)
-    }
-  }, [saveError, isSaveError])
-
-  React.useEffect(() => { // when we get a save saveError
-    if (saveError && isSaveError) {
-      console.log(`save error`, saveError)
       onResourceError && onResourceError(null, false, null, `Error saving ${languageId_}_${resourceId} ${saveError}`, true)
     }
   }, [saveError, isSaveError])
@@ -580,9 +573,14 @@ export default function ScriptureCard({
   React.useEffect(() => { // when startSave goes true, save edits to user branch and then clear startSave
     const _saveEdit = async () => { // begin uploading new USFM
       console.info(`saveChangesToCloud() - Using sha: ${sha}`)
-      await onSaveEdit(userEditBranchName).then((success) => { // push changed to server
+      await onSaveEdit(userEditBranchName).then((success) => { // push change to server
         if (success) {
           console.log(`saveChangesToCloud() - save scripture edits success`)
+          setCardsSaving(prevCardsSaving => prevCardsSaving.filter(cardId => cardId !== cardResourceId))
+          setState({
+            startSave: false,
+          })
+
           const unsavedCardIndices = Object.keys(unsavedChangesList)
 
           if (unsavedCardIndices?.length) {
@@ -758,8 +756,8 @@ export default function ScriptureCard({
               }
             }
 
-          bibleUsfm = usfmjs.toUSFM(newBookJson, { forcedNewLines: true })
-        }
+            bibleUsfm = usfmjs.toUSFM(newBookJson, { forcedNewLines: true })
+          }
 
           console.log(`saveChangesToCloud() - saving new USFM: ${bibleUsfm.substring(0, 100)}...`)
           setCardsSaving(prevCardsSaving => [...prevCardsSaving, cardResourceId])
