@@ -116,20 +116,20 @@ function ScripturePane({
 
   const [initialVerseText, setInitialVerseText] = React.useState(null)
 
-  let resourceMsg = null
+  let resourceMessage = ''
 
   if (saving) {
-    resourceMsg = 'Saving Changes...'
+    resourceMessage = 'Saving Changes...'
   } else if (determiningBranch) {
-    resourceMsg = 'Pre-' + LOADING_RESOURCE
+    resourceMessage = 'Pre-' + LOADING_RESOURCE
   } else {
-    resourceMsg = getResourceMessage(resourceStatus, server, resourceLink, isNT)
+    resourceMessage = getResourceMessage(resourceStatus, server, resourceLink, isNT)
   }
 
   const {
     chapter,
-    verse,
     projectId,
+    verse,
   } = reference
   direction = direction || 'ltr'
   const basicReference = {
@@ -241,10 +241,10 @@ function ScripturePane({
 
   return (
     <Container style={{ direction, width: '100%', paddingBottom: '0.5em' }}>
-      {resourceMsg ?
+      {resourceMessage ?
         // @ts-ignore
         <div style={MessageStyle}>
-          <div style={{ fontSize: `${fontSize}%` }}> {resourceMsg} </div>
+          <div style={{ fontSize: `${fontSize}%` }}> {resourceMessage} </div>
         </div>
         :
         <Content>

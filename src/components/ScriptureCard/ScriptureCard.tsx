@@ -7,9 +7,14 @@ import { IconButton } from '@mui/material'
 import { RxLink2, RxLinkBreak2 } from 'react-icons/rx'
 import {
   Card,
+  ErrorDialog,
   ERROR_STATE,
   MANIFEST_NOT_LOADED_ERROR,
+  UpdateBranchButton,
+  useBranchMerger,
   useCardState,
+  useContentUpdateProps,
+  useMasterMergeProps,
   useUserBranch,
 } from 'translation-helps-rcl'
 // @ts-ignore
@@ -51,7 +56,7 @@ function compareObject(verseRef) {
     verse,
     verseData,
   } = verseRef || {}
-  const verseObjects = verseData?.verseObjects?.length || 0
+  const verseObjects = verseData?.verseObjects?.length ? JSON.stringify(verseData.verseObjects) : ''
   return {
     chapter,
     verse,
@@ -114,11 +119,15 @@ export default function ScriptureCard({
   resourceLink,
   selectedQuote,
   server,
+  setCardsLoadingUpdate,
+  setCardsLoadingMerge,
+  setCardsSaving,
   setSavedChanges,
   setWordAlignerStatus,
   translate,
   title,
   useUserLocalStorage,
+  updateMergeState
 }) {
   const bookId = reference?.projectId
   const [state, setState_] = React.useState({
@@ -133,15 +142,15 @@ export default function ScriptureCard({
     saveContent: null,
     selections: new Map(),
     sha: null,
+    showAlignmentPopup: false,
     startSave: false,
     urlError: null,
     usingUserBranch: false,
     unsavedChangesList: {},
-    versesForRef: null,
-    showAlignmentPopup: false,
-    verseSelectedForAlignment: null,
     versesAlignmentStatus: null,
+    versesForRef: null,
     verseObjectsMap: new Map(),
+    verseSelectedForAlignment: null,
   })
   const {
     checkForEditBranch,
@@ -173,13 +182,11 @@ export default function ScriptureCard({
     setState_(prevState => ({ ...prevState, ...newState }))
   }
 
-  if (usingUserBranch) {
-    httpConfig = {
-      ...httpConfig,
-      cache: { maxAge: 0 },
-      noCache: true,
-    } // disable http caching
-  }
+  httpConfig = {
+    ...httpConfig,
+    cache: { maxAge: 0 },
+    noCache: true,
+  } // disable http caching
 
   const {
     isNewTestament,
@@ -188,23 +195,23 @@ export default function ScriptureCard({
     scriptureSettings,
     scriptureVersionHist,
   } = useScriptureSettings({
-    isNT,
-    title,
-    owner,
-    reference: currentReference || reference,
     appRef: ref,
-    server,
     cardNum,
     disableWordPopover,
     greekRepoUrl,
     hebrewRepoUrl,
     httpConfig,
+    isNT,
     languageId,
     originalLanguageOwner,
+    owner,
     readyForFetch,
+    reference: currentReference || reference,
     resourceId,
     resourceLink,
     setUrlError: (error) => setState({ urlError: error }),
+    server,
+    title,
     useUserLocalStorage,
     wholeBook: true,
   })
@@ -245,7 +252,10 @@ export default function ScriptureCard({
       usingUserBranch: _usingUserBranch,
       workingResourceBranch,
     },
-    actions: { startEdit: startEditBranch },
+    actions: {
+      startEdit: startEditBranch,
+      finishEdit,
+    },
   } = useUserBranch({
     appRef,
     authentication: canUseEditBranch ? authentication : null,
@@ -260,6 +270,75 @@ export default function ScriptureCard({
     server,
     useUserLocalStorage,
   })
+
+  const _useBranchMerger = useBranchMerger({ server, owner, repo, userBranch: userEditBranchName, tokenid: authentication?.token?.sha1 });
+  const {
+    state: {
+      mergeStatus: mergeToMaster,
+      updateStatus: mergeFromMaster,
+    },
+  } = _useBranchMerger;
+
+  const updateButtonProps = useContentUpdateProps({
+    isSaving: startSave,
+    useBranchMerger: _useBranchMerger,
+    onUpdate: () => {
+      delay(500).then(() => scriptureConfig?.reloadResource(sha))
+    },
+  });
+
+  const {
+    callUpdateUserBranch,
+    isErrorDialogOpen,
+    onCloseErrorDialog,
+    isLoading: isUpdateLoading,
+    dialogMessage,
+    dialogTitle,
+    dialogLink,
+    dialogLinkTooltip,
+  } = updateButtonProps
+
+  const onMerge = () => {
+    finishEdit()
+    setState({ ref: appRef })
+    delay(500).then(() => {
+      scriptureConfig?.reloadResource()
+    })
+  }
+
+  const { isLoading: isMergeLoading, callMergeUserBranch } = useMasterMergeProps({
+    isSaving: startSave,
+    useBranchMerger: _useBranchMerger,
+    onMerge,
+  })
+
+  React.useEffect(() => {
+    if (cardResourceId) {
+      updateMergeState && updateMergeState(
+        cardResourceId,
+        mergeFromMaster,
+        mergeToMaster,
+        callUpdateUserBranch,
+        callMergeUserBranch,
+      )
+    }
+  },[cardResourceId, mergeFromMaster, mergeToMaster])
+
+  React.useEffect(() => {
+    if (isUpdateLoading) {
+      setCardsLoadingUpdate?.(prevCardsLoading => [...prevCardsLoading, cardResourceId])
+    } else {
+      setCardsLoadingUpdate?.(prevCardsLoading => prevCardsLoading.filter(cardId => cardId !== cardResourceId))
+    }
+  }, [isUpdateLoading])
+
+  React.useEffect(() => {
+    if (isMergeLoading) {
+      setCardsLoadingMerge?.(prevCardsLoading => [...prevCardsLoading, cardResourceId])
+    } else {
+      setCardsLoadingMerge?.(prevCardsLoading => prevCardsLoading.filter(cardId => cardId !== cardResourceId))
+    }
+  }, [isMergeLoading])
 
   const workingRef = canUseEditBranch ? workingResourceBranch : appRef
   let scriptureTitle
@@ -296,6 +375,14 @@ export default function ScriptureCard({
       setState({ usingUserBranch: _usingUserBranch })
     }
   }, [_usingUserBranch, usingUserBranch])
+
+  React.useEffect(() => { // select correct working ref - could be master, user branch, or release
+    let workingRef_ = workingRef || appRef
+
+    if (ref !== workingRef_) {
+      setState({ ref: workingRef_ })
+    }
+  }, [workingRef, ref, appRef])
 
   React.useEffect(() => { // update display status if error
     const error = scriptureConfig?.resourceStatus?.[ERROR_STATE]
@@ -487,6 +574,13 @@ export default function ScriptureCard({
   React.useEffect(() => { // when we get a save saveError
     if (saveError && isSaveError) {
       console.log(`save error`, saveError)
+      // onResourceError && onResourceError(null, false, null, `Error saving ${languageId_}_${resourceId} ${saveError}`, true)
+    }
+  }, [saveError, isSaveError])
+
+  React.useEffect(() => { // when we get a save saveError
+    if (saveError && isSaveError) {
+      console.log(`save error`, saveError)
       onResourceError && onResourceError(null, false, null, `Error saving ${languageId_}_${resourceId} ${saveError}`, true)
     }
   }, [saveError, isSaveError])
@@ -513,10 +607,12 @@ export default function ScriptureCard({
             ref: userEditBranchName,
           })
           delay(500).then(() => {
+            setCardsSaving(prevCardsSaving => prevCardsSaving.filter(cardId => cardId !== cardResourceId))
             scriptureConfig?.reloadResource(sha)
           })
         } else {
           console.error('saveChangesToCloud() - saving changed scripture failed')
+          setCardsSaving(prevCardsSaving => prevCardsSaving.filter(cardId => cardId !== cardResourceId))
           setState({ startSave: false })
         }
       })
@@ -529,6 +625,7 @@ export default function ScriptureCard({
         // console.log(`saveChangesToCloud - save sha not yet ready`)
       } else {
         // console.log(`saveChangesToCloud - calling _saveEdit()`)
+        setCardsSaving(prevCardsSaving => [...prevCardsSaving, cardResourceId])
         _saveEdit()
       }
     }
@@ -669,10 +766,11 @@ export default function ScriptureCard({
               }
             }
 
-            bibleUsfm = usfmjs.toUSFM(newBookJson, {forcedNewLines: true})
-          }
+          bibleUsfm = usfmjs.toUSFM(newBookJson, { forcedNewLines: true })
+        }
 
           console.log(`saveChangesToCloud() - saving new USFM: ${bibleUsfm.substring(0, 100)}...`)
+          setCardsSaving(prevCardsSaving => [...prevCardsSaving, cardResourceId])
           setState({saveContent: bibleUsfm, startSave: true, saveClicked: false})
         }
       }
@@ -808,7 +906,15 @@ export default function ScriptureCard({
     if (Object.keys(newState).length) {
       setState(newState)
     }
-  }, [owner, resourceId, bookId, languageId_, scriptureConfig?.versesForRef, originalScriptureBookObjects, selectedQuote])
+  }, [
+    owner,
+    resourceId,
+    bookId,
+    languageId_,
+    scriptureConfig?.versesForRef,
+    originalScriptureBookObjects,
+    selectedQuote,
+  ])
 
   React.useEffect(() => { // clear settings on verse change
     setState({
@@ -846,8 +952,8 @@ export default function ScriptureCard({
     const _reference = {
       ..._versesForRef,
       chapter,
-      verse,
       projectId,
+      verse,
     }
     const _scriptureAlignmentEditConfig = {
       ...scriptureAlignmentEditConfig,
@@ -913,10 +1019,10 @@ export default function ScriptureCard({
     let alignButtonText = ''
 
     if (allVersesAligned) {
-      alignIcon = <RxLink2 id={`valid_icon_${resourceId}`} color='#BBB'/>
+      alignIcon = <RxLink2 id={`valid_icon_${resourceId}`} color='#BBB' />
       alignButtonText = 'Alignment is Valid'
     } else {
-      alignIcon = <RxLinkBreak2 id={`invalid_alignment_icon_${resourceId}`} color='#000'/>
+      alignIcon = <RxLinkBreak2 id={`invalid_alignment_icon_${resourceId}`} color='#000' />
       alignButtonText = 'Alignment is Invalid'
     }
 
@@ -934,6 +1040,13 @@ export default function ScriptureCard({
         </IconButton>
       )
     }
+
+    newItems.push(
+      <>
+        <UpdateBranchButton {...updateButtonProps} isLoading={isUpdateLoading || startSave}/>
+        <ErrorDialog title={dialogTitle} content={dialogMessage} open={isErrorDialogOpen} onClose={onCloseErrorDialog} isLoading={ isUpdateLoading || startSave } link={dialogLink} linkTooltip={dialogLinkTooltip} />
+      </>
+    )
 
     return newItems
   }
@@ -966,7 +1079,7 @@ export default function ScriptureCard({
         getCustomComponent={getScriptureSelector}
         hideMarkdownToggle
         onMenuClose={onMenuClose}
-        onMinimize={onMinimize ? () => onMinimize(id) : null}
+        onMinimize={onMinimize ? () => onMinimize(id, scriptureTitle) : null}
         editable={enableEdit || enableAlignment}
         saved={startSave || !haveUnsavedChanges}
         onSaveEdit={() => setState({ saveClicked: true })}
@@ -1054,6 +1167,14 @@ ScriptureCard.propTypes = {
   selectedQuote: PropTypes.object,
   /** server (e.g. 'https://git.door43.org') */
   server: PropTypes.string.isRequired,
+  /** callback to update loading state */
+  setAreResourcesLoading: PropTypes.func,
+  /** callback to update saving state*/
+  setAreResourcesSaving: PropTypes.func,
+  /** callback to report card loading status */
+  setCardsLoading: PropTypes.func,
+  /** callback to report card savinging status */
+  setCardsSaving: PropTypes.func,
   /** function to set state in app that there are unsaved changes */
   setSavedChanges: PropTypes.func,
   /** callback to update word aligner state */
@@ -1062,6 +1183,8 @@ ScriptureCard.propTypes = {
   title: PropTypes.string.isRequired,
   /** optional function for localization */
   translate: PropTypes.func,
+  /** callback to update the card's merge state in app */
+  updateMergeState: PropTypes.func,
   /** use method for using local storage specific for user */
   useUserLocalStorage: PropTypes.func.isRequired,
 }

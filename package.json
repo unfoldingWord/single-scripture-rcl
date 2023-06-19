@@ -1,7 +1,7 @@
 {
   "name": "single-scripture-rcl",
   "description": "A React Component Library for Rendering a Single Scripture Resource.",
-  "version": "3.3.3-patch.11",
+  "version": "3.4.2-beta.4",
   "repository": {
     "type": "git",
     "url": "https://github.com/unfoldingWord/single-scripture-rcl.git"
@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "test": "jest",
-    "start": "styleguidist server",
+    "start": "styleguidist server NODE_OPTIONS=--max_old_space_size=4096",
     "build": "styleguidist build",
     "prepublishOnly": "rm -fr ./dist && babel ./src --out-dir ./dist -s inline --extensions \".ts,.tsx,.js\"",
     "pack-next": "yarn version --prerelease && yarn && yarn run prepublishOnly && yarn pack"
@@ -30,7 +30,7 @@
     "react-icons": "^4.8.0",
     "scripture-resources-rcl": "^5.2.0",
     "tc-ui-toolkit": "^5.3.3",
-    "translation-helps-rcl": "^3.3.5",
+    "translation-helps-rcl": "^3.4.2",
     "word-aligner": "^1.0.0",
     "word-aligner-rcl": "^0.9.2"
   },
@@ -81,7 +81,7 @@
     "scripture-resources-rcl": "^5.4.1",
     "style-loader": "^2.0.0",
     "tc-ui-toolkit": "^5.3.3",
-    "translation-helps-rcl": "^3.3.11",
+    "translation-helps-rcl": "^3.4.2",
     "ts-jest": "^29.0.5",
     "use-deep-compare-effect": "1.8.1",
     "usfm-js": "3.4.2",
