@@ -56,7 +56,7 @@ function compareObject(verseRef) {
     verse,
     verseData,
   } = verseRef || {}
-  const verseObjects = verseData?.verseObjects?.length ? JSON.stringify(verseData.verseObjects) : ""
+  const verseObjects = verseData?.verseObjects?.length ? JSON.stringify(verseData.verseObjects) : ''
   return {
     chapter,
     verse,
@@ -119,15 +119,15 @@ export default function ScriptureCard({
   resourceLink,
   selectedQuote,
   server,
+  setCardsLoadingMerge,
+  setCardsLoadingUpdate,
+  setCardsSaving,
   setSavedChanges,
   setWordAlignerStatus,
   translate,
   title,
   useUserLocalStorage,
   updateMergeState,
-  setCardsLoadingUpdate,
-  setCardsLoadingMerge,
-  setCardsSaving
 }) {
   const bookId = reference?.projectId
   const [state, setState_] = React.useState({
@@ -271,13 +271,13 @@ export default function ScriptureCard({
     useUserLocalStorage,
   })
 
-  const _useBranchMerger = useBranchMerger({ server, owner, repo, userBranch: userEditBranchName, tokenid: authentication?.token?.sha1 });
+  const _useBranchMerger = useBranchMerger({ server, owner, repo, userBranch: userEditBranchName, tokenid: authentication?.token?.sha1 })
   const {
     state: {
       mergeStatus: mergeToMaster,
       updateStatus: mergeFromMaster,
     },
-  } = _useBranchMerger;
+  } = _useBranchMerger
 
   const updateButtonProps = useContentUpdateProps({
     isSaving: startSave,
@@ -285,7 +285,7 @@ export default function ScriptureCard({
     onUpdate: () => {
       delay(500).then(() => scriptureConfig?.reloadResource(sha))
     },
-  });
+  })
 
   const {
     callUpdateUserBranch,
@@ -550,6 +550,7 @@ export default function ScriptureCard({
     config: {
       cache: { maxAge: 0 },
       ...authentication?.config,
+      dontCreateBranch: true,
       token: authentication?.token,
       // @ts-ignore
       timeout: httpConfig?.serverTimeOut || httpConfig?.timeout || 10000,
@@ -565,14 +566,14 @@ export default function ScriptureCard({
   React.useEffect(() => { // when we get a save saveError
     if (saveError && isSaveError) {
       console.log(`save error`, saveError)
-      // onResourceError && onResourceError(null, false, null, `Error saving ${languageId_}_${resourceId} ${saveError}`, true)
+      onResourceError && onResourceError(null, false, null, `Error saving ${languageId_}_${resourceId} ${saveError}`, true)
     }
   }, [saveError, isSaveError])
 
   React.useEffect(() => { // when startSave goes true, save edits to user branch and then clear startSave
     const _saveEdit = async () => { // begin uploading new USFM
       console.info(`saveChangesToCloud() - Using sha: ${sha}`)
-      await onSaveEdit(userEditBranchName).then((success) => { // push changed to server
+      await onSaveEdit(userEditBranchName).then((success) => { // push change to server
         if (success) {
           console.log(`saveChangesToCloud() - save scripture edits success`)
           setCardsSaving(prevCardsSaving => prevCardsSaving.filter(cardId => cardId !== cardResourceId))
@@ -684,7 +685,10 @@ export default function ScriptureCard({
               ref: branch,
             })
           } else {
-            console.log(`saveChangesToCloud - failed to create edit branch`)
+            console.error('saveChangesToCloud() - error creating edit branch')
+            onResourceError && onResourceError(null, false, null, `Error creating edit branch ${languageId_}_${resourceId}`, true)
+            setState({ saveClicked: false })
+            return
           }
         }
 
@@ -752,7 +756,7 @@ export default function ScriptureCard({
               }
             }
 
-            bibleUsfm = usfmjs.toUSFM(newBookJson, {forcedNewLines: true})
+            bibleUsfm = usfmjs.toUSFM(newBookJson, { forcedNewLines: true })
           }
 
           console.log(`saveChangesToCloud() - saving new USFM: ${bibleUsfm.substring(0, 100)}...`)
@@ -930,8 +934,8 @@ export default function ScriptureCard({
     _versesForRef = [{ ...reference }]
   }
 
-  const renderedScripturePanes = versesForRef?.map((_currentVerseData, index) => {
-    const initialVerseObjects = _currentVerseData?.verseData?.verseObjects || null
+  const renderedScripturePanes = _versesForRef?.map((_currentVerseData, index) => {
+    const initialVerseObjects = _currentVerseData?.verseData?.verseObjects || []
     // @ts-ignore
     const { chapter, verse } = _currentVerseData || {}
     const projectId = currentReference?.projectId || reference?.projectId
@@ -1034,7 +1038,7 @@ export default function ScriptureCard({
       </>
     )
 
-    return newItems;
+    return newItems
   }
 
   return (
@@ -1083,7 +1087,7 @@ export default function ScriptureCard({
         versesAlignmentStatus={versesAlignmentStatus}
         onVerseSelect={(verse) => setState({
           verseSelectedForAlignment: verse,
-          showAlignmentPopup: false
+          showAlignmentPopup: false,
         })}
       />
     </SelectionsContextProvider>
@@ -1157,9 +1161,11 @@ ScriptureCard.propTypes = {
   setAreResourcesLoading: PropTypes.func,
   /** callback to update saving state*/
   setAreResourcesSaving: PropTypes.func,
-  /** callback to report card loading status */
-  setCardsLoading: PropTypes.func,
-  /** callback to report card savinging status */
+  /** callback to report card merge status */
+  setCardsLoadingMerge: PropTypes.func,
+  /** callback to report card update status */
+  setCardsLoadingUpdate: PropTypes.func,
+  /** callback to report card saving status */
   setCardsSaving: PropTypes.func,
   /** function to set state in app that there are unsaved changes */
   setSavedChanges: PropTypes.func,
