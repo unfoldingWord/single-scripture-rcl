@@ -119,8 +119,8 @@ export default function ScriptureCard({
   resourceLink,
   selectedQuote,
   server,
-  setCardsLoadingUpdate,
   setCardsLoadingMerge,
+  setCardsLoadingUpdate,
   setCardsSaving,
   setSavedChanges,
   setWordAlignerStatus,
@@ -271,13 +271,13 @@ export default function ScriptureCard({
     useUserLocalStorage,
   })
 
-  const _useBranchMerger = useBranchMerger({ server, owner, repo, userBranch: userEditBranchName, tokenid: authentication?.token?.sha1 });
+  const _useBranchMerger = useBranchMerger({ server, owner, repo, userBranch: userEditBranchName, tokenid: authentication?.token?.sha1 })
   const {
     state: {
       mergeStatus: mergeToMaster,
       updateStatus: mergeFromMaster,
     },
-  } = _useBranchMerger;
+  } = _useBranchMerger
 
   const updateButtonProps = useContentUpdateProps({
     isSaving: startSave,
@@ -285,7 +285,7 @@ export default function ScriptureCard({
     onUpdate: () => {
       delay(500).then(() => scriptureConfig?.reloadResource(sha))
     },
-  });
+  })
 
   const {
     callUpdateUserBranch,
@@ -550,11 +550,11 @@ export default function ScriptureCard({
     config: {
       cache: { maxAge: 0 },
       ...authentication?.config,
+      dontCreateBranch: true,
       token: authentication?.token,
       // @ts-ignore
       timeout: httpConfig?.serverTimeOut || httpConfig?.timeout || 10000,
       server,
-      dontCreateBranch: true,
     },
     author: loggedInUser,
     token: authentication?.token,
@@ -1087,7 +1087,7 @@ export default function ScriptureCard({
         versesAlignmentStatus={versesAlignmentStatus}
         onVerseSelect={(verse) => setState({
           verseSelectedForAlignment: verse,
-          showAlignmentPopup: false
+          showAlignmentPopup: false,
         })}
       />
     </SelectionsContextProvider>
@@ -1161,9 +1161,11 @@ ScriptureCard.propTypes = {
   setAreResourcesLoading: PropTypes.func,
   /** callback to update saving state*/
   setAreResourcesSaving: PropTypes.func,
-  /** callback to report card loading status */
-  setCardsLoading: PropTypes.func,
-  /** callback to report card savinging status */
+  /** callback to report card merge status */
+  setCardsLoadingMerge: PropTypes.func,
+  /** callback to report card update status */
+  setCardsLoadingUpdate: PropTypes.func,
+  /** callback to report card saving status */
   setCardsSaving: PropTypes.func,
   /** function to set state in app that there are unsaved changes */
   setSavedChanges: PropTypes.func,
