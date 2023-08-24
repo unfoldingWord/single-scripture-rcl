@@ -7,6 +7,7 @@ describe('getCurrentBook', () => {
       const bookId = 'tit'
       const filename = '57-TIT.usfm'
       const scriptureConfig = {
+        bibleUsfm: 'the Bible',
         bookObjects: {
           chapters: {
             1: {
@@ -23,6 +24,6 @@ describe('getCurrentBook', () => {
 
       // then
       console.log(bibleUsfm)
-      expect(bibleUsfm).toBeTruthy()
+      expect(bibleUsfm).toEqual(scriptureConfig.bibleUsfm)
   })
 })

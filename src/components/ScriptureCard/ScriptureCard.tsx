@@ -101,8 +101,7 @@ export const getCurrentBook = (scriptureConfig, bookId) => {
     isBookValid = bookName?.includes(bookId)
   }
   if (isBookValid) {
-    const bibleUsfm = usfmjs.toUSFM(latestBible, { forcedNewLines: true })
-    return bibleUsfm
+    return scriptureConfig?.bibleUsfm
   }
   console.error(`Expected ${bookId} but got ${filename}`)
   return null
