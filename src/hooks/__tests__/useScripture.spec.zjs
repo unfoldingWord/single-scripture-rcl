@@ -1,0 +1,8 @@
+import { isOriginalBible } from '../../../dist/utils/ScriptureSettings'
+
+describe('test', () => {
+  test('test', () => {
+    const results = isOriginalBible('tit')
+    expect(results).toBeFalsy()
+  })
+})
