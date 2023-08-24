@@ -696,7 +696,15 @@ export default function ScriptureCard({
         const unsavedCardIndices = Object.keys(unsavedChangesList)
 
         if (unsavedCardIndices?.length) {
-          let bibleUsfm = core.getResponseData(scriptureConfig?.fetchResponse)
+          const fileName = scriptureConfig?.bookObjects?.name
+          const isRightBook = fileName?.toLowerCase().includes(bookId)
+
+          if (!isRightBook || !scriptureConfig?.bibleUsfm) {
+            console.error('wrong book')
+            return
+          }
+
+          let bibleUsfm = scriptureConfig?.bibleUsfm
           let mergeFail = false
           let cardNum = 0
 
