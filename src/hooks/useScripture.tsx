@@ -281,6 +281,7 @@ export function useScripture({ // hook for fetching scripture
           if (!sameBook) {
             console.log(`useScripture invalid book, expectedBookId is ${expectedBookId}, but received book name ${fetchedBook}`, { sha, url })
           } else {
+            newState['bibleUsfm'] = core.getResponseData(fetchResponse)
             newState['bookObjects'] = content
             newState['bibleUsfm'] = core.getResponseData(fetchResponse)
             newState['versesForRef'] = updateVersesForRef(content)
