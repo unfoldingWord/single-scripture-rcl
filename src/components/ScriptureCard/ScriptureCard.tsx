@@ -299,7 +299,7 @@ export default function ScriptureCard({
     isSaving: startSave,
     useBranchMerger: _useBranchMerger,
     onUpdate: () => {
-      delay(500).then(() => scriptureConfig?.reloadResource(sha))
+      delay(500).then(() => scriptureConfig?.reloadResource())
     },
   })
 
