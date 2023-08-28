@@ -107,6 +107,7 @@ export function useScripture({ // hook for fetching scripture
   wholeBook = false,
 } : Props) {
   const [state, setState_] = useState({
+    bibleUsfm: null,
     bookObjects: null,
     fetchedBook: '',
     fetchParams: {
@@ -130,6 +131,7 @@ export function useScripture({ // hook for fetching scripture
   })
 
   const {
+    bibleUsfm,
     bookObjects,
     fetchedBook,
     fetchParams,
@@ -279,11 +281,13 @@ export function useScripture({ // hook for fetching scripture
           if (!sameBook) {
             console.log(`useScripture invalid book, expectedBookId is ${expectedBookId}, but received book name ${fetchedBook}`, { sha, url })
           } else {
+            newState['bibleUsfm'] = core.getResponseData(fetchResponse)
             newState['bookObjects'] = content
             newState['versesForRef'] = updateVersesForRef(content)
             newState['fetchedBook'] = expectedBookId
 
             if (!isEqual(newState, {
+              bibleUsfm,
               bookObjects,
               versesForRef,
               fetchedBook: expectedBookId,
@@ -432,6 +436,7 @@ export function useScripture({ // hook for fetching scripture
   }, [reference])
 
   return {
+    bibleUsfm,
     bookObjects,
     fetchResponse,
     getVersesForRef: _getVersesForRef,

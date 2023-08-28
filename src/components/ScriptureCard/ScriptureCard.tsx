@@ -91,6 +91,22 @@ function areVersesSame(versesForRef1: any[], versesForRef2: any[]) {
   return areSame
 }
 
+export const getCurrentBook = (scriptureConfig, bookId) => {
+  const latestBible = scriptureConfig?.bookObjects
+  const filename = latestBible?.name // Like "57-TIT.usfm"
+  const regex = /^(.*?)\.usfm/;
+  let isBookValid = false
+  if (filename) {
+    const bookName = filename.match(regex)?.[1]?.toLowerCase()
+    isBookValid = bookName?.includes(bookId)
+  }
+  if (isBookValid) {
+    return scriptureConfig?.bibleUsfm
+  }
+  console.error(`Expected ${bookId} but got ${filename}`)
+  return null
+}
+
 export default function ScriptureCard({
   appRef,
   authentication,
@@ -696,33 +712,36 @@ export default function ScriptureCard({
         const unsavedCardIndices = Object.keys(unsavedChangesList)
 
         if (unsavedCardIndices?.length) {
-          let bibleUsfm = core.getResponseData(scriptureConfig?.fetchResponse)
+          let bibleUsfm = getCurrentBook(scriptureConfig, bookId)
           let mergeFail = false
-          let cardNum = 0
+          if (bibleUsfm) {
+            let cardNum = 0
 
-          for (const cardIndex of unsavedCardIndices) {
-            cardNum = parseInt(cardIndex)
-            const { getChanges, state } = unsavedChangesList[cardNum]
+            for (const cardIndex of unsavedCardIndices) {
+              cardNum = parseInt(cardIndex)
+              const { getChanges, state } = unsavedChangesList[cardNum]
 
-            if (getChanges) {
-              let newUsfm
-              const {
-                ref,
-                updatedVerseObjects,
-              } = getChanges(state)
+              if (getChanges) {
+                let newUsfm
+                const {
+                  ref,
+                  updatedVerseObjects,
+                } = getChanges(state)
 
-              if (updatedVerseObjects && bibleUsfm) { // just replace verse
-                newUsfm = mergeVerseObjectsIntoBibleUsfm(bibleUsfm, ref, updatedVerseObjects, cardNum)
-              }
+                if (updatedVerseObjects && bibleUsfm) { // just replace verse
+                  newUsfm = mergeVerseObjectsIntoBibleUsfm(bibleUsfm, ref, updatedVerseObjects, cardNum)
+                }
 
-              if (newUsfm) {
-                bibleUsfm = newUsfm
-              } else {
-                mergeFail = true
-                break
+                if (newUsfm) {
+                  bibleUsfm = newUsfm
+                } else {
+                  mergeFail = true
+                  break
+                }
               }
             }
           }
+
 
           if (mergeFail) { // if we failed to merge, fallback to brute force verse objects to USFM
             console.log(`saveChangesToCloud(${cardNum}) - verse not found, falling back to inserting verse object`)
@@ -759,9 +778,15 @@ export default function ScriptureCard({
             bibleUsfm = usfmjs.toUSFM(newBookJson, { forcedNewLines: true })
           }
 
-          console.log(`saveChangesToCloud() - saving new USFM: ${bibleUsfm.substring(0, 100)}...`)
-          setCardsSaving(prevCardsSaving => [...prevCardsSaving, cardResourceId])
-          setState({saveContent: bibleUsfm, startSave: true, saveClicked: false})
+          if (bibleUsfm) {
+            console.log(`saveChangesToCloud() - saving new USFM: ${bibleUsfm.substring(0, 100)}...`)
+            setCardsSaving(prevCardsSaving => [...prevCardsSaving, cardResourceId])
+            setState({saveContent: bibleUsfm, startSave: true, saveClicked: false})
+          } else {
+              console.error(`saveChangesToCloud() - Error retrieving the correct book data: incorrect book ${languageId_}_${resourceId}`)
+              onResourceError && onResourceError(null, false, null, `Error retrieving the correct book data ${languageId_}_${resourceId}`, true)
+              setState({ saveClicked: false })
+          }
         }
       }
     }
