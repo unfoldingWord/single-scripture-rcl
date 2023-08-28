@@ -16,6 +16,7 @@ import {
   MANIFEST_NOT_LOADED_ERROR,
   SCRIPTURE_NOT_LOADED_ERROR,
 } from 'translation-helps-rcl'
+import useDeepCompareEffect from 'use-deep-compare-effect'
 import { getVerses } from 'bible-reference-range'
 import * as isEqual from 'deep-equal'
 import { cleanupVerseObjects, getResourceLink } from '../utils/ScriptureSettings'
@@ -224,7 +225,7 @@ export function useScripture({ // hook for fetching scripture
     resource,
   } = resourceState
 
-  useEffect(() => { // validate response to make sure from latest request
+  useDeepCompareEffect(() => { // validate response to make sure from latest request
     if (readyForFetch) {
       const currentResourceState = _resourceResults?.state
 
