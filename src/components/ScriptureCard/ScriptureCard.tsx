@@ -27,6 +27,8 @@ import { useScriptureSettings } from '../../hooks/useScriptureSettings'
 import {
   cleanupVerseObjects,
   fixOccurrence,
+  getBibleIdFromUSFM,
+  getBookNameFromUsfmFileName,
   getResourceLink,
   getResourceMessage,
   getScriptureVersionSettings,
@@ -94,16 +96,29 @@ function areVersesSame(versesForRef1: any[], versesForRef2: any[]) {
 export const getCurrentBook = (scriptureConfig, bookId) => {
   const latestBible = scriptureConfig?.bookObjects
   const filename = latestBible?.name // Like "57-TIT.usfm"
-  const regex = /^(.*?)\.usfm/;
   let isBookValid = false
   if (filename) {
-    const bookName = filename.match(regex)?.[1]?.toLowerCase()
-    isBookValid = bookName?.includes(bookId)
+    const bookName = getBookNameFromUsfmFileName(filename)
+    console.log(`Current bookId is ${bookId} and seeing ${filename} in USFM`)
+    isBookValid = bookName?.toLowerCase()?.includes(bookId)
   }
   if (isBookValid) {
-    return scriptureConfig?.bibleUsfm
+    const bibleUsfm = scriptureConfig?.bibleUsfm;
+    // expect header in usfm such as: \id JHN EN_ULT en_English_ltr Wed Dec 14 2022 14:59:15 GMT-0500 (Eastern Standard Time) tc
+    let isValidHeaderID = false
+    const headerBookID = getBibleIdFromUSFM(bibleUsfm)
+    if (headerBookID) {
+      console.log(`getCurrentBook() - Found header bookID in usfm: ${headerBookID}`)
+      isValidHeaderID = headerBookID?.toLowerCase() === bookId?.toLowerCase()
+    } else {
+      console.error(`getCurrentBook() - Missing header ID in usfm: ${bibleUsfm?.substring(0, 100)}`)
+    }
+    if (isValidHeaderID) {
+      return bibleUsfm
+    }
+    console.error(`getCurrentBook() - invalid header ID in usfm, expected ${bookId} but got: ${headerBookID}`)
   }
-  console.error(`Expected ${bookId} but got ${filename}`)
+  console.error(`getCurrentBook() - Expected ${bookId} but got file ${filename}`)
   return null
 }
 

@@ -19,7 +19,11 @@ import {
 import useDeepCompareEffect from 'use-deep-compare-effect'
 import { getVerses } from 'bible-reference-range'
 import * as isEqual from 'deep-equal'
-import { cleanupVerseObjects, getResourceLink } from '../utils/ScriptureSettings'
+import {
+  cleanupVerseObjects,
+  getBibleIdFromUSFM,
+  getResourceLink,
+} from '../utils/ScriptureSettings'
 import {
   ServerConfig,
   ScriptureResource,
@@ -295,6 +299,8 @@ export function useScripture({ // hook for fetching scripture
               resourceState,
             })) {
               console.log(`useScripture correct book, expectedBookId is ${expectedBookId}`, { sha, url })
+              const headerBookID = getBibleIdFromUSFM(bibleUsfm)
+              console.log(`useScripture - Found header bookID in usfm: ${headerBookID}`)
               newState['fetched'] = true
               newState['ignoreSha'] = null
               setState(newState)

@@ -366,3 +366,27 @@ export function cleanupVerseObjects(verseObjects) {
   }
   return []
 }
+
+export function getBookNameFromUsfmFileName(filename) {
+  const regex = /^(.*?)\.usfm/;
+  const bookName = filename?.match(regex)?.[1]
+  return bookName
+}
+
+export function getBibleIdFromUSFM(bibleUsfm) {
+  const idHeader = '\\id '
+  const posId = bibleUsfm?.indexOf(idHeader)
+
+  if (posId >= 0) {
+    const idStart = posId + idHeader.length;
+    let headerId = bibleUsfm?.substring( idStart, idStart + 100).trim()
+    let headerBookID = null
+
+    if (headerId?.length > 1) {
+      headerBookID = headerId?.split(' ')
+      headerBookID = headerBookID?.[0].trim()
+    }
+    return headerBookID
+  }
+  return null
+}
