@@ -368,7 +368,7 @@ export function cleanupVerseObjects(verseObjects) {
 }
 
 export function getBookNameFromUsfmFileName(filename) {
-  const regex = /^(.*?)\.usfm/;
+  const regex = /^(.*?)\.usfm/
   const bookName = filename?.match(regex)?.[1]
   return bookName
 }
@@ -378,7 +378,7 @@ export function getBibleIdFromUSFM(bibleUsfm) {
   const posId = bibleUsfm?.indexOf(idHeader)
 
   if (posId >= 0) {
-    const idStart = posId + idHeader.length;
+    const idStart = posId + idHeader.length
     let headerId = bibleUsfm?.substring( idStart, idStart + 100).trim()
     let headerBookID = null
 
