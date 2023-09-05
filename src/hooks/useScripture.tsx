@@ -102,6 +102,23 @@ export function getVersesForRef(reference, bookObjects, languageId) {
   return getVersesForRefStr(refStr, bookObjects, languageId)
 }
 
+/**
+ * compare specific fields in objects to see if they are all equal
+ * @param {object} object1
+ * @param {object} object2
+ * @param {string[]} fields
+ */
+export function areFieldsSame(object1, object2, fields = []) {
+  for (const field of fields) {
+    const isSame = isEqual(object1[field], object2[field])
+
+    if (!isSame) {
+      return false
+    }
+  }
+  return true
+}
+
 export function useScripture({ // hook for fetching scripture
   config,
   readyForFetch,
@@ -116,7 +133,6 @@ export function useScripture({ // hook for fetching scripture
     fetchCount: 0,
     fetched: false,
     fetchedBook: '',
-    fetchedResources: null,
     fetchParams: {
       resourceLink: '',
       reference: {},
@@ -125,13 +141,15 @@ export function useScripture({ // hook for fetching scripture
     ignoreSha: null,
     initialized: false,
     resourceState: {
-      bibleJson: null,
-      matchedVerse: null,
-      resource: null,
+      bibleObjects: null,
+      bibleUsfm: null,
       content: null,
+      fetchResponse: null,
+      fetchedResources: null,
       loadingResource: false,
       loadingContent: false,
-      fetchResponse: null,
+      matchedVerse: null,
+      resource: null,
     },
     versesForRef: [],
   })
@@ -139,10 +157,11 @@ export function useScripture({ // hook for fetching scripture
   const {
     owner,
     languageId,
-    projectId: bookId,
     branch = 'master',
     ref = null,
   } = resource_ || {}
+
+  const { projectId: bookId} = reference || {}
 
   const {
     bibleUsfm,
@@ -150,13 +169,13 @@ export function useScripture({ // hook for fetching scripture
     fetchCount,
     fetched,
     fetchedBook,
-    fetchedResources,
     fetchParams,
     ignoreSha,
     initialized,
     resourceState,
     versesForRef,
   } = state
+  const fetchedResources = resourceState?.fetchedResources
 
   function setState(newState) {
     setState_(prevState => ({ ...prevState, ...newState }))
@@ -205,6 +224,7 @@ export function useScripture({ // hook for fetching scripture
         setState({
           fetchParams: newFetchParams,
           fetched: false,
+          initialized: true,
         })
 
         await fetchBook(newFetchParams)
@@ -233,7 +253,7 @@ export function useScripture({ // hook for fetching scripture
       // fetch manifest data
       const _resource = await core.resourceFromResourceLink(fetchParams)
 
-      if (!_resource?.manifest || !_resource?.project) {
+      if (!_resource?.manifest || !_resource?.project?.file) {
         const errorMsg = _resource?.manifest ? 'parsing resource manifest' : 'loading resource manifest'
         console.warn(`useScripture - error ${errorMsg}`, fetchParams )
         setState({
@@ -246,11 +266,11 @@ export function useScripture({ // hook for fetching scripture
       }
 
       // fetch book usfm
-      const response = (await resource?.project?.file())
+      const response = await _resource?.project?.file()
       const bibleUsfm = response && core.getResponseData(response)
-      const bibleJson = bibleUsfm && usfmjs.toJSON(bibleUsfm)
+      const bibleObjects = bibleUsfm && usfmjs.toJSON(bibleUsfm) // convert to bible objects
 
-      if (!bibleJson) {
+      if (!bibleObjects) {
         const errorMsg = bibleUsfm ? 'fetching book of the bible' : 'parsing book of the bible'
         console.warn(`useScripture - error ${errorMsg}`, fetchParams )
         setState({
@@ -266,20 +286,19 @@ export function useScripture({ // hook for fetching scripture
 
       setState(
         {
-          fetchCount: _fetchCount,
           resourceState: {
             loadingResource: false,
             fetchedResources: {
               ..._resource,
               bibleUsfm,
-              bibleJson,
+              bibleObjects,
               fetchCount: _fetchCount,
               name,
               sha,
               url,
             },
           },
-        }
+        },
       )
     } catch (e) {
       console.error(`useScripture - hard error loading resource`, fetchParams, e )
@@ -323,24 +342,35 @@ export function useScripture({ // hook for fetching scripture
         }
 
         if (isSameBook) {
-          newState['bibleUsfm'] = fetchedResources?.bibleUsfm
-          const bibleJson = fetchedResources?.bibleJson
-          newState['bookObjects'] = bibleJson
-          newState['versesForRef'] = updateVersesForRef(bibleJson)
+          const bibleUsfm_ = fetchedResources?.bibleUsfm;
+          newState['bibleUsfm'] = bibleUsfm_
+          const bibleObjects = fetchedResources?.bibleObjects
+          newState['bookObjects'] = bibleObjects
+          newState['versesForRef'] = updateVersesForRef(bibleObjects)
           newState['fetchedBook'] = expectedBookId
-
-          if (!isEqual(newState, {
+          const currentState = {
             bibleUsfm,
             bookObjects,
-            versesForRef,
             fetchedBook: expectedBookId,
             resourceState,
-          })) {
+            versesForRef,
+          }
+
+          if (!areFieldsSame(newState, currentState, Object.keys(currentState))) {
             console.log(`useScripture correct book, expectedBookId is ${expectedBookId}`, { sha, url })
             const headerBookID = getBibleIdFromUSFM(bibleUsfm)
             console.log(`useScripture - Found header bookID in usfm: ${headerBookID}`)
             newState['fetched'] = true
             newState['ignoreSha'] = null
+            const resourceState_ = {
+              bibleObjects,
+              bibleUsfm: bibleUsfm_,
+              loadingResource: false,
+              loadingContent: false,
+              resource: fetchedResources,
+            }
+            // @ts-ignore
+            newState['resourceState'] = resourceState_
             setState(newState)
           }
         }
@@ -351,8 +381,8 @@ export function useScripture({ // hook for fetching scripture
   const resource = resourceState?.resource
   const { title, version } = parseResourceManifest(resource)
   const loading = resourceState?.loadingResource || resourceState?.loadingContent || !readyForFetch
-  const contentNotFoundError = !resourceState?.content
-  const scriptureNotLoadedError = !resourceState?.bibleJson
+  const contentNotFoundError = !resourceState?.bibleUsfm
+  const scriptureNotLoadedError = !resourceState?.bibleObjects
   const manifestNotFoundError = !resource?.manifest
   const invalidManifestError = !title || !version || !languageId
   const error = readyForFetch && initialized && !loading &&
@@ -433,8 +463,8 @@ export function useScripture({ // hook for fetching scripture
 
   useEffect(() => {
     if (currentBookRef) {
-      console.log(`useScripture fetched book changed to ${currentBookRef}, ${resourceLink_}`, { content, fetchParams })
-      setState({ bookObjects: null })
+      console.log(`useScripture fetched book changed to ${currentBookRef}, ${resourceLink_}`, fetchParams )
+      setState({ bookObjects: null, bibleUsfm: null })
     }
     // @ts-ignore
   }, [currentBookRef])
@@ -468,7 +498,6 @@ export function useScripture({ // hook for fetching scripture
     bibleUsfm,
     bookObjects,
     getVersesForRef: _getVersesForRef,
-    matchedVerse,
     reference: fetchParams?.reference,
     reloadResource,
     resourceLink: fetchParams?.resourceLink,
