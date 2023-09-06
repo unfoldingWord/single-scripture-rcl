@@ -306,9 +306,15 @@ export default function ScriptureCard({
 
   const onMerge = () => {
     finishEdit()
-    setState({ ref: appRef })
+    console.log(`onMerge() switching back to master after merge`)
+    setState({
+      readyForFetch: false,
+    })
     delay(500).then(() => {
-      scriptureConfig?.reloadResource()
+      setState({
+        checkForEditBranch: checkForEditBranch + 1, // trigger recheck of user branch
+        readyForFetch: false,
+      })
     })
   }
 
@@ -372,6 +378,7 @@ export default function ScriptureCard({
     console.log(`ScriptureCard branchDetermined is ${branchDetermined} and workingRef is ${workingRef} and readyForFetch is ${readyForFetch}`)
 
     if (!readyForFetch && branchDetermined ) {
+      console.log(`ScriptureCard branchDetermined is ${branchDetermined} and workingRef is ${workingRef}`)
       setState({ readyForFetch: true, ref: workingRef })
     }
   }, [branchDetermined])
