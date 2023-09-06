@@ -27,7 +27,6 @@ import { useScriptureSettings } from '../../hooks/useScriptureSettings'
 import {
   cleanupVerseObjects,
   fixOccurrence,
-  getBibleIdFromUSFM,
   getBookNameFromUsfmFileName,
   getResourceLink,
   getResourceMessage,
@@ -94,29 +93,24 @@ function areVersesSame(versesForRef1: any[], versesForRef2: any[]) {
 }
 
 export const getCurrentBook = (scriptureConfig, bookId) => {
-  const latestBible = scriptureConfig?.bookObjects
-  const filename = latestBible?.name // Like "57-TIT.usfm"
+  const latestBible = scriptureConfig?.resourceState?.resource?.projectId
+  const filename = scriptureConfig?.resourceState?.resource?.name // Like "57-TIT.usfm"
   let isBookValid = false
-  if (filename) {
-    const bookName = getBookNameFromUsfmFileName(filename)
-    console.log(`Current bookId is ${bookId} and seeing ${filename} in USFM`)
-    isBookValid = bookName?.toLowerCase()?.includes(bookId)
+  const bookName = getBookNameFromUsfmFileName(filename)
+  isBookValid = bookName?.toLowerCase()?.includes(bookId)
+  if (!isBookValid) {
+    console.warn(`Current bookId is ${bookId} and USFM file is ${filename}`)
+  }
+  if (latestBible.toLowerCase() !== bookId) {
+    console.warn(`Current bookId is ${bookId} but fetched projectId is ${latestBible}`)
+    isBookValid = false
   }
   if (isBookValid) {
     const bibleUsfm = scriptureConfig?.bibleUsfm;
-    // expect header in usfm such as: \id JHN EN_ULT en_English_ltr Wed Dec 14 2022 14:59:15 GMT-0500 (Eastern Standard Time) tc
-    let isValidHeaderID = false
-    const headerBookID = getBibleIdFromUSFM(bibleUsfm)
-    if (headerBookID) {
-      console.log(`getCurrentBook() - Found header bookID in usfm: ${headerBookID}`)
-      isValidHeaderID = headerBookID?.toLowerCase() === bookId?.toLowerCase()
-    } else {
-      console.error(`getCurrentBook() - Missing header ID in usfm: ${bibleUsfm?.substring(0, 100)}`)
-    }
-    if (isValidHeaderID) {
+    if (bibleUsfm) {
       return bibleUsfm
     }
-    console.error(`getCurrentBook() - invalid header ID in usfm, expected ${bookId} but got: ${headerBookID}`)
+    console.error(`getCurrentBook() - Bible USFM missing`)
   }
   console.error(`getCurrentBook() - Expected ${bookId} but got file ${filename}`)
   return null
@@ -172,7 +166,6 @@ export default function ScriptureCard({
     saveClicked: false,
     saveContent: null,
     selections: new Map(),
-    sha: null,
     showAlignmentPopup: false,
     startSave: false,
     urlError: null,
@@ -194,7 +187,6 @@ export default function ScriptureCard({
     saveClicked,
     saveContent,
     selections,
-    sha,
     showAlignmentPopup,
     startSave,
     urlError,
@@ -247,27 +239,10 @@ export default function ScriptureCard({
     wholeBook: true,
   })
 
-  const fetchResp_ = scriptureConfig?.fetchResponse
+  const fetchedResource = scriptureConfig?.resourceState
   // @ts-ignore
   const repo = `${scriptureConfig?.resource?.languageId}_${scriptureConfig?.resource?.projectId}`
   const reference_ = scriptureConfig?.reference || null
-
-  React.useEffect(() => { // get the _sha from last scripture download
-    const _sha = fetchResp_?.data?.sha || null
-    const url = fetchResp_?.data?.download_url || null
-    let validBranch = true
-
-    if (_sha) { // TRICKY: since this fetch may be delayed - make sure it was for the current branch before using the sha
-      const parts = (url || '').split('/')
-      const fetchBranch = parts.length > 7 ? parts[7] : ''
-      validBranch = fetchBranch === ref
-    }
-
-    if (validBranch && _sha !== sha) {
-      console.log(`ScriptureCard: for ${url} ${JSON.stringify(reference_)} new sha is ${_sha}`)
-      setState({ sha: _sha })
-    }
-  }, [fetchResp_])
 
   // @ts-ignore
   const cardResourceId = scriptureConfig?.resource?.projectId || resourceId
@@ -568,6 +543,7 @@ export default function ScriptureCard({
   }
 
   const filepath = getBookName()
+  const sha = fetchedResource?.sha
 
   // keep track of verse edit state
   const {

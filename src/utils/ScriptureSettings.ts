@@ -373,7 +373,7 @@ export function getBookNameFromUsfmFileName(filename) {
   return bookName
 }
 
-export function getBibleIdFromUSFM(bibleUsfm) {
+export function getBibleIdFromUsfmContentID(bibleUsfm) {
   const idHeader = '\\id '
   const posId = bibleUsfm?.indexOf(idHeader)
 

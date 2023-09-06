@@ -19,7 +19,6 @@ import { getVerses } from 'bible-reference-range'
 import * as isEqual from 'deep-equal'
 import {
   cleanupVerseObjects,
-  getBibleIdFromUSFM,
   getBookNameFromUsfmFileName,
   getResourceLink,
 } from '../utils/ScriptureSettings'
@@ -148,8 +147,9 @@ export function useScripture({ // hook for fetching scripture
       fetchedResources: null,
       loadingResource: false,
       loadingContent: false,
-      matchedVerse: null,
       resource: null,
+      sha: null,
+      url: null,
     },
     versesForRef: [],
   })
@@ -358,8 +358,6 @@ export function useScripture({ // hook for fetching scripture
 
           if (!areFieldsSame(newState, currentState, Object.keys(currentState))) {
             console.log(`useScripture correct book, expectedBookId is ${expectedBookId}`, { sha, url })
-            const headerBookID = getBibleIdFromUSFM(bibleUsfm)
-            console.log(`useScripture - Found header bookID in usfm: ${headerBookID}`)
             newState['fetched'] = true
             newState['ignoreSha'] = null
             const resourceState_ = {
@@ -368,6 +366,8 @@ export function useScripture({ // hook for fetching scripture
               loadingResource: false,
               loadingContent: false,
               resource: fetchedResources,
+              sha,
+              url,
             }
             // @ts-ignore
             newState['resourceState'] = resourceState_
@@ -501,7 +501,8 @@ export function useScripture({ // hook for fetching scripture
     reference: fetchParams?.reference,
     reloadResource,
     resourceLink: fetchParams?.resourceLink,
-    resourceStatus,
+    resourceState, // state information for latest fetched resource
+    resourceStatus, // status flags for fetched resource
     title,
     updateVerse,
     version,
