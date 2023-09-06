@@ -17,6 +17,7 @@ import {
 import useDeepCompareEffect from 'use-deep-compare-effect'
 import { getVerses } from 'bible-reference-range'
 import * as isEqual from 'deep-equal'
+import { delay } from '../utils'
 import {
   cleanupVerseObjects,
   getBookNameFromUsfmFileName,
@@ -311,71 +312,79 @@ export function useScripture({ // hook for fetching scripture
     console.log(`useScripture - for ${resource_?.projectId} readyForFetch is now ${readyForFetch}`)
   }, [readyForFetch])
 
+  function validateResponse() {
+    // TRICKY - responses from server can come back from previous requests.  So we make sure this response is for the current requested book
+    let isSameBook = false
+    const newState = { resourceState: resourceState }
+    // @ts-ignore
+    const expectedBookId = bookId || 'zzz'
+    const fetchedBook = getBookNameFromUsfmFileName(fetchedResources?.name)
+    console.log(`useScripture.validateResponse() - Current bookId is ${bookId} and seeing ${fetchedBook} in USFM`)
+    isSameBook = fetchedBook?.toLowerCase()?.includes(bookId)
+
+    const sha = fetchedResources?.sha || null
+    const url = fetchedResources?.url || null
+
+    if (isSameBook) { // also make sure it is the same branch
+      const fetchedBranch = getBranchName(url)
+      const fetchingBranch = getBranchName(fetchParams?.resourceLink)
+
+      if (fetchedBranch !== fetchingBranch) {
+        console.log(`useScripture.validateResponse() invalid branch, expected branch is ${fetchingBranch}, but fetchedBranch is ${fetchedBranch}`, { sha, url })
+        isSameBook = false
+      }
+    } else {
+      console.log(`useScripture.validateResponse() -  invalid book, expectedBookId is ${expectedBookId}, but received book name ${fetchedBook}`, { sha, url })
+    }
+
+    if (ignoreSha === sha) {
+      console.log(`useScripture.validateResponse() - the sha is the same as the ignore sha ${sha}`, { sha, url })
+      isSameBook = false
+    }
+
+    if (isSameBook) {
+      console.log(`useScripture.validateResponse() - book is correct ${expectedBookId}`)
+      const bibleUsfm_ = fetchedResources?.bibleUsfm
+      newState['bibleUsfm'] = bibleUsfm_
+      const bibleObjects = fetchedResources?.bibleObjects
+      newState['bookObjects'] = bibleObjects
+      console.log(`useScripture.validateResponse() - update verses refs`)
+      newState['versesForRef'] = updateVersesForRef(bibleObjects)
+      newState['fetchedBook'] = expectedBookId
+      const currentState = {
+        bibleUsfm,
+        bookObjects,
+        fetchedBook: expectedBookId,
+        resourceState,
+        versesForRef,
+      }
+
+      if (!areFieldsSame(newState, currentState, Object.keys(currentState))) {
+        console.log(`useScripture.validateResponse() - correct book, expectedBookId is ${expectedBookId}`, { sha, url })
+        newState['fetched'] = true
+        newState['ignoreSha'] = null
+        const resourceState_ = {
+          bibleObjects,
+          bibleUsfm: bibleUsfm_,
+          loadingResource: false,
+          loadingContent: false,
+          resource: fetchedResources,
+          sha,
+          url,
+        }
+        // @ts-ignore
+        newState['resourceState'] = resourceState_
+        setState(newState)
+      }
+    }
+  }
+
   useDeepCompareEffect(() => { // validate response to make sure from latest request
     if (readyForFetch && fetchedResources) {
       if (!fetched && fetchedResources?.fetchCount === fetchCount) {
-        // TRICKY - responses from server can come back from previous requests.  So we make sure this response is for the current requested book
-        let isSameBook = false
-        const newState = { resourceState: resourceState }
-        // @ts-ignore
-        const expectedBookId = bookId || 'zzz'
-        const fetchedBook = getBookNameFromUsfmFileName(fetchedResources?.name)
-        console.log(`Current bookId is ${bookId} and seeing ${fetchedBook} in USFM`)
-        isSameBook = fetchedBook?.toLowerCase()?.includes(bookId)
-
-        const sha = fetchedResources?.sha || null
-        const url = fetchedResources?.url || null
-
-        if (isSameBook) { // also make sure it is the same branch
-          const fetchedBranch = getBranchName(url)
-          const fetchingBranch = getBranchName(fetchParams?.resourceLink)
-
-          if (fetchedBranch !== fetchingBranch) {
-            console.log(`useScripture invalid branch, expected branch is ${fetchingBranch}, but fetchedBranch is ${fetchedBranch}`, { sha, url })
-            isSameBook = false
-          }
-        } else {
-          console.log(`useScripture invalid book, expectedBookId is ${expectedBookId}, but received book name ${fetchedBook}`, { sha, url })
-        }
-
-        if (ignoreSha === sha) {
-          console.log(`useScripture - the sha is the same as the ignore sha ${sha}`, { sha, url })
-          isSameBook = false
-        }
-
-        if (isSameBook) {
-          const bibleUsfm_ = fetchedResources?.bibleUsfm;
-          newState['bibleUsfm'] = bibleUsfm_
-          const bibleObjects = fetchedResources?.bibleObjects
-          newState['bookObjects'] = bibleObjects
-          newState['versesForRef'] = updateVersesForRef(bibleObjects)
-          newState['fetchedBook'] = expectedBookId
-          const currentState = {
-            bibleUsfm,
-            bookObjects,
-            fetchedBook: expectedBookId,
-            resourceState,
-            versesForRef,
-          }
-
-          if (!areFieldsSame(newState, currentState, Object.keys(currentState))) {
-            console.log(`useScripture correct book, expectedBookId is ${expectedBookId}`, { sha, url })
-            newState['fetched'] = true
-            newState['ignoreSha'] = null
-            const resourceState_ = {
-              bibleObjects,
-              bibleUsfm: bibleUsfm_,
-              loadingResource: false,
-              loadingContent: false,
-              resource: fetchedResources,
-              sha,
-              url,
-            }
-            // @ts-ignore
-            newState['resourceState'] = resourceState_
-            setState(newState)
-          }
-        }
+        delay(500).then(() => {
+          validateResponse()
+        })
       }
     }
   }, [{ readyForFetch, fetchedResources }])
