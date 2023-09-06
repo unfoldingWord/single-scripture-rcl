@@ -265,8 +265,9 @@ export function useScripture({ // hook for fetching scripture
         return
       }
 
-      // fetch book usfm
+      console.log(`useScripture - LOADED bible manifest, fetching book ${resource_?.projectId} resourceLink is now ${fetchParams?.resourceLink} and resourceLink_=${fetchParams?.resourceLink_}`, fetchParams)
       const response = await _resource?.project?.file()
+      // parse book usfm
       const bibleUsfm = response && core.getResponseData(response)
       const bibleObjects = bibleUsfm && usfmjs.toJSON(bibleUsfm) // convert to bible objects
 
@@ -284,6 +285,7 @@ export function useScripture({ // hook for fetching scripture
 
       const { name, sha, url } = response?.data || {}
 
+      console.log(`useScripture - LOADED bible book ${resource_?.projectId} resourceLink is now ${fetchParams?.resourceLink} and resourceLink_=${fetchParams?.resourceLink_}`, fetchParams)
       setState(
         {
           resourceState: {

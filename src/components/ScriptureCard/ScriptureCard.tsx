@@ -306,9 +306,10 @@ export default function ScriptureCard({
 
   const onMerge = () => {
     finishEdit()
-    console.log(`onMerge() switching back to master after merge`)
+    console.log(`onMerge() switching back to master after merge appRef:`, appRef)
     setState({
       readyForFetch: false,
+      ref: appRef,
     })
     delay(500).then(() => {
       setState({
