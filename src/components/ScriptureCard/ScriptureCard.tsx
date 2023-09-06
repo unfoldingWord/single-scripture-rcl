@@ -101,7 +101,7 @@ export const getCurrentBook = (scriptureConfig, bookId) => {
   if (!isBookValid) {
     console.warn(`Current bookId is ${bookId} and USFM file is ${filename}`)
   }
-  if (latestBible.toLowerCase() !== bookId) {
+  if (latestBible?.toLowerCase() !== bookId) {
     console.warn(`Current bookId is ${bookId} but fetched projectId is ${latestBible}`)
     isBookValid = false
   }

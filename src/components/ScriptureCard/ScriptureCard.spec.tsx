@@ -15,7 +15,12 @@ describe('getCurrentBook', () => {
           },
         },
         headers: [],
-        name: filename
+      },
+      resourceState: {
+        resource: {
+          projectId: bookId,
+          name: filename,
+        }
       }
     }
 
@@ -23,7 +28,6 @@ describe('getCurrentBook', () => {
     const bibleUsfm = getCurrentBook(scriptureConfig, bookId)
 
     // then
-    console.log(bibleUsfm)
     expect(bibleUsfm).toEqual(scriptureConfig.bibleUsfm)
   })
 
@@ -40,7 +44,12 @@ describe('getCurrentBook', () => {
           },
         },
         headers: [],
-        name: filename
+      },
+      resourceState: {
+        resource: {
+          projectId: bookId,
+          name: filename,
+        }
       }
     }
 
@@ -48,11 +57,10 @@ describe('getCurrentBook', () => {
     const bibleUsfm = getCurrentBook(scriptureConfig, bookId)
 
     // then
-    console.log(bibleUsfm)
     expect(bibleUsfm).toEqual(scriptureConfig.bibleUsfm)
   })
 
-  it('should fail when bibleUsfm is JHN and filename is 15-1JN.usfm', () => {
+  it('should fail when projectId is undefined and filename is 15-1JN.usfm', () => {
     // Given
     const bookId = '1jn'
     const filename = '15-1JN.usfm'
@@ -66,7 +74,11 @@ describe('getCurrentBook', () => {
           },
         },
         headers: [],
-        name: filename
+      },
+      resourceState: {
+        resource: {
+          name: filename,
+        }
       }
     }
 
@@ -74,7 +86,34 @@ describe('getCurrentBook', () => {
     const bibleUsfm = getCurrentBook(scriptureConfig, bookId)
 
     // then
-    console.log(bibleUsfm)
+    expect(bibleUsfm).toEqual(FAIL)
+  })
+
+  it('should fail when projectId is 1jn and filename is undefined', () => {
+    // Given
+    const bookId = '1jn'
+    const FAIL = null
+    const scriptureConfig = {
+      bibleUsfm: 'the Bible',
+      bookObjects: {
+        chapters: {
+          1: {
+            1: 'stuff'
+          },
+        },
+        headers: [],
+      },
+      resourceState: {
+        resource: {
+          projectId: '1jn',
+        }
+      }
+    }
+
+    // when
+    const bibleUsfm = getCurrentBook(scriptureConfig, bookId)
+
+    // then
     expect(bibleUsfm).toEqual(FAIL)
   })
 
@@ -92,14 +131,19 @@ describe('getCurrentBook', () => {
           },
         },
         headers: [],
-        name: filename
+      },
+      resourceState: {
+        resource: {
+          projectId: '1jn',
+          name: filename,
+        }
       }
     }
-    // when
 
+    // when
     const bibleUsfm = getCurrentBook(scriptureConfig, bookId)
+
     // then
-    console.log(bibleUsfm)
     expect(bibleUsfm).toEqual(FAIL)
   })
 
@@ -117,14 +161,19 @@ describe('getCurrentBook', () => {
           },
         },
         headers: [],
-        name: filename
+      },
+      resourceState: {
+        resource: {
+          projectId: '1jn',
+          name: filename,
+        }
       }
     }
-    // when
 
+    // when
     const bibleUsfm = getCurrentBook(scriptureConfig, bookId)
+
     // then
-    console.log(bibleUsfm)
     expect(bibleUsfm).toEqual(FAIL)
   })
 
@@ -142,14 +191,19 @@ describe('getCurrentBook', () => {
           },
         },
         headers: [],
-        name: filename
+      },
+      resourceState: {
+        resource: {
+          projectId: '1jn',
+          name: filename,
+        }
       }
     }
-    // when
 
+    // when
     const bibleUsfm = getCurrentBook(scriptureConfig, bookId)
+
     // then
-    console.log(bibleUsfm)
     expect(bibleUsfm).toEqual(FAIL)
   })
 })
