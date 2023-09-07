@@ -92,6 +92,11 @@ function areVersesSame(versesForRef1: any[], versesForRef2: any[]) {
   return areSame
 }
 
+/**
+ * get the USFM for bookId from scriptureConfig.
+ * @param {object} scriptureConfig
+ * @param {string} bookId
+ */
 export const getCurrentBook = (scriptureConfig, bookId) => {
   const latestBible = scriptureConfig?.resourceState?.resource?.projectId
   const filename = scriptureConfig?.resourceState?.resource?.name // Like "57-TIT.usfm"
@@ -313,7 +318,7 @@ export default function ScriptureCard({
     })
     delay(500).then(() => {
       setState({
-        checkForEditBranch: checkForEditBranch + 1, // trigger recheck of user branch
+        checkForEditBranch: checkForEditBranch + 1, // trigger recheck of user branch which will switch the branch back to master
         readyForFetch: false,
       })
     })
@@ -376,8 +381,6 @@ export default function ScriptureCard({
   }, [reference])
 
   React.useEffect(() => { // waiting for branch fetch to complete
-    console.log(`ScriptureCard branchDetermined is ${branchDetermined} and workingRef is ${workingRef} and readyForFetch is ${readyForFetch}`)
-
     if (!readyForFetch && branchDetermined ) {
       console.log(`ScriptureCard branchDetermined is ${branchDetermined} and workingRef is ${workingRef}`)
       setState({ readyForFetch: true, ref: workingRef })

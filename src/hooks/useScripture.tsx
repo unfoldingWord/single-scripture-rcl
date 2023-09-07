@@ -102,23 +102,6 @@ export function getVersesForRef(reference, bookObjects, languageId) {
   return getVersesForRefStr(refStr, bookObjects, languageId)
 }
 
-/**
- * compare specific fields in objects to see if they are all equal
- * @param {object} object1
- * @param {object} object2
- * @param {string[]} fields
- */
-export function areFieldsSame(object1, object2, fields = []) {
-  for (const field of fields) {
-    const isSame = isEqual(object1[field], object2[field])
-
-    if (!isSame) {
-      return false
-    }
-  }
-  return true
-}
-
 export function useScripture({ // hook for fetching scripture
   config,
   readyForFetch,
@@ -315,8 +298,10 @@ export function useScripture({ // hook for fetching scripture
     console.log(`useScripture - for ${resource_?.projectId} readyForFetch is now ${readyForFetch}`)
   }, [readyForFetch])
 
+  /**
+   * make sure last response is for current book/branch
+   */
   function validateResponse() {
-    // TRICKY - responses from server can come back from previous requests.  So we make sure this response is for the current requested book
     let isSameBook = false
     // @ts-ignore
     const expectedBookId = bookId || 'zzz'
@@ -347,7 +332,7 @@ export function useScripture({ // hook for fetching scripture
     if (isSameBook) {
       const bibleUsfm_ = fetchedResources?.bibleUsfm
       const bookObjects = fetchedResources?.bookObjects
-      const versesForRef = updateVersesForRef(bookObjects)
+      const versesForRef = fetchVersesForRef(bookObjects)
 
       console.log(`useScripture.validateResponse() - correct book, expectedBookId is ${expectedBookId}`, { sha, url })
       const newState = {
@@ -415,8 +400,8 @@ export function useScripture({ // hook for fetching scripture
 
   /**
    * get verses for ref
-   * @param refStr
-   * @param content_
+   * @param {string} refStr
+   * @param {object} content_
    */
   function _getVersesForRef(refStr, content_ = bookObjects) {
     if (content_) {
@@ -425,6 +410,12 @@ export function useScripture({ // hook for fetching scripture
     return null
   }
 
+  /**
+   * update verse data for current book
+   * @param {string} chapter
+   * @param {string} verse
+   * @param {object} verseData
+   */
   function updateVerse(chapter, verse, verseData) {
     if (bookObjects) {
       const bookObjects_ = { ...bookObjects } // shallow copy
@@ -443,7 +434,11 @@ export function useScripture({ // hook for fetching scripture
     return null
   }
 
-  function updateVersesForRef(_bookObjects = bookObjects) {
+  /**
+   * get the verses for current reference or reference range
+   * @param {object} _bookObjects
+   */
+  function fetchVersesForRef(_bookObjects = bookObjects) {
     let newVersesForRef = []
 
     if (_bookObjects) {
@@ -489,7 +484,7 @@ export function useScripture({ // hook for fetching scripture
       // }
     } else {
       const _bookObjects = fetchedBookSame ? bookObjects : null
-      _versesForRef = updateVersesForRef(_bookObjects)
+      _versesForRef = fetchVersesForRef(_bookObjects)
       // console.log(`useScripture _bookObjects is ${!!_bookObjects} and books are the same ${fetchedBook}`, { content, fetchParams })
     }
 
