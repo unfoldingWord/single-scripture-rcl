@@ -211,7 +211,7 @@ export function useScripture({ // hook for fetching scripture
           initialized: true,
         })
 
-        await fetchBook(newFetchParams)
+        fetchBook(newFetchParams)
       }
     }
   }, [
@@ -223,6 +223,11 @@ export function useScripture({ // hook for fetching scripture
     ref,
   ])
 
+  /**
+   * do a fetch of manifest and book of the bible specified in fetchParams
+   * @param {object} fetchParams
+   * @param {string} ignoreSha - optional previous sha - ignore responses that came back for this previous book commit
+   */
   async function fetchBook(fetchParams, ignoreSha = null) {
     try {
       const _fetchCount = fetchCount + 1
@@ -299,7 +304,7 @@ export function useScripture({ // hook for fetching scripture
   }, [readyForFetch])
 
   /**
-   * make sure last response is for current book/branch
+   * make sure last fetch response is for current book/branch
    */
   function validateResponse() {
     let isSameBook = false
@@ -453,8 +458,8 @@ export function useScripture({ // hook for fetching scripture
    * force reload of current resource
    * @param {string|undefined} ignoreSha - optional sha to ignore
    */
-  async function reloadResource(ignoreSha = null) {
-    await fetchBook(fetchParams, ignoreSha)
+  function reloadResource(ignoreSha = null) {
+    fetchBook(fetchParams, ignoreSha)
   }
 
   // @ts-ignore
