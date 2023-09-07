@@ -367,12 +367,22 @@ export function cleanupVerseObjects(verseObjects) {
   return []
 }
 
+/**
+ * take the filename of the book (e.g. "57-TIT.usfm") and parse out the bookId
+ * @param {string} filename
+ * @return {string} bookId if found
+ */
 export function getBookNameFromUsfmFileName(filename) {
   const regex = /^(.*?)\.usfm/
   const bookName = filename?.match(regex)?.[1]
   return bookName
 }
 
+/**
+ * parse the USFM to find bookID in header
+ * @param {string} bibleUsfm
+ * @return {string} bookId if found
+ */
 export function getBibleIdFromUsfmContentID(bibleUsfm) {
   const idHeader = '\\id '
   const posId = bibleUsfm?.indexOf(idHeader)
