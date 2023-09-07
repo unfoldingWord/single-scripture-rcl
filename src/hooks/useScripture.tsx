@@ -141,7 +141,7 @@ export function useScripture({ // hook for fetching scripture
     ignoreSha: null,
     initialized: false,
     resourceState: {
-      bibleObjects: null,
+      bookObjects: null,
       bibleUsfm: null,
       content: null,
       fetchResponse: null,
@@ -252,6 +252,7 @@ export function useScripture({ // hook for fetching scripture
       })
 
       // fetch manifest data
+      await delay(100)
       const _resource = await core.resourceFromResourceLink(fetchParams)
 
       if (!_resource?.manifest || !_resource?.project?.file) {
@@ -267,12 +268,14 @@ export function useScripture({ // hook for fetching scripture
       }
 
       console.log(`useScripture - LOADED bible manifest, fetching book ${resource_?.projectId} resourceLink is now ${fetchParams?.resourceLink} and resourceLink_=${fetchParams?.resourceLink_}`, fetchParams)
+      await delay(100)
       const response = await _resource?.project?.file()
       // parse book usfm
       const bibleUsfm = response && core.getResponseData(response)
-      const bibleObjects = bibleUsfm && usfmjs.toJSON(bibleUsfm) // convert to bible objects
+      await delay(100)
+      const bookObjects = bibleUsfm && usfmjs.toJSON(bibleUsfm) // convert to bible objects
 
-      if (!bibleObjects) {
+      if (!bookObjects) {
         const errorMsg = bibleUsfm ? 'fetching book of the bible' : 'parsing book of the bible'
         console.warn(`useScripture - error ${errorMsg}`, fetchParams )
         setState({
@@ -294,7 +297,7 @@ export function useScripture({ // hook for fetching scripture
             fetchedResources: {
               ..._resource,
               bibleUsfm,
-              bibleObjects,
+              bookObjects,
               fetchCount: _fetchCount,
               name,
               sha,
@@ -315,7 +318,6 @@ export function useScripture({ // hook for fetching scripture
   function validateResponse() {
     // TRICKY - responses from server can come back from previous requests.  So we make sure this response is for the current requested book
     let isSameBook = false
-    const newState = { resourceState: resourceState }
     // @ts-ignore
     const expectedBookId = bookId || 'zzz'
     const fetchedBook = getBookNameFromUsfmFileName(fetchedResources?.name)
@@ -343,39 +345,30 @@ export function useScripture({ // hook for fetching scripture
     }
 
     if (isSameBook) {
-      console.log(`useScripture.validateResponse() - book is correct ${expectedBookId}`)
       const bibleUsfm_ = fetchedResources?.bibleUsfm
-      newState['bibleUsfm'] = bibleUsfm_
-      const bibleObjects = fetchedResources?.bibleObjects
-      newState['bookObjects'] = bibleObjects
-      console.log(`useScripture.validateResponse() - update verses refs`)
-      newState['versesForRef'] = updateVersesForRef(bibleObjects)
-      newState['fetchedBook'] = expectedBookId
-      const currentState = {
-        bibleUsfm,
-        bookObjects,
-        fetchedBook: expectedBookId,
-        resourceState,
-        versesForRef,
-      }
+      const bookObjects = fetchedResources?.bookObjects
+      const versesForRef = updateVersesForRef(bookObjects)
 
-      if (!areFieldsSame(newState, currentState, Object.keys(currentState))) {
-        console.log(`useScripture.validateResponse() - correct book, expectedBookId is ${expectedBookId}`, { sha, url })
-        newState['fetched'] = true
-        newState['ignoreSha'] = null
-        const resourceState_ = {
-          bibleObjects,
+      console.log(`useScripture.validateResponse() - correct book, expectedBookId is ${expectedBookId}`, { sha, url })
+      const newState = {
+        bibleUsfm: bibleUsfm_,
+        bookObjects,
+        fetched: true,
+        fetchedBook: expectedBookId,
+        ignoreSha: null,
+        resourceState: {
+          bookObjects,
           bibleUsfm: bibleUsfm_,
           loadingResource: false,
           loadingContent: false,
           resource: fetchedResources,
           sha,
           url,
-        }
-        // @ts-ignore
-        newState['resourceState'] = resourceState_
-        setState(newState)
+        },
+        versesForRef,
       }
+
+      setState(newState)
     }
   }
 
@@ -393,7 +386,7 @@ export function useScripture({ // hook for fetching scripture
   const { title, version } = parseResourceManifest(resource)
   const loading = resourceState?.loadingResource || resourceState?.loadingContent || !readyForFetch
   const contentNotFoundError = !resourceState?.bibleUsfm
-  const scriptureNotLoadedError = !resourceState?.bibleObjects
+  const scriptureNotLoadedError = !resourceState?.bookObjects
   const manifestNotFoundError = !resource?.manifest
   const invalidManifestError = !title || !version || !languageId
   const error = readyForFetch && initialized && !loading &&
