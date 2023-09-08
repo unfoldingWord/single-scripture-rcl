@@ -27,6 +27,7 @@ import { useScriptureSettings } from '../../hooks/useScriptureSettings'
 import {
   cleanupVerseObjects,
   fixOccurrence,
+  getBookNameFromUsfmFileName,
   getResourceLink,
   getResourceMessage,
   getScriptureVersionSettings,
@@ -91,19 +92,32 @@ function areVersesSame(versesForRef1: any[], versesForRef2: any[]) {
   return areSame
 }
 
+/**
+ * get the USFM for bookId from scriptureConfig.
+ * @param {object} scriptureConfig
+ * @param {string} bookId
+ */
 export const getCurrentBook = (scriptureConfig, bookId) => {
-  const latestBible = scriptureConfig?.bookObjects
-  const filename = latestBible?.name // Like "57-TIT.usfm"
-  const regex = /^(.*?)\.usfm/;
+  const latestBible = scriptureConfig?.resourceState?.resource?.projectId
+  const filename = scriptureConfig?.resourceState?.resource?.name // Like "57-TIT.usfm"
   let isBookValid = false
-  if (filename) {
-    const bookName = filename.match(regex)?.[1]?.toLowerCase()
-    isBookValid = bookName?.includes(bookId)
+  const bookName = getBookNameFromUsfmFileName(filename)
+  isBookValid = bookName?.toLowerCase()?.includes(bookId)
+  if (!isBookValid) {
+    console.warn(`Current bookId is ${bookId} and USFM file is ${filename}`)
+  }
+  if (latestBible?.toLowerCase() !== bookId) {
+    console.warn(`Current bookId is ${bookId} but fetched projectId is ${latestBible}`)
+    isBookValid = false
   }
   if (isBookValid) {
-    return scriptureConfig?.bibleUsfm
+    const bibleUsfm = scriptureConfig?.bibleUsfm;
+    if (bibleUsfm) {
+      return bibleUsfm
+    }
+    console.error(`getCurrentBook() - Bible USFM missing`)
   }
-  console.error(`Expected ${bookId} but got ${filename}`)
+  console.error(`getCurrentBook() - Expected ${bookId} but got file ${filename}`)
   return null
 }
 
@@ -157,7 +171,6 @@ export default function ScriptureCard({
     saveClicked: false,
     saveContent: null,
     selections: new Map(),
-    sha: null,
     showAlignmentPopup: false,
     startSave: false,
     urlError: null,
@@ -179,7 +192,6 @@ export default function ScriptureCard({
     saveClicked,
     saveContent,
     selections,
-    sha,
     showAlignmentPopup,
     startSave,
     urlError,
@@ -232,27 +244,10 @@ export default function ScriptureCard({
     wholeBook: true,
   })
 
-  const fetchResp_ = scriptureConfig?.fetchResponse
+  const fetchedResource = scriptureConfig?.resourceState
   // @ts-ignore
   const repo = `${scriptureConfig?.resource?.languageId}_${scriptureConfig?.resource?.projectId}`
   const reference_ = scriptureConfig?.reference || null
-
-  React.useEffect(() => { // get the _sha from last scripture download
-    const _sha = fetchResp_?.data?.sha || null
-    const url = fetchResp_?.data?.download_url || null
-    let validBranch = true
-
-    if (_sha) { // TRICKY: since this fetch may be delayed - make sure it was for the current branch before using the sha
-      const parts = (url || '').split('/')
-      const fetchBranch = parts.length > 7 ? parts[7] : ''
-      validBranch = fetchBranch === ref
-    }
-
-    if (validBranch && _sha !== sha) {
-      console.log(`ScriptureCard: for ${url} ${JSON.stringify(reference_)} new sha is ${_sha}`)
-      setState({ sha: _sha })
-    }
-  }, [fetchResp_])
 
   // @ts-ignore
   const cardResourceId = scriptureConfig?.resource?.projectId || resourceId
@@ -316,9 +311,16 @@ export default function ScriptureCard({
 
   const onMerge = () => {
     finishEdit()
-    setState({ ref: appRef })
+    console.log(`onMerge() switching back to master after merge appRef:`, appRef)
+    setState({
+      readyForFetch: false,
+      ref: appRef,
+    })
     delay(500).then(() => {
-      scriptureConfig?.reloadResource()
+      setState({
+        checkForEditBranch: checkForEditBranch + 1, // trigger recheck of user branch which will switch the branch back to master
+        readyForFetch: false,
+      })
     })
   }
 
@@ -379,9 +381,8 @@ export default function ScriptureCard({
   }, [reference])
 
   React.useEffect(() => { // waiting for branch fetch to complete
-    console.log(`ScriptureCard branchDetermined is ${branchDetermined} and workingRef is ${workingRef} and readyForFetch is ${readyForFetch}`)
-
     if (!readyForFetch && branchDetermined ) {
+      console.log(`ScriptureCard branchDetermined is ${branchDetermined} and workingRef is ${workingRef}`)
       setState({ readyForFetch: true, ref: workingRef })
     }
   }, [branchDetermined])
@@ -553,6 +554,7 @@ export default function ScriptureCard({
   }
 
   const filepath = getBookName()
+  const sha = fetchedResource?.sha
 
   // keep track of verse edit state
   const {
