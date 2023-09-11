@@ -1,0 +1,20 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`diff should succeed 1`] = `
+"Index: usfmPatch
+===================================================================
+--- usfmPatch
++++ usfmPatch
+@@ -9,9 +9,9 @@
+ 
+ \\ts\\*
+ \\c 1
+ \\p
+-\\v 1 \\zaln-s |x-strong="G39720" x-lemma="Παῦλος" x-morph="Gr,N,,,,,NMS," x-occurrence="1" x-occurrences="1" x-content="Παῦλος"\\*\\w Paul|x-occurrence="1" x-occurrences="1"\\w*\\zaln-e\\*,
++\\v 1 EDITED verse: \\zaln-s |x-strong="G39720" x-lemma="Παῦλος" x-morph="Gr,N,,,,,NMS," x-occurrence="1" x-occurrences="1" x-content="Παῦλος"\\*\\w Paul|x-occurrence="1" x-occurrences="1"\\w*\\zaln-e\\*,
+ \\zaln-s |x-strong="G14010" x-lemma="δοῦλος" x-morph="Gr,N,,,,,NMS," x-occurrence="1" x-occurrences="1" x-content="δοῦλος"\\*\\w a|x-occurrence="1" x-occurrences="1"\\w*
+ \\w servant|x-occurrence="1" x-occurrences="1"\\w*\\zaln-e\\*
+ \\zaln-s |x-strong="G23160" x-lemma="θεός" x-morph="Gr,N,,,,,GMS," x-occurrence="1" x-occurrences="2" x-content="Θεοῦ"\\*\\w of|x-occurrence="1" x-occurrences="5"\\w*
+ \\w God|x-occurrence="1" x-occurrences="2"\\w*\\zaln-e\\*
+"
+`;

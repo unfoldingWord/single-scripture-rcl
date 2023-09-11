@@ -8,3 +8,4 @@ yalc.lock
 src/
 coverage/
 node_modules/
+**/__tests__/
