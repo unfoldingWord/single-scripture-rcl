@@ -1,11 +1,31 @@
 import { createPatch } from 'diff'
 
 /**
- * create a patch of the differences between the contents of originalFile and editedFile
- * @param originalFile
- * @param editedFile
+ * replace any characters that are not compatible with a json string content
+ * @param {string} diffFile
+ * @return {string} escaped text
  */
-export function getPatch(originalFile, editedFile) {
-  const diffResult = createPatch('usfmPatch', originalFile, editedFile)
+export function escapeJsonStringChars(diffFile) {
+  let newDiff = diffFile.replaceAll('\\', '\\\\')
+  newDiff = newDiff.replaceAll('\n\r', '\\n')
+  newDiff = newDiff.replaceAll('\n', '\\n')
+  newDiff = newDiff.replaceAll('"', '\\"')
+  return newDiff
+}
+
+/**
+ * create a patch of the differences between the contents of originalFile and editedFile
+ * @param {string} fileName - name of the file being changed
+ * @param {string} originalFile - original file contents
+ * @param {string} editedFile - new file contents
+ * @param {boolean} jsonEscape - if true then we escape characters to fit in json string contents
+ * @return {string} - differences between files
+ */
+export function getPatch(fileName, originalFile, editedFile, jsonEscape = false) {
+  let diffResult = createPatch(fileName, originalFile, editedFile)
+
+  if (jsonEscape) {
+    diffResult = escapeJsonStringChars(diffResult);
+  }
   return diffResult
 }
