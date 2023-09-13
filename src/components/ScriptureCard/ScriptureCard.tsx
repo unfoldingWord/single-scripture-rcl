@@ -623,9 +623,9 @@ export default function ScriptureCard({
             readyForFetch: true,
             ref: userEditBranchName,
           })
-          delay(500).then(() => {
+          delay(100).then(() => {
             setCardsSaving(prevCardsSaving => prevCardsSaving.filter(cardId => cardId !== cardResourceId))
-            scriptureConfig?.reloadResource(sha)
+            scriptureConfig?.reloadResource(sha, userEditBranchName)
           })
         } else {
           console.error('saveChangesToCloud() - saving changed scripture failed')
