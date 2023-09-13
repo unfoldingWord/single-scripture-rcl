@@ -8,7 +8,7 @@ exports[`getPatch should succeed with no escaping 1`] = `
 --- 57-TIT.usfm
 +++ 57-TIT.usfm
 @@ -9,9 +9,9 @@
-
+ 
  \\ts\\*
  \\c 1
  \\p
