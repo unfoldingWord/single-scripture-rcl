@@ -22,6 +22,7 @@ import {
   cleanupVerseObjects,
   getBookNameFromUsfmFileName,
   getResourceLink,
+  parseResourceLink,
 } from '../utils/ScriptureSettings'
 import {
   ServerConfig,
@@ -117,9 +118,9 @@ export function useScripture({ // hook for fetching scripture
     fetched: false,
     fetchedBook: '',
     fetchParams: {
-      resourceLink: '',
-      reference: {},
       config: {},
+      reference: {},
+      resourceLink: '',
     },
     ignoreSha: null,
     initialized: false,
@@ -170,7 +171,7 @@ export function useScripture({ // hook for fetching scripture
       initiateBookFetch()
     }
 
-    async function initiateBookFetch() {
+    function initiateBookFetch() {
       console.log(`useScripture - readyForFetch true, initializing`)
       let resourceLink = readyForFetch && resourceLink_
 
@@ -199,9 +200,9 @@ export function useScripture({ // hook for fetching scripture
       }
 
       const newFetchParams = {
-        resourceLink,
-        reference: bookRef,
         config,
+        reference: bookRef,
+        resourceLink,
       }
 
       if (!isEqual(newFetchParams, fetchParams)) {
@@ -230,13 +231,21 @@ export function useScripture({ // hook for fetching scripture
    */
   async function fetchBook(fetchParams, ignoreSha = null) {
     try {
+      const fetchLink = `${fetchParams?.resourceLink}/${fetchParams?.reference?.projectId}`
+      const shaToBeIgnored = ignoreSha && ignoreSha === resourceState?.sha // we will reload if ignoreSha given and it matches current sha
+
+      if ((fetchLink === resourceState?.resource?.resourceLink) && !shaToBeIgnored) { // see if we already fetched this
+        console.log(`useScripture.fetchBook() - Already fetching resourceLink ${resourceState?.resource?.resourceLink} and ignoreSha=${ignoreSha}`, fetchParams)
+        return
+      }
+
       const _fetchCount = fetchCount + 1
-      console.log(`useScripture - FETCHING bible ${resource_?.projectId} resourceLink is now ${fetchParams?.resourceLink} and resourceLink_=${fetchParams?.resourceLink_}`, fetchParams)
+      console.log(`useScripture.fetchBook() - FETCHING bible ${resource_?.projectId} resourceLink is now ${fetchParams?.resourceLink} and ignoreSha=${ignoreSha}`, fetchParams)
       setState({
-        resourceState: { loadingResource: true },
         fetchCount: _fetchCount,
         fetched: false,
         ignoreSha,
+        resourceState: { loadingResource: true },
       })
 
       // fetch manifest data
@@ -245,7 +254,7 @@ export function useScripture({ // hook for fetching scripture
 
       if (!_resource?.manifest || !_resource?.project?.file) {
         const errorMsg = _resource?.manifest ? 'parsing resource manifest' : 'loading resource manifest'
-        console.warn(`useScripture - error ${errorMsg}`, fetchParams )
+        console.warn(`useScripture.fetchBook() - error ${errorMsg}`, fetchParams )
         setState({
           resourceState: {
             loadingResource: false,
@@ -255,7 +264,7 @@ export function useScripture({ // hook for fetching scripture
         return
       }
 
-      console.log(`useScripture - LOADED bible manifest, fetching book ${resource_?.projectId} resourceLink is now ${fetchParams?.resourceLink} and resourceLink_=${fetchParams?.resourceLink_}`, fetchParams)
+      console.log(`useScripture.fetchBook() - LOADED bible manifest, fetching book ${resource_?.projectId} resourceLink is now ${fetchParams?.resourceLink} and resourceLink_=${fetchParams?.resourceLink_}`, fetchParams)
       await delay(100)
       const response = await _resource?.project?.file()
       // parse book usfm
@@ -265,7 +274,7 @@ export function useScripture({ // hook for fetching scripture
 
       if (!bookObjects) {
         const errorMsg = bibleUsfm ? 'fetching book of the bible' : 'parsing book of the bible'
-        console.warn(`useScripture - error ${errorMsg}`, fetchParams )
+        console.warn(`useScripture.fetchBook() - error ${errorMsg}`, fetchParams )
         setState({
           resourceState: {
             loadingResource: false,
@@ -277,7 +286,7 @@ export function useScripture({ // hook for fetching scripture
 
       const { name, sha, url } = response?.data || {}
 
-      console.log(`useScripture - LOADED bible book ${resource_?.projectId} resourceLink is now ${fetchParams?.resourceLink} and resourceLink_=${fetchParams?.resourceLink_}`, fetchParams)
+      console.log(`useScripture.fetchBook() - LOADED bible book ${resource_?.projectId} resourceLink is now ${fetchParams?.resourceLink} and resourceLink_=${fetchParams?.resourceLink_}`, fetchParams)
       setState(
         {
           resourceState: {
@@ -288,6 +297,7 @@ export function useScripture({ // hook for fetching scripture
               bookObjects,
               fetchCount: _fetchCount,
               name,
+              reference: fetchParams?.reference,
               sha,
               url,
             },
@@ -295,7 +305,13 @@ export function useScripture({ // hook for fetching scripture
         },
       )
     } catch (e) {
-      console.error(`useScripture - hard error loading resource`, fetchParams, e )
+      console.error(`useScripture.fetchBook() - hard error loading resource`, fetchParams, e )
+      setState({
+        resourceState: {
+          loadingResource: false,
+          resource: null,
+        },
+      })
     }
   }
 
@@ -455,11 +471,34 @@ export function useScripture({ // hook for fetching scripture
   }
 
   /**
-   * force reload of current resource
+   * force reload of resource
    * @param {string|undefined} ignoreSha - optional sha to ignore
+   * @param {string|undefined} ref - optional reference to fetch
    */
-  function reloadResource(ignoreSha = null) {
-    fetchBook(fetchParams, ignoreSha)
+  function reloadResource(ignoreSha = null, ref = null) {
+    console.log(`useScripture.reloadResource() ignoreSha: ${ignoreSha}` )
+    const _fetchParams = { ...fetchParams }
+
+    if (ref && fetchParams?.resourceLink) {
+      const {
+        owner,
+        languageId,
+        resourceId,
+        ref: _ref,
+      } = parseResourceLink(fetchParams.resourceLink)
+
+      if (ref !== _ref) { // if ref changed, update resourcelink
+        const _resourceLink = getResourceLink({
+          owner,
+          languageId,
+          resourceId,
+          ref,
+        })
+        console.log(`useScripture.reloadResource() old ref is different ${_ref}, switching to load ref: ${ref}, new resourceLink: ${_resourceLink}` )
+        _fetchParams.resourceLink = _resourceLink
+      }
+    }
+    fetchBook(_fetchParams, ignoreSha)
   }
 
   // @ts-ignore

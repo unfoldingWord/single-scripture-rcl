@@ -27,6 +27,16 @@ export function getResourceLink(scripture) {
   return `${scripture.owner}/${scripture.languageId}/${scripture.resourceId}/${ref}`
 }
 
+export function parseResourceLink(resourceLink) {
+  const [owner, languageId, resourceId, ref] = resourceLink.split('/')
+  return {
+    owner,
+    languageId,
+    resourceId,
+    ref,
+  }
+}
+
 export function getScriptureObject({
   title,
   server,
