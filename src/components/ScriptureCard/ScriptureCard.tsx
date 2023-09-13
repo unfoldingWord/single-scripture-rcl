@@ -171,7 +171,7 @@ export default function ScriptureCard({
     ref: appRef,
     saveClicked: false,
     saveContent: null,
-    saveDiff: false,
+    saveDiffPatch: false,
     selections: new Map(),
     showAlignmentPopup: false,
     startSave: false,
@@ -193,7 +193,7 @@ export default function ScriptureCard({
     ref,
     saveClicked,
     saveContent,
-    saveDiff,
+    saveDiffPatch,
     selections,
     showAlignmentPopup,
     startSave,
@@ -597,7 +597,7 @@ export default function ScriptureCard({
     const _saveEdit = async () => { // begin uploading new USFM
       console.info(`saveChangesToCloud() - Using sha: ${sha}`)
       let saveFunction = onSaveEdit
-      if (saveDiff) {
+      if (saveDiffPatch) {
         saveFunction = onSaveEditPatch // if we are sending up a diffpatch, we will use this method
       }
       await saveFunction(userEditBranchName).then((success) => { // push change to server
@@ -755,7 +755,7 @@ export default function ScriptureCard({
             }
           }
 
-          let saveDiff = false // if true then we will send up a diffpatch instead of the whole book
+          let saveDiffPatch = false // if true then we will send up a diffpatch instead of the whole book
 
           if (mergeFail) { // if we failed to merge, fallback to brute force verse objects to USFM
             console.log(`saveChangesToCloud(${cardNum}) - verse not found, falling back to inserting verse object`)
@@ -793,9 +793,9 @@ export default function ScriptureCard({
           } else { // if only changed a few verses, we will just make a diffpatch instead of sending the whole book
             const filename = scriptureConfig?.resourceState?.resource?.name // Like "57-TIT.usfm"
             if (filename && bibleUsfm && bibleUsfm_) { // make sure we have everything needed to make a patch
-              const patchContent = getPatch(filename, bibleUsfm_, bibleUsfm, false)
-              bibleUsfm_ = patchContent // replace with patch data
-              saveDiff = true
+              const diffPatch = getPatch(filename, bibleUsfm_, bibleUsfm, false)
+              bibleUsfm_ = diffPatch // replace whole book with patch data (much shorter)
+              saveDiffPatch = true
             }
           }
 
@@ -805,7 +805,7 @@ export default function ScriptureCard({
             setState({
               saveContent: bibleUsfm_,
               saveClicked: false,
-              saveDiff,
+              saveDiffPatch,
               startSave: true,
             })
           } else {
