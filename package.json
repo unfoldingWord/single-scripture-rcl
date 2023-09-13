@@ -1,7 +1,7 @@
 {
   "name": "single-scripture-rcl",
   "description": "A React Component Library for Rendering a Single Scripture Resource.",
-  "version": "3.4.9",
+  "version": "3.4.10-beta",
   "repository": {
     "type": "git",
     "url": "https://github.com/unfoldingWord/single-scripture-rcl.git"
@@ -72,8 +72,10 @@
     "eslint-plugin-prettier": "3.1.4",
     "eslint-plugin-react": "7.21.5",
     "eslint-plugin-react-hooks": "^4.2.0",
+    "fs-extra": "^11.1.1",
     "gitea-react-toolkit": "1.11.0",
     "jest": "^29.6.4",
+    "path-extra": "^4.3.0",
     "prop-types": "^15.7.2",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
@@ -94,6 +96,7 @@
     "@types/react": "^17.0.0",
     "@types/react-dom": "^17.0.0",
     "deep-equal": "^2.0.5",
+    "diff": "^5.1.0",
     "lodash": "^4.17.21",
     "react-docgen-typescript": "^1.20.5",
     "source-map-loader": "^1.1.3",
