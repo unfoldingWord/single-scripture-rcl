@@ -42,6 +42,7 @@ import {
   OT_ORIG_LANG,
 } from '../../utils'
 import { VerseSelectorPopup } from '../VerseSelectorPopup'
+import { getPatch } from '../../utils/files'
 
 const KEY_FONT_SIZE_BASE = 'scripturePaneFontSize_'
 const label = 'Version'
@@ -170,6 +171,7 @@ export default function ScriptureCard({
     ref: appRef,
     saveClicked: false,
     saveContent: null,
+    saveDiffPatch: false,
     selections: new Map(),
     showAlignmentPopup: false,
     startSave: false,
@@ -191,6 +193,7 @@ export default function ScriptureCard({
     ref,
     saveClicked,
     saveContent,
+    saveDiffPatch,
     selections,
     showAlignmentPopup,
     startSave,
@@ -561,6 +564,7 @@ export default function ScriptureCard({
     error: saveError,
     isError: isSaveError,
     onSaveEdit,
+    onSaveEditPatch,
   } = useEdit({
     sha,
     owner,
@@ -575,6 +579,7 @@ export default function ScriptureCard({
       server,
     },
     author: loggedInUser,
+    email: authentication?.user?.email,
     token: authentication?.token,
     branch: workingResourceBranch,
     filepath,
@@ -591,7 +596,11 @@ export default function ScriptureCard({
   React.useEffect(() => { // when startSave goes true, save edits to user branch and then clear startSave
     const _saveEdit = async () => { // begin uploading new USFM
       console.info(`saveChangesToCloud() - Using sha: ${sha}`)
-      await onSaveEdit(userEditBranchName).then((success) => { // push change to server
+      let saveFunction = onSaveEdit
+      if (saveDiffPatch) {
+        saveFunction = onSaveEditPatch // if we are sending up a diffpatch, we will use this method
+      }
+      await saveFunction(userEditBranchName).then((success) => { // push change to server
         if (success) {
           console.log(`saveChangesToCloud() - save scripture edits success`)
           setCardsSaving(prevCardsSaving => prevCardsSaving.filter(cardId => cardId !== cardResourceId))
@@ -714,9 +723,11 @@ export default function ScriptureCard({
         const unsavedCardIndices = Object.keys(unsavedChangesList)
 
         if (unsavedCardIndices?.length) {
-          let bibleUsfm = getCurrentBook(scriptureConfig, bookId)
+          let bibleUsfm_ = getCurrentBook(scriptureConfig, bookId) // get original USFM
+          let bibleUsfm = bibleUsfm_ // make a copy to edit
           let mergeFail = false
-          if (bibleUsfm) {
+
+          if (bibleUsfm_) {
             let cardNum = 0
 
             for (const cardIndex of unsavedCardIndices) {
@@ -744,6 +755,7 @@ export default function ScriptureCard({
             }
           }
 
+          let saveDiffPatch = false // if true then we will send up a diffpatch instead of the whole book
 
           if (mergeFail) { // if we failed to merge, fallback to brute force verse objects to USFM
             console.log(`saveChangesToCloud(${cardNum}) - verse not found, falling back to inserting verse object`)
@@ -778,12 +790,24 @@ export default function ScriptureCard({
             }
 
             bibleUsfm = usfmjs.toUSFM(newBookJson, { forcedNewLines: true })
+          } else { // if only changed a few verses, we will just make a diffpatch instead of sending the whole book
+            const filename = scriptureConfig?.resourceState?.resource?.name // Like "57-TIT.usfm"
+            if (filename && bibleUsfm && bibleUsfm_) { // make sure we have everything needed to make a patch
+              const diffPatch = getPatch(filename, bibleUsfm_, bibleUsfm, false)
+              bibleUsfm_ = diffPatch // replace whole book with patch data (much shorter)
+              saveDiffPatch = true
+            }
           }
 
           if (bibleUsfm) {
             console.log(`saveChangesToCloud() - saving new USFM: ${bibleUsfm.substring(0, 100)}...`)
             setCardsSaving(prevCardsSaving => [...prevCardsSaving, cardResourceId])
-            setState({saveContent: bibleUsfm, startSave: true, saveClicked: false})
+            setState({
+              saveContent: bibleUsfm_,
+              saveClicked: false,
+              saveDiffPatch,
+              startSave: true,
+            })
           } else {
               console.error(`saveChangesToCloud() - Error retrieving the correct book data: incorrect book ${languageId_}_${resourceId}`)
               onResourceError && onResourceError(null, false, null, `Error retrieving the correct book data ${languageId_}_${resourceId}`, true)
