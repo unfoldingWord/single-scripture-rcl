@@ -1,4 +1,5 @@
 /// <reference types="jest" />
+import 'regenerator-runtime/runtime'
 import { getCurrentBook } from './ScriptureCard'
 
 describe('getCurrentBook', () => {
