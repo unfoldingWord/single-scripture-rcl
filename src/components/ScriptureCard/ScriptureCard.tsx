@@ -341,13 +341,14 @@ export default function ScriptureCard({
     if (cardResourceId && !usingOriginalBible) {
       updateMergeState && updateMergeState(
         cardResourceId,
+        scriptureConfig.title,
         mergeFromMaster,
         mergeToMaster,
         callUpdateUserBranch,
         callMergeUserBranch,
       )
     }
-  },[cardResourceId, mergeFromMaster, mergeToMaster])
+  },[cardResourceId, scriptureConfig.title, mergeFromMaster, mergeToMaster])
 
   React.useEffect(() => {
     if (isUpdateLoading) {
