@@ -232,11 +232,13 @@ export function useScripture({ // hook for fetching scripture
   async function fetchBook(fetchParams, ignoreSha = null) {
     try {
       const fetchLink = `${fetchParams?.resourceLink}/${fetchParams?.reference?.projectId}`
-      const shaToBeIgnored = ignoreSha && ignoreSha === resourceState?.sha // we will reload if ignoreSha given and it matches current sha
 
-      if ((fetchLink === resourceState?.resource?.resourceLink) && !shaToBeIgnored) { // see if we already fetched this
-        console.log(`useScripture.fetchBook() - Already fetching resourceLink ${resourceState?.resource?.resourceLink} and ignoreSha=${ignoreSha}`, fetchParams)
-        return
+      if (ignoreSha) {
+        const fetchedShaMatchesIgnoreSha = ignoreSha === resourceState?.sha // we will reload if ignoreSha given and it matches current sha
+        if ((fetchLink === resourceState?.resource?.resourceLink) && !fetchedShaMatchesIgnoreSha) { // see if we already fetched this
+          console.log(`useScripture.fetchBook() - Already fetching resourceLink ${resourceState?.resource?.resourceLink} and ignoreSha=${ignoreSha}`, fetchParams)
+          return
+        }
       }
 
       const _fetchCount = fetchCount + 1
