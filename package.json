@@ -1,7 +1,7 @@
 {
   "name": "single-scripture-rcl",
   "description": "A React Component Library for Rendering a Single Scripture Resource.",
-  "version": "3.4.11-beta.6",
+  "version": "3.4.12-beta",
   "repository": {
     "type": "git",
     "url": "https://github.com/unfoldingWord/single-scripture-rcl.git"
@@ -16,7 +16,7 @@
     "start": "styleguidist server NODE_OPTIONS=--max_old_space_size=4096",
     "build": "styleguidist build",
     "prepublishOnly": "rm -fr ./dist && babel ./src --out-dir ./dist -s inline --extensions \".ts,.tsx,.js\"",
-    "pack-next": "yarn version --prerelease && yarn && yarn run prepublishOnly && yarn pack"
+    "pack-next": "yarn version --prerelease --no-git-tag-version && yarn && yarn run prepublishOnly && yarn pack"
   },
   "peerDependencies": {
     "@material-ui/core": "4.11.0",

@@ -251,6 +251,8 @@ export default function ScriptureCard({
   // @ts-ignore
   const repo = `${scriptureConfig?.resource?.languageId}_${scriptureConfig?.resource?.projectId}`
   const reference_ = scriptureConfig?.reference || null
+  const usingOriginalBible = isOriginalBible(scriptureConfig['resource']?.projectId)
+
 
   // @ts-ignore
   const cardResourceId = scriptureConfig?.resource?.projectId || resourceId
@@ -333,17 +335,20 @@ export default function ScriptureCard({
     onMerge,
   })
 
+  // Since original text (Greek/Hebrew) should not be edited, do not include
+  // them in merge state since user will not merge/push changes.
   React.useEffect(() => {
-    if (cardResourceId) {
+    if (cardResourceId && !usingOriginalBible) {
       updateMergeState && updateMergeState(
         cardResourceId,
+        scriptureConfig.title,
         mergeFromMaster,
         mergeToMaster,
         callUpdateUserBranch,
         callMergeUserBranch,
       )
     }
-  },[cardResourceId, mergeFromMaster, mergeToMaster])
+  },[cardResourceId, scriptureConfig.title, mergeFromMaster, mergeToMaster])
 
   React.useEffect(() => {
     if (isUpdateLoading) {
@@ -464,7 +469,6 @@ export default function ScriptureCard({
 
   const scriptureLabel = <Title>{scriptureTitle}</Title>
   let disableWordPopover_ = disableWordPopover
-  const usingOriginalBible = isOriginalBible(scriptureConfig['resource']?.projectId)
 
   if (disableWordPopover === undefined) { // if not specified, then determine if original language resource
     disableWordPopover_ = !usingOriginalBible
@@ -1082,7 +1086,8 @@ export default function ScriptureCard({
       )
     }
 
-    newItems.push(
+    // Only show the update from main button if scripture is not original text.
+    !usingOriginalBible && newItems.push(
       <>
         <UpdateBranchButton {...updateButtonProps} isLoading={isUpdateLoading || startSave}/>
         <ErrorDialog title={dialogTitle} content={dialogMessage} open={isErrorDialogOpen} onClose={onCloseErrorDialog} isLoading={ isUpdateLoading || startSave } link={dialogLink} linkTooltip={dialogLinkTooltip} />
