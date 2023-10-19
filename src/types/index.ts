@@ -1,7 +1,7 @@
 export interface ScriptureReference {
   projectId: string;
   chapter: number;
-  verse: number;
+  verse: number|string;
 }
 
 export interface ServerConfig {

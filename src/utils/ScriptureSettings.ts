@@ -410,3 +410,23 @@ export function getBibleIdFromUsfmContentID(bibleUsfm) {
   }
   return null
 }
+
+/**
+ * determines if there are any words in verseObjects
+ * @param {object[]} verseObjects - array of verseObjects to search for words
+ * @return {boolean} true if word is found
+ */
+export function verseObjectsHaveWords(verseObjects:object[]) {
+  for (const vo of verseObjects) {
+    if (vo['type'] === 'word') {
+      return true
+    } else if (vo['children']) {
+      const foundWords = verseObjectsHaveWords(vo['children'])
+
+      if (foundWords) {
+        return true
+      }
+    }
+  }
+  return false
+}

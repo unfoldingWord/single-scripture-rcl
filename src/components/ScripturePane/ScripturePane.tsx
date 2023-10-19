@@ -3,7 +3,11 @@ import useDeepCompareEffect from 'use-deep-compare-effect'
 import { VerseObjects } from 'scripture-resources-rcl'
 import { UsfmFileConversionHelpers } from 'word-aligner-rcl'
 import { ScriptureReference } from '../../types'
-import { getResourceMessage, LOADING_RESOURCE } from '../../utils'
+import {
+  getResourceMessage,
+  LOADING_RESOURCE,
+  verseObjectsHaveWords,
+} from '../../utils'
 import { ScriptureALignmentEditProps, useScriptureAlignmentEdit } from '../../hooks/useScriptureAlignmentEdit'
 import {
   Container,
@@ -77,26 +81,6 @@ const TextAreaStyle = {
   width: '100%',
   minWidth: '220px',
   fontSize: '16px',
-}
-
-/**
- * determines if there are any words in verseObjects
- * @param {object[]} verseObjects - array to search for words
- * @return {boolean} true if word is found
- */
-function hasWords(verseObjects:object[]) {
-  for (const vo of verseObjects) {
-    if (vo.type === 'word') {
-      return true
-    } else if (vo.children) {
-      const foundWords = hasWords(vo.children)
-
-      if (foundWords) {
-        return true
-      }
-    }
-  }
-  return false
 }
 
 function ScripturePane({
@@ -264,7 +248,7 @@ function ScripturePane({
   }
 
   const verseObjects = currentVerseObjects || initialVerseObjects
-  const noWords = React.useMemo(() => !hasWords(verseObjects), [currentVerseObjects, initialVerseObjects])
+  const noWords = React.useMemo(() => !verseObjectsHaveWords(verseObjects), [currentVerseObjects, initialVerseObjects])
 
   /**
    * determine what to show based on variables
@@ -273,12 +257,6 @@ function ScripturePane({
    * @param {boolean} noWords - if true then there are no displayable words
    */
   function verseContent(editing, enableEdit, noWords) {
-    if (noWords && enableEdit) {
-      return <EmptyContent>
-        Click to Edit
-      </EmptyContent>
-    }
-
     if (editing) {
       return <textarea
         defaultValue={newVerseText || initialVerseText}
@@ -289,6 +267,12 @@ function ScripturePane({
       />
     }
 
+    if (noWords && enableEdit) {
+      return <EmptyContent>
+        Click to Edit
+      </EmptyContent>
+
+    }
     return <VerseObjects
       verseKey={`${reference.chapter}:${reference.verse}`}
       verseObjects={verseObjects}

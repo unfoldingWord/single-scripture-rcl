@@ -17,7 +17,12 @@ import {
 import useDeepCompareEffect from 'use-deep-compare-effect'
 import { getVerses } from 'bible-reference-range'
 import * as isEqual from 'deep-equal'
-import { delay } from '../utils'
+import { delay, verseObjectsHaveWords } from '../utils'
+import {
+  AlignmentHelpers,
+  UsfmFileConversionHelpers,
+  usfmHelpers,
+} from 'word-aligner-rcl'
 import {
   cleanupVerseObjects,
   getBookNameFromUsfmFileName,
@@ -466,6 +471,22 @@ export function useScripture({ // hook for fetching scripture
 
     if (_bookObjects) {
       newVersesForRef = getVersesForRef(reference, _bookObjects, languageId)
+      if (reference?.verse === 'front') { // special handling for front matter
+        const verseData = newVersesForRef?.[0]?.verseData;
+        const initialVerseObjects = verseData?.verseObjects;
+        if (initialVerseObjects && !verseObjectsHaveWords(initialVerseObjects)) {
+          for (const vo of initialVerseObjects) {
+            if (vo['tag'] === 'd') { // check for descriptive title
+              // reparse so descriptive title text is broken into align-able words
+              let verseText = UsfmFileConversionHelpers.getUsfmForVerseContent({ verseObjects: initialVerseObjects })
+              const { targetVerseObjects } = AlignmentHelpers.updateAlignmentsToTargetVerse(initialVerseObjects, verseText)
+              console.log(targetVerseObjects)
+              verseData.verseObjects = targetVerseObjects // replace verseObjects with align-able content
+              break
+            }
+          }
+        }
+      }
       return newVersesForRef
     }
 
