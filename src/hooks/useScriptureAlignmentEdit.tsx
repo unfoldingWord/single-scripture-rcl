@@ -174,14 +174,14 @@ function checkForDataCorruption(prefix, targetAlignment) {
 
 /**
  * make sure there is a significant change to the text
- * @param newVerseText
- * @param initialVerseText
+ * @param {string} newVerseText
+ * @param {string} initialVerseText
  */
 function hasTextChangedSignificantly(newVerseText, initialVerseText) {
   let changed = newVerseText !== initialVerseText
 
-  if (changed) { // make sure it's significant
-    const lengthDifference = newVerseText.length - initialVerseText.length
+  if (changed && newVerseText) { // make sure it's significant
+    const lengthDifference = newVerseText.length - initialVerseText?.length
     const lastChar = newVerseText.substring(newVerseText.length -1)
     if ((lengthDifference === 1) && (lastChar === ' ')) { // if it has just added a trailing white space, then don't consider it as important
       changed = false
