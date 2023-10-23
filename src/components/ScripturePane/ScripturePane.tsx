@@ -35,6 +35,8 @@ interface Props {
   isNT: boolean;
   /** whether or not this current verse has been selected for alignment */
   isVerseSelectedForAlignment: boolean;
+  /** function to be called when verse alignment has error */
+  onAlignmentError: Function;
   /** function to be called when verse alignment has finished */
   onAlignmentFinish: Function;
   // original scripture bookObjects for current book
@@ -94,6 +96,7 @@ function ScripturePane({
   getLexiconData,
   isNT,
   isVerseSelectedForAlignment,
+  onAlignmentError,
   onAlignmentFinish,
   originalScriptureBookObjects,
   reference,
@@ -183,17 +186,20 @@ function ScripturePane({
     },
   } = _scriptureAlignmentEdit
 
-  if (isVerseSelectedForAlignment && !alignerData && !doingAlignment && !errorMessage) {
-    console.log(`ScripturePane - verse selected for alignment`, basicReference)
-    const status = isOkToAlign()
-    const errorMessage_ = status?.errorMessage
+  React.useEffect(() => {
+    if (isVerseSelectedForAlignment && !alignerData && !doingAlignment && !errorMessage) {
+      console.log(`ScripturePane - verse selected for alignment`, basicReference)
+      const status = isOkToAlign()
+      const errorMessage_ = status?.errorMessage
 
-    if (errorMessage_) {
-      setState({ errorMessage: errorMessage_ })
-    } else {
-      handleAlignmentClick()
+      if (errorMessage_) {
+        setState({ errorMessage: errorMessage_ })
+        onAlignmentError && onAlignmentError(errorMessage_)
+      } else {
+        handleAlignmentClick()
+      }
     }
-  }
+  }, [isVerseSelectedForAlignment, alignerData, doingAlignment, errorMessage])
 
   // const verseChanged = React.useMemo(() => {
   //   return (newVerseText !== newText)
@@ -241,7 +247,7 @@ function ScripturePane({
     const verseText = UsfmFileConversionHelpers.getUsfmForVerseContent({ verseObjects: initialVerseObjects })
     clearChanges()
     setInitialVerseText(verseText)
-    setState({ newText: null })
+    setState({ newText: null, errorMessage: null })
   }, [{ basicReference, initialVerseObjects }])
 
   function onTextChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
@@ -307,11 +313,19 @@ function ScripturePane({
           >
             {verseContent(editing, enableEdit, noWords)}
           </span>
-          {
-            errorMessage &&
-            <ErrorDialog title={'Cannot Align Verse'} content={errorMessage} open={errorMessage} onClose={ setState({ errorMessage: null })} isLoading={ false } />
-          }
         </Content>
+      }
+      { errorMessage &&
+        <div>
+          { errorMessage }
+        </div>
+        // <ErrorDialog
+        //   title={'Cannot Align Verse'}
+        //   content={errorMessage}
+        //   open={!!errorMessage}
+        //   onClose={ setState({ errorMessage: null })}
+        //   isLoading={ false }
+        // />
       }
     </Container>
   )
