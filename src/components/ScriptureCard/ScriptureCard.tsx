@@ -675,7 +675,7 @@ export default function ScriptureCard({
         console.log(`saveChangesToCloud() - new USFM for card ${cardNum}, verse ${ref?.verse}:} - ${newVerseUsfm.substring(0, 100)}`)
         if (frontMatter) { // front matter goes before first verse
           const oldVerse = verseChunks[0]
-          const prefixLen = oldVerse.indexOf('\n'); // characters before the front matter text
+          const prefixLen = oldVerse.indexOf('\n') // characters before the front matter text
           verseChunks[verseIndex] = oldVerse.substring(0, prefixLen + 1) + newVerseUsfm
         } else {
           const oldVerse = verseChunks[verseIndex]
@@ -804,6 +804,10 @@ export default function ScriptureCard({
           } else { // if only changed a few verses, we will just make a diffpatch instead of sending the whole book
             const filename = scriptureConfig?.resourceState?.resource?.name // Like "57-TIT.usfm"
             if (filename && bibleUsfm && bibleUsfm_) { // make sure we have everything needed to make a patch
+              if (bibleUsfm_ === bibleUsfm) { // if no data change, then skip save
+                setState({ saveClicked: false })
+                return
+              }
               const diffPatch = getPatch(filename, bibleUsfm_, bibleUsfm, false)
               bibleUsfm_ = diffPatch // replace whole book with patch data (much shorter)
               saveDiffPatch = true
@@ -820,9 +824,9 @@ export default function ScriptureCard({
               startSave: true,
             })
           } else {
-              console.error(`saveChangesToCloud() - Error retrieving the correct book data: incorrect book ${languageId_}_${resourceId}`)
-              onResourceError && onResourceError(null, false, null, `Error retrieving the correct book data ${languageId_}_${resourceId}`, true)
-              setState({ saveClicked: false })
+            console.error(`saveChangesToCloud() - Error retrieving the correct book data: incorrect book ${languageId_}_${resourceId}`)
+            onResourceError && onResourceError(null, false, null, `Error retrieving the correct book data ${languageId_}_${resourceId}`, true)
+            setState({ saveClicked: false })
           }
         }
       }
