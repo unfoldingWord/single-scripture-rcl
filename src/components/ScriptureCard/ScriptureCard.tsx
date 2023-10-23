@@ -666,15 +666,22 @@ export default function ScriptureCard({
 
     if (chapterIndex >= 0) {
       const currentChapter = chapterChunks[chapterIndex]
-      const verseChunks = currentChapter.split('\\v ')
+      let verseChunks = currentChapter.split('\\v ')
       const verseIndex = findRefInArray(ref?.verse, verseChunks)
+      const frontMatter = ref?.verse === 'front'
 
-      if (verseIndex >= 0) {
+      if (frontMatter || verseIndex >= 0) {
         const newVerseUsfm = UsfmFileConversionHelpers.convertVerseDataToUSFM(updatedVerseObjects)
-        console.log(`saveChangesToCloud(${cardNum}) - new USFM for card:} - ${newVerseUsfm.substring(0, 100)}`)
-        const oldVerse = verseChunks[verseIndex]
-        const verseNumLen = (ref?.verse + '').length
-        verseChunks[verseIndex] = oldVerse.substring(0, verseNumLen + 1) + newVerseUsfm
+        console.log(`saveChangesToCloud() - new USFM for card ${cardNum}, verse ${ref?.verse}:} - ${newVerseUsfm.substring(0, 100)}`)
+        if (frontMatter) { // front matter goes before first verse
+          const oldVerse = verseChunks[0]
+          const prefixLen = oldVerse.indexOf('\n') // characters before the front matter text
+          verseChunks[verseIndex] = oldVerse.substring(0, prefixLen + 1) + newVerseUsfm
+        } else {
+          const oldVerse = verseChunks[verseIndex]
+          const verseNumLen = (ref?.verse + '').length // characters before the verse text
+          verseChunks[verseIndex] = oldVerse.substring(0, verseNumLen + 1) + newVerseUsfm
+        }
         const newChapter = verseChunks.join('\\v ')
         chapterChunks[chapterIndex] = newChapter
         newUsfm = chapterChunks.join('\\c ')
@@ -813,9 +820,9 @@ export default function ScriptureCard({
               startSave: true,
             })
           } else {
-              console.error(`saveChangesToCloud() - Error retrieving the correct book data: incorrect book ${languageId_}_${resourceId}`)
-              onResourceError && onResourceError(null, false, null, `Error retrieving the correct book data ${languageId_}_${resourceId}`, true)
-              setState({ saveClicked: false })
+            console.error(`saveChangesToCloud() - Error retrieving the correct book data: incorrect book ${languageId_}_${resourceId}`)
+            onResourceError && onResourceError(null, false, null, `Error retrieving the correct book data ${languageId_}_${resourceId}`, true)
+            setState({ saveClicked: false })
           }
         }
       }

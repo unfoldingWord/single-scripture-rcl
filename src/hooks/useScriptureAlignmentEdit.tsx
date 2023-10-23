@@ -484,6 +484,8 @@ export function useScriptureAlignmentEdit({
       alignerData,
       currentVerseObjects,
       editing,
+      enableEdit,
+      enableAlignment,
       initialVerseText,
       initialVerseObjects,
       newVerseText,

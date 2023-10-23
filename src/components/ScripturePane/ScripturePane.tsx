@@ -3,9 +3,17 @@ import useDeepCompareEffect from 'use-deep-compare-effect'
 import { VerseObjects } from 'scripture-resources-rcl'
 import { UsfmFileConversionHelpers } from 'word-aligner-rcl'
 import { ScriptureReference } from '../../types'
-import { getResourceMessage, LOADING_RESOURCE } from '../../utils'
+import {
+  getResourceMessage,
+  LOADING_RESOURCE,
+  verseObjectsHaveWords,
+} from '../../utils'
 import { ScriptureALignmentEditProps, useScriptureAlignmentEdit } from '../../hooks/useScriptureAlignmentEdit'
-import { Container, Content } from './styled'
+import {
+  Container,
+  Content,
+  EmptyContent,
+} from './styled'
 
 interface Props {
   /** optional styles to use for content **/
@@ -166,9 +174,9 @@ function ScripturePane({
       aligned,
       alignerData,
       currentVerseObjects,
-      initialVerseObjects,
       editing,
-      unsavedChanges,
+      enableEdit,
+      initialVerseObjects,
       newVerseText,
     },
   } = _scriptureAlignmentEdit
@@ -239,6 +247,41 @@ function ScripturePane({
     setEditing(false, newText)
   }
 
+  const verseObjects = currentVerseObjects || initialVerseObjects
+  const noWords = React.useMemo(() => !verseObjectsHaveWords(verseObjects), [currentVerseObjects, initialVerseObjects])
+
+  /**
+   * determine what to show based on variables
+   * @param {boolean} editing - if true show edit mode
+   * @param {boolean} enableEdit - if true then edit is enabled
+   * @param {boolean} noWords - if true then there are no displayable words
+   */
+  function verseContent(editing, enableEdit, noWords) {
+    if (editing) {
+      return <textarea
+        defaultValue={newVerseText || initialVerseText}
+        onChange={onTextChange}
+        onBlur={onBlur}
+        style={textAreaStyle}
+        autoFocus
+      />
+    }
+
+    if (noWords && enableEdit) {
+      return <EmptyContent>
+        Click to Edit
+      </EmptyContent>
+
+    }
+    return <VerseObjects
+      verseKey={`${reference.chapter}:${reference.verse}`}
+      verseObjects={verseObjects}
+      disableWordPopover={disableWordPopover}
+      getLexiconData={getLexiconData}
+      translate={translate}
+    />
+  }
+
   return (
     <Container style={{ direction, width: '100%', paddingBottom: '0.5em' }}>
       {resourceMessage ?
@@ -253,23 +296,7 @@ function ScripturePane({
             setEditing && setEditing(true)
           }}
           >
-            {editing ?
-              <textarea
-                defaultValue={newVerseText || initialVerseText}
-                onChange={onTextChange}
-                onBlur={onBlur}
-                style={textAreaStyle}
-                autoFocus
-              />
-              :
-              <VerseObjects
-                verseKey={`${reference.chapter}:${reference.verse}`}
-                verseObjects={currentVerseObjects || initialVerseObjects}
-                disableWordPopover={disableWordPopover}
-                getLexiconData={getLexiconData}
-                translate={translate}
-              />
-            }
+            {verseContent(editing, enableEdit, noWords)}
           </span>
         </Content>
       }

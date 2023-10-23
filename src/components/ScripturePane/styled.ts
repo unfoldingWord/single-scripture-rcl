@@ -33,6 +33,15 @@ export const Content = styled.span`
   line-height: 20px;
 `
 
+export const EmptyContent = styled.span`
+  font-size: 16px;
+  letter-spacing: 0.25px;
+  font-family: Noto Sans;
+  font-weight: normal;
+  line-height: 20px;
+  background-color: lightgray;
+`
+
 export const ChapterVerse = styled.span`
   font-size: 12px;
 `
