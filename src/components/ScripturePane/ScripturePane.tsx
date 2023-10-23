@@ -2,6 +2,7 @@ import * as React from 'react'
 import useDeepCompareEffect from 'use-deep-compare-effect'
 import { VerseObjects } from 'scripture-resources-rcl'
 import { UsfmFileConversionHelpers } from 'word-aligner-rcl'
+import { ErrorDialog } from 'translation-helps-rcl'
 import { ScriptureReference } from '../../types'
 import {
   getResourceMessage,
@@ -110,12 +111,12 @@ function ScripturePane({
   const [state, setState_] = React.useState({
     doingAlignment: false,
     newText: null,
-    urlError: null,
+    errorMessage: null,
   })
   const {
     doingAlignment,
     newText,
-    urlError,
+    errorMessage,
   } = state
 
   function setState(newState) {
@@ -167,6 +168,7 @@ function ScripturePane({
     actions: {
       clearChanges,
       handleAlignmentClick,
+      isOkToAlign,
       setEditing,
       setVerseChanged,
     },
@@ -181,9 +183,16 @@ function ScripturePane({
     },
   } = _scriptureAlignmentEdit
 
-  if (isVerseSelectedForAlignment && !alignerData && !doingAlignment) {
+  if (isVerseSelectedForAlignment && !alignerData && !doingAlignment && !errorMessage) {
     console.log(`ScripturePane - verse selected for alignment`, basicReference)
-    handleAlignmentClick()
+    const status = isOkToAlign()
+    const errorMessage_ = status?.errorMessage
+
+    if (errorMessage_) {
+      setState({ errorMessage: errorMessage_ })
+    } else {
+      handleAlignmentClick()
+    }
   }
 
   // const verseChanged = React.useMemo(() => {
@@ -298,6 +307,10 @@ function ScripturePane({
           >
             {verseContent(editing, enableEdit, noWords)}
           </span>
+          {
+            errorMessage &&
+            <ErrorDialog title={'Cannot Align Verse'} content={errorMessage} open={errorMessage} onClose={ setState({ errorMessage: null })} isLoading={ false } />
+          }
         </Content>
       }
     </Container>

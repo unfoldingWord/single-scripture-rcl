@@ -11,7 +11,7 @@ import {
   ScriptureReference,
   ServerConfig,
 } from '../types'
-import { getScriptureResourceSettings } from '../utils/ScriptureSettings'
+import { getScriptureResourceSettings, verseObjectsHaveWords } from '../utils/ScriptureSettings'
 import { ORIGINAL_SOURCE } from '../utils'
 import { getVersesForRef } from './useScripture'
 
@@ -281,6 +281,20 @@ export function useScriptureAlignmentEdit({
     return {}
   }
 
+  function isOkToAlign() {
+    const currentVerseObjects_ = updatedVerseObjects || initialVerseObjects
+
+    if (!verseObjectsHaveWords(currentVerseObjects_)) {
+      return { errorMessage: 'There are no words to align in the Literal/Simplified Scripture Text' }
+    }
+
+    if (!verseObjectsHaveWords(originalVerseObjects)) {
+      return { errorMessage: 'There are no words to align in the Original language' }
+    }
+
+    return null
+  }
+
   /**
    * callback for when user clicked on alignment button - will show if not already shown
    */
@@ -474,6 +488,7 @@ export function useScriptureAlignmentEdit({
       clearChanges,
       getChanges,
       handleAlignmentClick,
+      isOkToAlign,
       onAlignmentsChange,
       saveAlignment,
       setEditing,
