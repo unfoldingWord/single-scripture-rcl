@@ -110,12 +110,10 @@ function ScripturePane({
   const [state, setState_] = React.useState({
     doingAlignment: false,
     newText: null,
-    urlError: null,
   })
   const {
     doingAlignment,
     newText,
-    urlError,
   } = state
 
   function setState(newState) {
@@ -167,6 +165,7 @@ function ScripturePane({
     actions: {
       clearChanges,
       handleAlignmentClick,
+      isOkToAlign,
       setEditing,
       setVerseChanged,
     },
@@ -181,10 +180,17 @@ function ScripturePane({
     },
   } = _scriptureAlignmentEdit
 
-  if (isVerseSelectedForAlignment && !alignerData && !doingAlignment) {
-    console.log(`ScripturePane - verse selected for alignment`, basicReference)
-    handleAlignmentClick()
-  }
+  React.useEffect(() => {
+    if (isVerseSelectedForAlignment && !alignerData && !doingAlignment) {
+      console.log(`ScripturePane - verse selected for alignment`, basicReference)
+      const status = isOkToAlign()
+      const errorMessage_ = status?.errorMessage
+
+      if (!errorMessage_) {
+        handleAlignmentClick()
+      }
+    }
+  }, [isVerseSelectedForAlignment, alignerData, doingAlignment])
 
   // const verseChanged = React.useMemo(() => {
   //   return (newVerseText !== newText)
@@ -251,7 +257,7 @@ function ScripturePane({
   const noWords = React.useMemo(() => !verseObjectsHaveWords(verseObjects), [currentVerseObjects, initialVerseObjects])
 
   /**
-   * determine what to show based on variables
+   * determine what UI to show based on state
    * @param {boolean} editing - if true show edit mode
    * @param {boolean} enableEdit - if true then edit is enabled
    * @param {boolean} noWords - if true then there are no displayable words
@@ -267,12 +273,12 @@ function ScripturePane({
       />
     }
 
-    if (noWords && enableEdit) {
+    if (noWords && enableEdit) { // show a clickable message in the case that there is no text to click on
       return <EmptyContent>
         Click to Edit
       </EmptyContent>
-
     }
+
     return <VerseObjects
       verseKey={`${reference.chapter}:${reference.verse}`}
       verseObjects={verseObjects}

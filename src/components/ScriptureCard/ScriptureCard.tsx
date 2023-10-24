@@ -676,7 +676,7 @@ export default function ScriptureCard({
         if (frontMatter) { // front matter goes before first verse
           const oldVerse = verseChunks[0]
           const prefixLen = oldVerse.indexOf('\n') // characters before the front matter text
-          verseChunks[verseIndex] = oldVerse.substring(0, prefixLen + 1) + newVerseUsfm
+          verseChunks[0] = oldVerse.substring(0, prefixLen + 1) + newVerseUsfm
         } else {
           const oldVerse = verseChunks[verseIndex]
           const verseNumLen = (ref?.verse + '').length // characters before the verse text

@@ -12,7 +12,7 @@ import {
   ScriptureReference,
   ServerConfig,
 } from '../types'
-import { getScriptureResourceSettings } from '../utils/ScriptureSettings'
+import { getScriptureResourceSettings, verseObjectsHaveWords } from '../utils/ScriptureSettings'
 import { ORIGINAL_SOURCE } from '../utils'
 import { getVersesForRef } from './useScripture'
 
@@ -382,6 +382,35 @@ export function useScriptureAlignmentEdit({
   }
 
   /**
+   * determine if it is OK to proceed with alignment - there needs to be alignable words in the target text and in the original language
+   * @returns {null|{errorMessage: string}} - returns null if no error found, otherwise returns an object that contains the errorMessage
+   */
+  function isOkToAlign() {
+    let currentVerseObjects_ = updatedVerseObjects || initialVerseObjects
+    let errorMessage
+
+    if (verseTextChanged) { // make sure we apply any edited text before checking for words
+      const targetVerseUSFM = getCurrentVerseUsfm(updatedVerseObjects, initialVerseObjects, verseTextChanged, newVerseText)
+      const newTargetVerseObjects = usfmHelpers.usfmVerseToJson(targetVerseUSFM)
+      currentVerseObjects_ = newTargetVerseObjects
+    }
+
+    if (!verseObjectsHaveWords(currentVerseObjects_)) {
+      errorMessage = 'There are no words to align in the Literal/Simplified Scripture Text'
+    } else if (!verseObjectsHaveWords(originalVerseObjects)) {
+      errorMessage = 'There are no words to align in the Original language'
+    }
+
+    if (errorMessage) {
+      setState({ alignerData: { errorMessage } })
+      console.log(`isOkToAlign() - Alignment error: ${errorMessage}`)
+      return { errorMessage }
+    }
+
+    return null
+  }
+
+  /**
    * callback for when user clicked on alignment button - will show if not already shown
    */
   async function handleAlignmentClick() {
@@ -594,6 +623,7 @@ export function useScriptureAlignmentEdit({
       clearChanges,
       getChanges,
       handleAlignmentClick,
+      isOkToAlign,
       onAlignmentsChange,
       saveAlignment,
       setEditing,
