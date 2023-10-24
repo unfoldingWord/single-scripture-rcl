@@ -1021,11 +1021,6 @@ export default function ScriptureCard({
       isVerseSelectedForAlignment = verseSelectedForAlignment.chapter == chapter && verseSelectedForAlignment.verse == verse
     }
 
-    const onAlignmentError = (error) => {
-      console.log('alignment error', error)
-      setState({ verseSelectedForAlignment: null })
-    }
-
     return (
       <ScripturePane
         {...scriptureConfig}
@@ -1039,7 +1034,6 @@ export default function ScriptureCard({
         isNT={isNT_}
         isVerseSelectedForAlignment={isVerseSelectedForAlignment}
         key={index}
-        onAlignmentError={(error) => onAlignmentError(error)}
         onAlignmentFinish={() => setState({ verseSelectedForAlignment: null })}
         originalScriptureBookObjects={originalScriptureBookObjects}
         refStyle={refStyle}

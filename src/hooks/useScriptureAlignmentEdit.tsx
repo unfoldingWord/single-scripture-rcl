@@ -282,8 +282,14 @@ export function useScriptureAlignmentEdit({
   }
 
   function isOkToAlign() {
-    const currentVerseObjects_ = updatedVerseObjects || initialVerseObjects
+    let currentVerseObjects_ = updatedVerseObjects || initialVerseObjects
     let errorMessage
+
+    if (verseTextChanged) { // make sure we apply any edited text before checking for words
+      const targetVerseUSFM = getCurrentVerseUsfm(updatedVerseObjects, initialVerseObjects, verseTextChanged, newVerseText)
+      const alignedVerseObjects = usfmHelpers.usfmVerseToJson(targetVerseUSFM)
+      currentVerseObjects_ = alignedVerseObjects
+    }
 
     if (!verseObjectsHaveWords(currentVerseObjects_)) {
       errorMessage = 'There are no words to align in the Literal/Simplified Scripture Text'

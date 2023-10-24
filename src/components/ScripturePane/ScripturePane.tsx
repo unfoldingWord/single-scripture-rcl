@@ -34,8 +34,6 @@ interface Props {
   isNT: boolean;
   /** whether or not this current verse has been selected for alignment */
   isVerseSelectedForAlignment: boolean;
-  /** function to be called when verse alignment has error */
-  onAlignmentError: Function;
   /** function to be called when verse alignment has finished */
   onAlignmentFinish: Function;
   // original scripture bookObjects for current book
@@ -95,7 +93,6 @@ function ScripturePane({
   getLexiconData,
   isNT,
   isVerseSelectedForAlignment,
-  onAlignmentError,
   onAlignmentFinish,
   originalScriptureBookObjects,
   reference,
@@ -113,12 +110,10 @@ function ScripturePane({
   const [state, setState_] = React.useState({
     doingAlignment: false,
     newText: null,
-    errorMessage: null,
   })
   const {
     doingAlignment,
     newText,
-    errorMessage,
   } = state
 
   function setState(newState) {
@@ -186,19 +181,16 @@ function ScripturePane({
   } = _scriptureAlignmentEdit
 
   React.useEffect(() => {
-    if (isVerseSelectedForAlignment && !alignerData && !doingAlignment && !errorMessage) {
+    if (isVerseSelectedForAlignment && !alignerData && !doingAlignment) {
       console.log(`ScripturePane - verse selected for alignment`, basicReference)
       const status = isOkToAlign()
       const errorMessage_ = status?.errorMessage
 
-      if (errorMessage_) {
-        setState({ errorMessage: errorMessage_ })
-        onAlignmentError && onAlignmentError(errorMessage_)
-      } else {
+      if (!errorMessage_) {
         handleAlignmentClick()
       }
     }
-  }, [isVerseSelectedForAlignment, alignerData, doingAlignment, errorMessage])
+  }, [isVerseSelectedForAlignment, alignerData, doingAlignment])
 
   // const verseChanged = React.useMemo(() => {
   //   return (newVerseText !== newText)
