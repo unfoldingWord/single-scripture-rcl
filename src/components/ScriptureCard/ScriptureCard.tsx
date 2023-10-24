@@ -804,7 +804,8 @@ export default function ScriptureCard({
           } else { // if only changed a few verses, we will just make a diffpatch instead of sending the whole book
             const filename = scriptureConfig?.resourceState?.resource?.name // Like "57-TIT.usfm"
             if (filename && bibleUsfm && bibleUsfm_) { // make sure we have everything needed to make a patch
-              if (bibleUsfm_ === bibleUsfm) { // if no data change, then skip save
+              if (bibleUsfm_ === bibleUsfm) { // if no data change, then skip save because DCS crashes on an empty patch
+                console.warn(`saveChangesToCloud() - there is nothing to save, skipping`)
                 setState({ saveClicked: false })
                 return
               }
