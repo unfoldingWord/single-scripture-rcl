@@ -283,13 +283,18 @@ export function useScriptureAlignmentEdit({
 
   function isOkToAlign() {
     const currentVerseObjects_ = updatedVerseObjects || initialVerseObjects
+    let errorMessage
 
     if (!verseObjectsHaveWords(currentVerseObjects_)) {
-      return { errorMessage: 'There are no words to align in the Literal/Simplified Scripture Text' }
+      errorMessage = 'There are no words to align in the Literal/Simplified Scripture Text'
+    } else if (!verseObjectsHaveWords(originalVerseObjects)) {
+      errorMessage = 'There are no words to align in the Original language'
     }
 
-    if (!verseObjectsHaveWords(originalVerseObjects)) {
-      return { errorMessage: 'There are no words to align in the Original language' }
+    if (errorMessage) {
+      setState({ alignerData: { errorMessage } })
+      console.log(`isOkToAlign() - Alignment error: ${errorMessage}`)
+      return { errorMessage }
     }
 
     return null

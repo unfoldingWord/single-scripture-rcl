@@ -2,7 +2,6 @@ import * as React from 'react'
 import useDeepCompareEffect from 'use-deep-compare-effect'
 import { VerseObjects } from 'scripture-resources-rcl'
 import { UsfmFileConversionHelpers } from 'word-aligner-rcl'
-import { ErrorDialog } from 'translation-helps-rcl'
 import { ScriptureReference } from '../../types'
 import {
   getResourceMessage,
@@ -314,18 +313,6 @@ function ScripturePane({
             {verseContent(editing, enableEdit, noWords)}
           </span>
         </Content>
-      }
-      { errorMessage &&
-        <div>
-          { errorMessage }
-        </div>
-        // <ErrorDialog
-        //   title={'Cannot Align Verse'}
-        //   content={errorMessage}
-        //   open={!!errorMessage}
-        //   onClose={ setState({ errorMessage: null })}
-        //   isLoading={ false }
-        // />
       }
     </Container>
   )
