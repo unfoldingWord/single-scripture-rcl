@@ -238,7 +238,7 @@ function ScripturePane({
     const verseText = UsfmFileConversionHelpers.getUsfmForVerseContent({ verseObjects: initialVerseObjects })
     clearChanges()
     setInitialVerseText(verseText)
-    setState({ newText: null, errorMessage: null })
+    setState({ newText: null })
   }, [{ basicReference, initialVerseObjects }])
 
   function onTextChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
@@ -257,7 +257,7 @@ function ScripturePane({
   const noWords = React.useMemo(() => !verseObjectsHaveWords(verseObjects), [currentVerseObjects, initialVerseObjects])
 
   /**
-   * determine what to show based on variables
+   * determine what UI to show based on state
    * @param {boolean} editing - if true show edit mode
    * @param {boolean} enableEdit - if true then edit is enabled
    * @param {boolean} noWords - if true then there are no displayable words
@@ -273,12 +273,12 @@ function ScripturePane({
       />
     }
 
-    if (noWords && enableEdit) {
+    if (noWords && enableEdit) { // show a clickable message in the case that there is no text to click on
       return <EmptyContent>
         Click to Edit
       </EmptyContent>
-
     }
+
     return <VerseObjects
       verseKey={`${reference.chapter}:${reference.verse}`}
       verseObjects={verseObjects}

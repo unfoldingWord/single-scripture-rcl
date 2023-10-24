@@ -281,6 +281,10 @@ export function useScriptureAlignmentEdit({
     return {}
   }
 
+  /**
+   * determine if it is OK to proceed with alignment - there needs to be alignable words in the target text and in the original language
+   * @returns {null|{errorMessage: string}} - returns null if no error found, otherwise returns an object that contains the errorMessage
+   */
   function isOkToAlign() {
     let currentVerseObjects_ = updatedVerseObjects || initialVerseObjects
     let errorMessage
