@@ -287,8 +287,8 @@ export function useScriptureAlignmentEdit({
 
     if (verseTextChanged) { // make sure we apply any edited text before checking for words
       const targetVerseUSFM = getCurrentVerseUsfm(updatedVerseObjects, initialVerseObjects, verseTextChanged, newVerseText)
-      const alignedVerseObjects = usfmHelpers.usfmVerseToJson(targetVerseUSFM)
-      currentVerseObjects_ = alignedVerseObjects
+      const newTargetVerseObjects = usfmHelpers.usfmVerseToJson(targetVerseUSFM)
+      currentVerseObjects_ = newTargetVerseObjects
     }
 
     if (!verseObjectsHaveWords(currentVerseObjects_)) {
