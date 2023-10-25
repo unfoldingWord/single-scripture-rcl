@@ -417,14 +417,16 @@ export function getBibleIdFromUsfmContentID(bibleUsfm) {
  * @return {boolean} true if word is found
  */
 export function verseObjectsHaveWords(verseObjects:object[]) {
-  for (const vo of verseObjects) {
-    if (vo['type'] === 'word') {
-      return true
-    } else if (vo['children']) {
-      const foundWords = verseObjectsHaveWords(vo['children'])
-
-      if (foundWords) {
+  if (verseObjects?.length) {
+    for (const vo of verseObjects) {
+      if (vo['type'] === 'word') {
         return true
+      } else if (vo['children']) {
+        const foundWords = verseObjectsHaveWords(vo['children'])
+
+        if (foundWords) {
+          return true
+        }
       }
     }
   }
