@@ -20,7 +20,7 @@ import {
 // @ts-ignore
 import { getQuoteMatchesInBookRef } from 'uw-quote-helpers'
 import { AlignmentHelpers, UsfmFileConversionHelpers } from 'word-aligner-rcl'
-import * as isEqual from 'deep-equal'
+import { isEqual } from '@react-hookz/deep-equal'
 import { getVerses } from 'bible-reference-range'
 import { ScripturePane, ScriptureSelector } from '..'
 import { useScriptureSettings } from '../../hooks/useScriptureSettings'

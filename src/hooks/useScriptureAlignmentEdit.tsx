@@ -6,7 +6,7 @@ import {
   UsfmFileConversionHelpers,
   usfmHelpers,
 } from 'word-aligner-rcl'
-import * as isEqual from 'deep-equal'
+import { isEqual } from '@react-hookz/deep-equal'
 import {
   ScriptureConfig,
   ScriptureReference,
@@ -173,6 +173,19 @@ function checkForDataCorruption(prefix, targetAlignment) {
 }
 
 /**
+ * return true if only spaces in content
+ * @param {string} text
+ */
+function allSpaces(text) {
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] !== ' ') {
+      return false
+    }
+  }
+  return true
+}
+
+/**
  * make sure there is a significant change to the text
  * @param {string} newVerseText
  * @param {string} initialVerseText
@@ -182,9 +195,18 @@ function hasTextChangedSignificantly(newVerseText, initialVerseText) {
 
   if (changed && newVerseText) { // make sure it's significant
     const lengthDifference = newVerseText.length - initialVerseText?.length
-    const lastChar = newVerseText.substring(newVerseText.length -1)
-    if ((lengthDifference === 1) && (lastChar === ' ')) { // if it has just added a trailing white space, then don't consider it as important
-      changed = false
+    const firstPartOfInitial = newVerseText.substring(0, initialVerseText.length)
+
+    if ((lengthDifference > 0) && (initialVerseText === firstPartOfInitial)) { // if initial parts match
+      // add exemption if the usfm ends with a quote tag
+      const lastChars = newVerseText.substring(newVerseText.length - lengthDifference)
+      const pos = newVerseText.lastIndexOf('\\')
+      const lastUsfmTag = newVerseText[pos + 1]
+      const endsWithQuote = (pos > 0) && (lastUsfmTag === 'q')
+
+      if (endsWithQuote && allSpaces(lastChars)) {
+        changed = false
+      }
     }
   }
   return changed
@@ -383,7 +405,7 @@ export function useScriptureAlignmentEdit({
 
   /**
    * determine if it is OK to proceed with alignment - there needs to be alignable words in the target text and in the original language
-   * @returns {null|{errorMessage: string}} - returns null if no error found, otherwise returns an object that contains the errorMessage
+   * @returns {null|{errorMessage:  string}} - returns null if no error found, otherwise returns an object that contains the errorMessage
    */
   function isOkToAlign() {
     let currentVerseObjects_ = updatedVerseObjects || initialVerseObjects

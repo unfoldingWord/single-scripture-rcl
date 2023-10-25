@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { core } from 'scripture-resources-rcl'
-import * as isEqual from 'deep-equal'
+import { isEqual } from '@react-hookz/deep-equal'
 import { KEY_SCRIPTURE_VER_HISTORY, ScriptureVersionHistory } from '../utils/ScriptureVersionHistory'
 import {
   INVALID_REPO_URL_ERROR,
