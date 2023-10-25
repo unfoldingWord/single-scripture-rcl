@@ -16,7 +16,7 @@ import {
 } from 'translation-helps-rcl'
 import useDeepCompareEffect from 'use-deep-compare-effect'
 import { getVerses } from 'bible-reference-range'
-import * as isEqual from 'deep-equal'
+import { isEqual } from '@react-hookz/deep-equal'
 import { AlignmentHelpers, UsfmFileConversionHelpers } from 'word-aligner-rcl'
 import { delay, verseObjectsHaveWords } from '../utils'
 import {

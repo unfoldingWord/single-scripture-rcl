@@ -5,7 +5,7 @@ import {
   UsfmFileConversionHelpers,
   usfmHelpers,
 } from 'word-aligner-rcl'
-import * as isEqual from 'deep-equal'
+import { isEqual } from '@react-hookz/deep-equal'
 import {
   ScriptureConfig,
   ScriptureReference,
