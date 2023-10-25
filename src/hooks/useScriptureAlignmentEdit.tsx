@@ -97,6 +97,46 @@ function getCurrentVerseUsfm(updatedVerseObjects, initialVerseObjects, verseText
   return targetVerseUSFM
 }
 
+/**
+ * return true if only spaces in content
+ * @param {string} text
+ */
+function allSpaces(text) {
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] !== ' ') {
+      return false
+    }
+  }
+  return true
+}
+
+/**
+ * make sure there is a significant change to the text
+ * @param {string} newVerseText
+ * @param {string} initialVerseText
+ */
+function hasTextChangedSignificantly(newVerseText, initialVerseText) {
+  let changed = newVerseText !== initialVerseText
+
+  if (changed && newVerseText) { // make sure it's significant
+    const lengthDifference = newVerseText.length - initialVerseText?.length
+    const firstPartOfInitial = newVerseText.substring(0, initialVerseText.length)
+
+    if ((lengthDifference > 0) && (initialVerseText === firstPartOfInitial)) { // if initial parts match
+      // add exemption if the usfm ends with a quote tag
+      const lastChars = newVerseText.substring(newVerseText.length - lengthDifference)
+      const pos = newVerseText.lastIndexOf('\\')
+      const lastUsfmTag = newVerseText[pos + 1]
+      const endsWithQuote = (pos > 0) && (lastUsfmTag === 'q')
+
+      if (endsWithQuote && allSpaces(lastChars)) {
+        changed = false
+      }
+    }
+  }
+  return changed
+}
+
 // manage verse edit and alignment states
 export function useScriptureAlignmentEdit({
   currentIndex,
@@ -283,7 +323,7 @@ export function useScriptureAlignmentEdit({
 
   /**
    * determine if it is OK to proceed with alignment - there needs to be alignable words in the target text and in the original language
-   * @returns {null|{errorMessage: string}} - returns null if no error found, otherwise returns an object that contains the errorMessage
+   * @returns {null|{errorMessage:  string}} - returns null if no error found, otherwise returns an object that contains the errorMessage
    */
   function isOkToAlign() {
     let currentVerseObjects_ = updatedVerseObjects || initialVerseObjects
@@ -412,7 +452,7 @@ export function useScriptureAlignmentEdit({
           // fallback to make sure text from verseObjects matches current text
           const verseText = UsfmFileConversionHelpers.getUsfmForVerseContent({ verseObjects: currentVerseObjects } )
 
-          if (verseText !== _newVerseText) { // if text from verse objects does not match latest text
+          if (hasTextChangedSignificantly(verseText, _newVerseText)) {
             // apply alignment to current text
             const { targetVerseObjects } = AlignmentHelpers.updateAlignmentsToTargetVerse(currentVerseObjects, _newVerseText)
             _updatedVerseObjects = targetVerseObjects // update verseObjects to match current text
