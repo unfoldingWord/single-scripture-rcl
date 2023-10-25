@@ -80,6 +80,7 @@ const TextAreaStyle = {
   height: '60%',
   width: '100%',
   minWidth: '220px',
+  minHeight: '100px',
   fontSize: '16px',
 }
 
