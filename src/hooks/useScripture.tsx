@@ -31,6 +31,7 @@ import {
   ScriptureReference,
   ServerConfig,
   VerseObjectsType,
+  VerseReferencesType,
 } from '../types'
 import { parseResourceManifest } from './parseResourceManifest'
 
@@ -74,7 +75,7 @@ function getBranchName(resourceLink: string) {
  * @param {string} languageId
  * @return {array|null} - of verseObjects
  */
-export function getVersesForRefStr(refStr, bookObjects, languageId):VerseObjectsType {
+export function getVersesForRefStr(refStr, bookObjects, languageId): VerseReferencesType {
   if (bookObjects) {
     let verses = getVerses(bookObjects.chapters, refStr)
 
@@ -101,7 +102,7 @@ export function getVersesForRefStr(refStr, bookObjects, languageId):VerseObjects
  * @param {string} languageId
  * @return {array|null} - of verseObjects
  */
-export function getVersesForRef(reference, bookObjects, languageId): VerseObjectsType {
+export function getVersesForRef(reference, bookObjects, languageId): VerseReferencesType {
   const refStr = `${reference.chapter}:${reference.verse}`
   return getVersesForRefStr(refStr, bookObjects, languageId)
 }
@@ -468,7 +469,7 @@ export function useScripture({ // hook for fetching scripture
    * @param {string} refStr
    * @param {object} content_
    */
-  function _getVersesForRef(refStr, content_ = bookObjects): VerseObjectsType {
+  function _getVersesForRef(refStr, content_ = bookObjects): VerseReferencesType {
     if (content_) {
       return getVersesForRefStr(refStr, content_, languageId)
     }

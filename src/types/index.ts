@@ -48,6 +48,12 @@ export interface VersesType {
   verseObjects?: VerseObjectsType,
 }
 
+export interface VerseReferenceType {
+  verseData: VersesType
+}
+
+export type VerseReferencesType = VerseReferenceType[];
+
 export interface ChapterObjectsType {
   [verse: string]: VersesType|string // could be either parsed verse data or raw verse text
 }
