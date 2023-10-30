@@ -2,7 +2,7 @@ import * as React from 'react'
 import useDeepCompareEffect from 'use-deep-compare-effect'
 import { VerseObjects } from 'scripture-resources-rcl'
 import { UsfmFileConversionHelpers } from 'word-aligner-rcl'
-import { ScriptureReference } from '../../types'
+import { BookObjectsType, ScriptureReference } from '../../types'
 import {
   getResourceMessage,
   LOADING_RESOURCE,
@@ -37,7 +37,7 @@ interface Props {
   /** function to be called when verse alignment has finished */
   onAlignmentFinish: Function;
   // original scripture bookObjects for current book
-  originalScriptureBookObjects: object,
+  originalScriptureBookObjects: BookObjectsType,
   /** current reference **/
   reference: ScriptureReference;
   /** optional styles to use for reference **/
@@ -166,7 +166,6 @@ function ScripturePane({
     actions: {
       clearChanges,
       handleAlignmentClick,
-      isOkToAlign,
       setEditing,
       setVerseChanged,
     },
@@ -184,12 +183,7 @@ function ScripturePane({
   React.useEffect(() => {
     if (isVerseSelectedForAlignment && !alignerData && !doingAlignment) {
       console.log(`ScripturePane - verse selected for alignment`, basicReference)
-      const status = isOkToAlign()
-      const errorMessage_ = status?.errorMessage
-
-      if (!errorMessage_) {
-        handleAlignmentClick()
-      }
+      handleAlignmentClick()
     }
   }, [isVerseSelectedForAlignment, alignerData, doingAlignment])
 

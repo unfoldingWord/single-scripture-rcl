@@ -58,10 +58,12 @@ export interface HeaderType { // parsed USFM content that comes before the first
 }
 
 export interface BookObjectsType { // parsed USFM content for a book of the bible
-  headers: HeaderType[],
+  bookId?: string; // short form identifier for book of the bible such as `mrk`
   chapters: { // the chapter content found in the USFM indexed by the chapter identifier
     [chapter: string]: ChapterObjectsType
-  }
+  },
+  headers: HeaderType[],
+  languageId?: string // short form identifier for language of the book such as `en`
 }
 
 export interface ScriptureConfig {
