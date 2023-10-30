@@ -26,9 +26,11 @@ import {
   parseResourceLink,
 } from '../utils/ScriptureSettings'
 import {
-  ServerConfig,
+  BookObjectsType,
   ScriptureResource,
   ScriptureReference,
+  ServerConfig,
+  VerseObjectsType,
 } from '../types'
 import { parseResourceManifest } from './parseResourceManifest'
 
@@ -72,7 +74,7 @@ function getBranchName(resourceLink: string) {
  * @param {string} languageId
  * @return {array|null} - of verseObjects
  */
-export function getVersesForRefStr(refStr, bookObjects, languageId) {
+export function getVersesForRefStr(refStr, bookObjects, languageId):VerseObjectsType {
   if (bookObjects) {
     let verses = getVerses(bookObjects.chapters, refStr)
 
@@ -99,7 +101,7 @@ export function getVersesForRefStr(refStr, bookObjects, languageId) {
  * @param {string} languageId
  * @return {array|null} - of verseObjects
  */
-export function getVersesForRef(reference, bookObjects, languageId) {
+export function getVersesForRef(reference, bookObjects, languageId): VerseObjectsType {
   const refStr = `${reference.chapter}:${reference.verse}`
   return getVersesForRefStr(refStr, bookObjects, languageId)
 }
@@ -112,6 +114,44 @@ export function useScripture({ // hook for fetching scripture
   resourceLink: resourceLink_,
   wholeBook = false,
 } : Props) {
+  type StateTypes = {
+    bibleUsfm: string,
+    bookObjects: BookObjectsType,
+    fetchCount: number,
+    fetched: boolean,
+    fetchedBook: string,
+    fetchParams: {
+      config: {},
+      reference: {},
+      resourceLink: string,
+    },
+    ignoreSha: string|null,
+    initialized: boolean,
+    resourceState: {
+      bibleUsfm: string,
+      bookObjects: BookObjectsType,
+      content: {},
+      fetchResponse: {},
+      fetchedResources: {
+        bibleUsfm: string,
+        bookObjects: BookObjectsType,
+        fetchCount: number,
+        name: string,
+        sha: string,
+        url: string,
+      },
+      loadingResource: boolean,
+      loadingContent: boolean,
+      resource: {
+        manifest: {},
+        resourceLink: {}
+      },
+      sha: string,
+      url: string,
+    },
+    versesForRef: any[],
+  }
+
   const [state, setState_] = useState({
     bibleUsfm: null,
     bookObjects: null,
@@ -149,6 +189,7 @@ export function useScripture({ // hook for fetching scripture
 
   const { projectId: bookId} = reference || {}
 
+  const _state: StateTypes = state // Tricky: work-around for bug that standard typescript type casting does not work in .tsx files
   const {
     bibleUsfm,
     bookObjects,
@@ -160,7 +201,7 @@ export function useScripture({ // hook for fetching scripture
     initialized,
     resourceState,
     versesForRef,
-  } = state
+  } = _state
   const fetchedResources = resourceState?.fetchedResources
 
   function setState(newState) {
@@ -427,7 +468,7 @@ export function useScripture({ // hook for fetching scripture
    * @param {string} refStr
    * @param {object} content_
    */
-  function _getVersesForRef(refStr, content_ = bookObjects) {
+  function _getVersesForRef(refStr, content_ = bookObjects): VerseObjectsType {
     if (content_) {
       return getVersesForRefStr(refStr, content_, languageId)
     }
@@ -462,7 +503,7 @@ export function useScripture({ // hook for fetching scripture
    * get the verses for current reference or reference range
    * @param {object} _bookObjects
    */
-  function fetchVersesForRef(_bookObjects = bookObjects) {
+  function fetchVersesForRef(_bookObjects: BookObjectsType = bookObjects): VerseObjectsType {
     let newVersesForRef = []
 
     if (_bookObjects) {
