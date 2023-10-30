@@ -144,6 +144,7 @@ export function useScripture({ // hook for fetching scripture
       loadingResource: boolean,
       loadingContent: boolean,
       resource: {
+        name: string,
         manifest: {},
         resourceLink: {}
       },
