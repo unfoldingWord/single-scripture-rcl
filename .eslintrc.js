@@ -8,8 +8,6 @@ module.exports = {
     "prettier",
     "prettier/react",
     '@unfoldingword',
-    "react-app",
-    "react-app/jest"
   ],
   "parser": "babel-eslint",
   "parserOptions": {

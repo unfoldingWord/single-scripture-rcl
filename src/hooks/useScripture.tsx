@@ -503,7 +503,7 @@ export function useScripture({ // hook for fetching scripture
 
   /**
    * get the verses for current reference or reference range
-   * @param {object} _bookObjects
+   * @param {BookObjectsType} _bookObjects
    */
   function fetchVersesForRef(_bookObjects: BookObjectsType = bookObjects): VerseObjectsType {
     let newVersesForRef = []

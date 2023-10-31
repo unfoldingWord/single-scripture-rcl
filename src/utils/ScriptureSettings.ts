@@ -414,7 +414,7 @@ export function getBibleIdFromUsfmContentID(bibleUsfm) {
 
 /**
  * determines if there are any words in verseObjects
- * @param {object[]} verseObjects - array of verseObjects to search for words
+ * @param {VerseObjectsType} verseObjects - array of verseObjects to search for words
  * @return {boolean} true if word is found
  */
 export function verseObjectsHaveWords(verseObjects: VerseObjectsType) {

@@ -89,7 +89,7 @@ export interface ScriptureALignmentEditProps {
  * @param {string} targetVerseUSFM
  * @param {VerseObjectsType} originalVerseObjects
  */
-function isUsfmAligned(targetVerseUSFM, originalVerseObjects) {
+function isUsfmAligned(targetVerseUSFM:string, originalVerseObjects:VerseObjectsType):boolean {
   originalVerseObjects = originalVerseObjects?.length ? originalVerseObjects : null // make sure not passing empty Array
   const { alignments, wordBank } = AlignmentHelpers.extractAlignmentsFromTargetVerse(targetVerseUSFM, originalVerseObjects)
   return AlignmentHelpers.areAlgnmentsComplete(wordBank, alignments)
@@ -102,7 +102,7 @@ function isUsfmAligned(targetVerseUSFM, originalVerseObjects) {
  * @param {boolean} verseTextChanged
  * @param {string} newVerseText
  */
-function getCurrentVerseUsfm(updatedVerseObjects, initialVerseObjects, verseTextChanged: boolean, newVerseText) {
+function getCurrentVerseUsfm(updatedVerseObjects:VerseObjectsType, initialVerseObjects:VerseObjectsType, verseTextChanged: boolean, newVerseText:string):string {
   let targetVerseUSFM = null
   const currentVerseObjects_ = updatedVerseObjects || initialVerseObjects
 
@@ -119,7 +119,7 @@ function getCurrentVerseUsfm(updatedVerseObjects, initialVerseObjects, verseText
  * return true if only spaces in content
  * @param {string} text
  */
-function allSpaces(text) {
+function allSpaces(text:string):boolean {
   for (let i = 0; i < text.length; i++) {
     if (text[i] !== ' ') {
       return false
@@ -133,7 +133,7 @@ function allSpaces(text) {
  * @param {string} newVerseText
  * @param {string} initialVerseText
  */
-function hasTextChangedSignificantly(newVerseText, initialVerseText) {
+function hasTextChangedSignificantly(newVerseText:string, initialVerseText:string):boolean {
   let changed = newVerseText !== initialVerseText
 
   if (changed && newVerseText) { // make sure it's significant
@@ -391,7 +391,7 @@ export function useScriptureAlignmentEdit({
    * get updated verse objects after alignments changed
    * @param {AlignerResultsDataType} _newAlignments - results of aligner
    */
-  function updateVerseWithNewAlignments(_newAlignments: AlignerResultsDataType = newAlignments) {
+  function updateVerseWithNewAlignments(_newAlignments: AlignerResultsDataType = newAlignments):VerseObjectsType {
     const currentVerseObjects_ = updatedVerseObjects || initialVerseObjects
     const targetVerseText = newVerseText || UsfmFileConversionHelpers.convertVerseDataToUSFM(currentVerseObjects_)
     const verseUsfm = AlignmentHelpers.addAlignmentsToVerseUSFM(_newAlignments.targetWords, _newAlignments.verseAlignments, targetVerseText)
@@ -534,7 +534,7 @@ export function useScriptureAlignmentEdit({
    * @param {AlignerResultsDataType} results
    * @return {boolean} true if alignment is complete
    */
-  function onAlignmentsChange(results: AlignerResultsDataType) {
+  function onAlignmentsChange(results: AlignerResultsDataType):boolean {
     console.log(`onAlignmentsChange() - alignment changed, results`, results) // merge alignments into target verse and convert to USFM
     const { targetWords, verseAlignments } = results
     const alignmentComplete = AlignmentHelpers.areAlgnmentsComplete(targetWords, verseAlignments)
