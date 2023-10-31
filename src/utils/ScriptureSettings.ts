@@ -19,6 +19,7 @@ import {
   TARGET_LITERAL,
   TARGET_SIMPLIFIED,
 } from './common'
+import {VerseObjectsType} from '../types';
 
 export const DISABLE_WORD_POPOVER = true // disable word popover for every scripture pane but original languages
 
@@ -416,13 +417,13 @@ export function getBibleIdFromUsfmContentID(bibleUsfm) {
  * @param {object[]} verseObjects - array of verseObjects to search for words
  * @return {boolean} true if word is found
  */
-export function verseObjectsHaveWords(verseObjects:object[]) {
+export function verseObjectsHaveWords(verseObjects: VerseObjectsType) {
   if (verseObjects?.length) {
     for (const vo of verseObjects) {
-      if (vo['type'] === 'word') {
+      if (vo.type === 'word') {
         return true
-      } else if (vo['children']) {
-        const foundWords = verseObjectsHaveWords(vo['children'])
+      } else if (vo.children) {
+        const foundWords = verseObjectsHaveWords(vo.children)
 
         if (foundWords) {
           return true

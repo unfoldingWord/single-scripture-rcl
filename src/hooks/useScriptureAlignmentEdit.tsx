@@ -8,9 +8,11 @@ import {
 } from 'word-aligner-rcl'
 import { isEqual } from '@react-hookz/deep-equal'
 import {
+  BookObjectsType,
   ScriptureConfig,
   ScriptureReference,
   ServerConfig,
+  VerseObjectsType,
 } from '../types'
 import { getScriptureResourceSettings, verseObjectsHaveWords } from '../utils/ScriptureSettings'
 import { ORIGINAL_SOURCE } from '../utils'
@@ -18,6 +20,22 @@ import { getVersesForRef } from './useScripture'
 
 interface StartEdit {
   (): Promise<string>;
+}
+
+type LanguageType = {
+  languageId: string, // short language code such as "en"
+  direction: string, // language direction "ltr" or "rtl"
+};
+
+interface AlignerDataType {
+    wordBank?: Object[], // list of wordbank word (target language words) in format needed by word-aligner-rcl
+    alignments?: Object[], // list of word alignments in format needed by word-aligner-rcl
+    errorMessage?: string, // if present then we don't have necessary data to do alignment
+}
+
+interface AlignerResultsDataType {
+    targetWords?: Object[], // list of target language words in format used in word-aligner-rcl
+    verseAlignments?: Object[], // list of word alignments in format used by word-aligner-rcl
 }
 
 export interface ScriptureALignmentEditProps {
@@ -33,8 +51,8 @@ export interface ScriptureALignmentEditProps {
   enableAlignment: boolean,
   // configuration to use for http communication
   httpConfig: ServerConfig,
-  // array of each verse for in reference range
-  initialVerseObjects: [],
+  // array of the initial verseObjects for current reference
+  initialVerseObjects: VerseObjectsType,
   // initial text for verse
   initialVerseText: string,
   // flag that we are working on NT book
@@ -46,7 +64,7 @@ export interface ScriptureALignmentEditProps {
   // url for the original language repo
   originalRepoUrl: string,
   // original scripture bookObjects for current book
-  originalScriptureBookObjects: object,
+  originalScriptureBookObjects: BookObjectsType,
   /** current reference **/
   reference: ScriptureReference;
   // details about the current scripture loaded
@@ -55,12 +73,12 @@ export interface ScriptureALignmentEditProps {
   scriptureSettings: { },
   // callback to save current verse edit and alignment changes
   setSavedChanges: Function,
-  // source language
+  // source language code such as `hbo`
   sourceLanguage: string,
   // callback to create a user branch for saving edit data
   startEditBranch: StartEdit,
   // current target language
-  targetLanguage: object,
+  targetLanguage: LanguageType,
   // title to show in alignment
   title: string,
    // branch name currently being used (e.g. `master` or user branch)
@@ -70,7 +88,7 @@ export interface ScriptureALignmentEditProps {
 /**
  * determines if alignment is complete based on target USFM and original language verse objects
  * @param {string} targetVerseUSFM
- * @param {object[]} originalVerseObjects
+ * @param {VerseObjectsType} originalVerseObjects
  */
 function isUsfmAligned(targetVerseUSFM, originalVerseObjects) {
   originalVerseObjects = originalVerseObjects?.length ? originalVerseObjects : null // make sure not passing empty Array
@@ -80,8 +98,8 @@ function isUsfmAligned(targetVerseUSFM, originalVerseObjects) {
 
 /**
  * get the updated USFM for target verse from the updated verse objects and latest text
- * @param {object[]} updatedVerseObjects
- * @param {object[]} initialVerseObjects
+ * @param {VerseObjectsType} updatedVerseObjects
+ * @param {VerseObjectsType} initialVerseObjects
  * @param {boolean} verseTextChanged
  * @param {string} newVerseText
  */
@@ -96,6 +114,46 @@ function getCurrentVerseUsfm(updatedVerseObjects, initialVerseObjects, verseText
     targetVerseUSFM = UsfmFileConversionHelpers.convertVerseDataToUSFM(currentVerseObjects_)
   }
   return targetVerseUSFM
+}
+
+/**
+ * return true if only spaces in content
+ * @param {string} text
+ */
+function allSpaces(text) {
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] !== ' ') {
+      return false
+    }
+  }
+  return true
+}
+
+/**
+ * make sure there is a significant change to the text
+ * @param {string} newVerseText
+ * @param {string} initialVerseText
+ */
+function hasTextChangedSignificantly(newVerseText, initialVerseText) {
+  let changed = newVerseText !== initialVerseText
+
+  if (changed && newVerseText) { // make sure it's significant
+    const lengthDifference = newVerseText.length - initialVerseText?.length
+    const firstPartOfInitial = newVerseText.substring(0, initialVerseText.length)
+
+    if ((lengthDifference > 0) && (initialVerseText === firstPartOfInitial)) { // if initial parts match
+      // add exemption if the usfm ends with a quote tag
+      const lastChars = newVerseText.substring(newVerseText.length - lengthDifference)
+      const pos = newVerseText.lastIndexOf('\\')
+      const lastUsfmTag = newVerseText[pos + 1]
+      const endsWithQuote = (pos > 0) && (lastUsfmTag === 'q')
+
+      if (endsWithQuote && allSpaces(lastChars)) {
+        changed = false
+      }
+    }
+  }
+  return changed
 }
 
 /**
@@ -234,6 +292,16 @@ export function useScriptureAlignmentEdit({
   title,
   workingResourceBranch,
 } : ScriptureALignmentEditProps) {
+  type StateTypes = {
+    aligned: boolean,
+    alignerData: AlignerDataType,
+    editing: boolean,
+    newAlignments: AlignerResultsDataType,
+    newVerseText: string,
+    updatedVerseObjects: VerseObjectsType,
+    verseTextChanged: boolean,
+  }
+
   const [state, setState_] = React.useState({
     aligned: false,
     alignerData: null,
@@ -244,6 +312,7 @@ export function useScriptureAlignmentEdit({
     verseTextChanged: false,
   })
 
+  const _state: StateTypes = state // Tricky: work-around for bug that standard typescript type casting does not work in .tsx files
   const {
     aligned,
     alignerData,
@@ -252,7 +321,7 @@ export function useScriptureAlignmentEdit({
     newVerseText,
     updatedVerseObjects,
     verseTextChanged,
-  } = state
+  } = _state
   const chapter = reference?.chapter
   const verse = reference?.verse
   const projectId = reference?.projectId
@@ -404,40 +473,11 @@ export function useScriptureAlignmentEdit({
   }
 
   /**
-   * determine if it is OK to proceed with alignment - there needs to be alignable words in the target text and in the original language
-   * @returns {null|{errorMessage:  string}} - returns null if no error found, otherwise returns an object that contains the errorMessage
-   */
-  function isOkToAlign() {
-    let currentVerseObjects_ = updatedVerseObjects || initialVerseObjects
-    let errorMessage
-
-    if (verseTextChanged) { // make sure we apply any edited text before checking for words
-      const targetVerseUSFM = getCurrentVerseUsfm(updatedVerseObjects, initialVerseObjects, verseTextChanged, newVerseText)
-      const newTargetVerseObjects = usfmHelpers.usfmVerseToJson(targetVerseUSFM)
-      currentVerseObjects_ = newTargetVerseObjects
-    }
-
-    if (!verseObjectsHaveWords(currentVerseObjects_)) {
-      errorMessage = 'There are no words to align in the Literal/Simplified Scripture Text'
-    } else if (!verseObjectsHaveWords(originalVerseObjects)) {
-      errorMessage = 'There are no words to align in the Original language'
-    }
-
-    if (errorMessage) {
-      setState({ alignerData: { errorMessage } })
-      console.log(`isOkToAlign() - Alignment error: ${errorMessage}`)
-      return { errorMessage }
-    }
-
-    return null
-  }
-
-  /**
    * callback for when user clicked on alignment button - will show if not already shown
    */
   async function handleAlignmentClick() {
     if (enableAlignment) {
-      let _alignerData = null
+      let _alignerData: AlignerDataType = null
       await startEditBranch()
 
       if (!alignerData) { // if word aligner not shown
@@ -461,6 +501,12 @@ export function useScriptureAlignmentEdit({
           verseAlignments: alignments,
         } = AlignmentHelpers.parseUsfmToWordAlignerData(targetVerseUSFM, originalVerseUsfm)
         _alignerData = { wordBank, alignments }
+
+        if (!alignments?.length) {
+          _alignerData.errorMessage = 'There are no words to align in the Original language'
+        } else if (!wordBank?.length) {
+          _alignerData.errorMessage = 'There are no words to align in the Literal/Simplified Scripture Text'
+        }
       } else { // word aligner currently shown
         console.log(`handleAlignmentClick - alignment already shown`)
         _alignerData = alignerData
@@ -472,9 +518,9 @@ export function useScriptureAlignmentEdit({
 
   /**
    * get updated verse objects after alignments changed
-   * @param {object} _newAlignments - results of aligner
+   * @param {AlignerResultsDataType} _newAlignments - results of aligner
    */
-  function updateVerseWithNewAlignments(_newAlignments = newAlignments) {
+  function updateVerseWithNewAlignments(_newAlignments: AlignerResultsDataType = newAlignments) {
     const currentVerseObjects_ = updatedVerseObjects || initialVerseObjects
     const targetVerseText = newVerseText || UsfmFileConversionHelpers.convertVerseDataToUSFM(currentVerseObjects_)
     checkForDataCorruption('updateVerseWithNewAlignments()', targetVerseText)
@@ -486,9 +532,9 @@ export function useScriptureAlignmentEdit({
 
   /**
    * callback for when user clicked on button to save current alignments in word aligner.  Generates new verse content and saves in state. Closes aligner display
-   * @param {object} _newAlignments - results of aligner
+   * @param {AlignerResultsDataType} _newAlignments - results of aligner
    */
-  function saveAlignment(_newAlignments = newAlignments) {
+  function saveAlignment(_newAlignments: AlignerResultsDataType = newAlignments) {
     console.log(`saveAlignment() - newAlignments`, _newAlignments)
 
     if (_newAlignments) {
@@ -527,7 +573,7 @@ export function useScriptureAlignmentEdit({
    * @param {string} _newVerseText - optional verse text
    */
   // eslint-disable-next-line require-await
-  async function setEditing(editing_, _newVerseText = newVerseText) {
+  async function setEditing(editing_: boolean, _newVerseText: string = newVerseText) {
     if (enableEdit) {
       if (editing_ !== editing) {
         _newVerseText = _newVerseText || initialVerseText
@@ -545,7 +591,7 @@ export function useScriptureAlignmentEdit({
 
           checkForDataCorruption('setEditing()', verseText)
 
-          if (hasTextChangedSignificantly(verseText, _newVerseText)) { // if text from verse objects does not match latest text
+          if (hasTextChangedSignificantly(verseText, _newVerseText)) {
             // apply alignment to current text
             const { targetVerseObjects } = AlignmentHelpers.updateAlignmentsToTargetVerse(currentVerseObjects, _newVerseText)
             _updatedVerseObjects = targetVerseObjects // update verseObjects to match current text
@@ -569,7 +615,7 @@ export function useScriptureAlignmentEdit({
    * @param {string} newVerseText - current changed verse text
    * @param {string} _initialVerseText - initial verse text
    */
-  function setVerseChanged(changed, newVerseText, _initialVerseText) {
+  function setVerseChanged(changed: boolean, newVerseText: string, _initialVerseText: string) {
     checkForDataCorruption('setVerseChanged()', newVerseText)
     const _targetVerseObjects = currentVerseObjects || initialVerseObjects
     checkForDataCorruption('setVerseChanged()', _targetVerseObjects)
@@ -606,7 +652,7 @@ export function useScriptureAlignmentEdit({
    * @param {boolean} unsavedChanges_
    * @param {object} newState
    */
-  function callSetSavedState(unsavedChanges_, newState = { } ) {
+  function callSetSavedState(unsavedChanges_: boolean, newState: {} = { } ) {
     const _newState = {
       ...state,
       ...newState,
@@ -621,16 +667,16 @@ export function useScriptureAlignmentEdit({
   }
 
   React.useEffect(() => { // set saved changes whenever user edits verse text or alignments or if alignments are open
-    const unsavedChanges_ = unsavedChanges || alignerData
+    const unsavedChanges_ = unsavedChanges || !!alignerData
     callSetSavedState(unsavedChanges_)
   }, [unsavedChanges, alignerData])
 
   /**
    * callback for when alignments are being changed
-   * @param {object} results
+   * @param {AlignerResultsDataType} results
    * @return {boolean} true if alignment is complete
    */
-  function onAlignmentsChange(results) {
+  function onAlignmentsChange(results: AlignerResultsDataType) {
     console.log(`onAlignmentsChange() - alignment changed, results`, results) // merge alignments into target verse and convert to USFM
     const { targetWords, verseAlignments } = results
     const alignmentComplete = AlignmentHelpers.areAlgnmentsComplete(targetWords, verseAlignments)
@@ -645,7 +691,6 @@ export function useScriptureAlignmentEdit({
       clearChanges,
       getChanges,
       handleAlignmentClick,
-      isOkToAlign,
       onAlignmentsChange,
       saveAlignment,
       setEditing,
