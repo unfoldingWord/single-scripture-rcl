@@ -90,7 +90,7 @@ export interface ScriptureALignmentEditProps {
  * @param {string} targetVerseUSFM
  * @param {VerseObjectsType} originalVerseObjects
  */
-function isUsfmAligned(targetVerseUSFM, originalVerseObjects) {
+function isUsfmAligned(targetVerseUSFM:string, originalVerseObjects:VerseObjectsType):boolean {
   originalVerseObjects = originalVerseObjects?.length ? originalVerseObjects : null // make sure not passing empty Array
   const { alignments, wordBank } = AlignmentHelpers.extractAlignmentsFromTargetVerse(targetVerseUSFM, originalVerseObjects)
   return AlignmentHelpers.areAlgnmentsComplete(wordBank, alignments)
@@ -103,7 +103,7 @@ function isUsfmAligned(targetVerseUSFM, originalVerseObjects) {
  * @param {boolean} verseTextChanged
  * @param {string} newVerseText
  */
-function getCurrentVerseUsfm(updatedVerseObjects, initialVerseObjects, verseTextChanged: boolean, newVerseText) {
+function getCurrentVerseUsfm(updatedVerseObjects:VerseObjectsType, initialVerseObjects:VerseObjectsType, verseTextChanged: boolean, newVerseText:string):string {
   let targetVerseUSFM = null
   const currentVerseObjects_ = updatedVerseObjects || initialVerseObjects
 
@@ -117,51 +117,11 @@ function getCurrentVerseUsfm(updatedVerseObjects, initialVerseObjects, verseText
 }
 
 /**
- * return true if only spaces in content
- * @param {string} text
- */
-function allSpaces(text) {
-  for (let i = 0; i < text.length; i++) {
-    if (text[i] !== ' ') {
-      return false
-    }
-  }
-  return true
-}
-
-/**
- * make sure there is a significant change to the text
- * @param {string} newVerseText
- * @param {string} initialVerseText
- */
-function hasTextChangedSignificantly(newVerseText, initialVerseText) {
-  let changed = newVerseText !== initialVerseText
-
-  if (changed && newVerseText) { // make sure it's significant
-    const lengthDifference = newVerseText.length - initialVerseText?.length
-    const firstPartOfInitial = newVerseText.substring(0, initialVerseText.length)
-
-    if ((lengthDifference > 0) && (initialVerseText === firstPartOfInitial)) { // if initial parts match
-      // add exemption if the usfm ends with a quote tag
-      const lastChars = newVerseText.substring(newVerseText.length - lengthDifference)
-      const pos = newVerseText.lastIndexOf('\\')
-      const lastUsfmTag = newVerseText[pos + 1]
-      const endsWithQuote = (pos > 0) && (lastUsfmTag === 'q')
-
-      if (endsWithQuote && allSpaces(lastChars)) {
-        changed = false
-      }
-    }
-  }
-  return changed
-}
-
-/**
  * extract just the alignments from verseObjects
- * @param {Object[]} verseObjects
+ * @param {VerseObjectsType} verseObjects
  * @returns {Object[]} - just alignments
  */
-function getAlignments(verseObjects) {
+function getAlignments(verseObjects: VerseObjectsType) {
   const alignmentsList = verseObjects.filter(vo => vo.tag === 'zaln')
 
   // remove endTag
@@ -180,11 +140,11 @@ function getAlignments(verseObjects) {
 /**
  * compare initial alignment with final to see if changed
  * @param {string} prefix
- * @param {Object[]} updatedVerseObjects
- * @param {Object[]} initialVerseObjects
+ * @param {VerseObjectsType} updatedVerseObjects
+ * @param {VerseObjectsType} initialVerseObjects
  * @returns {boolean} true if changed
  */
-function isMigrated(prefix, updatedVerseObjects, initialVerseObjects) {
+function isMigrated(prefix:string, updatedVerseObjects:VerseObjectsType, initialVerseObjects:VerseObjectsType):boolean {
   const updatedAlignments = getAlignments(updatedVerseObjects)
   const initialAlignments = getAlignments(initialVerseObjects)
   let same = updatedAlignments.length === initialAlignments.length // first make sure lengths are the same
@@ -234,7 +194,7 @@ function checkForDataCorruption(prefix, targetAlignment) {
  * return true if only spaces in content
  * @param {string} text
  */
-function allSpaces(text) {
+function allSpaces(text:string):boolean {
   for (let i = 0; i < text.length; i++) {
     if (text[i] !== ' ') {
       return false
@@ -248,7 +208,7 @@ function allSpaces(text) {
  * @param {string} newVerseText
  * @param {string} initialVerseText
  */
-function hasTextChangedSignificantly(newVerseText, initialVerseText) {
+function hasTextChangedSignificantly(newVerseText:string, initialVerseText:string):boolean {
   let changed = newVerseText !== initialVerseText
 
   if (changed && newVerseText) { // make sure it's significant
@@ -520,7 +480,7 @@ export function useScriptureAlignmentEdit({
    * get updated verse objects after alignments changed
    * @param {AlignerResultsDataType} _newAlignments - results of aligner
    */
-  function updateVerseWithNewAlignments(_newAlignments: AlignerResultsDataType = newAlignments) {
+  function updateVerseWithNewAlignments(_newAlignments: AlignerResultsDataType = newAlignments):VerseObjectsType {
     const currentVerseObjects_ = updatedVerseObjects || initialVerseObjects
     const targetVerseText = newVerseText || UsfmFileConversionHelpers.convertVerseDataToUSFM(currentVerseObjects_)
     checkForDataCorruption('updateVerseWithNewAlignments()', targetVerseText)
@@ -676,7 +636,7 @@ export function useScriptureAlignmentEdit({
    * @param {AlignerResultsDataType} results
    * @return {boolean} true if alignment is complete
    */
-  function onAlignmentsChange(results: AlignerResultsDataType) {
+  function onAlignmentsChange(results: AlignerResultsDataType):boolean {
     console.log(`onAlignmentsChange() - alignment changed, results`, results) // merge alignments into target verse and convert to USFM
     const { targetWords, verseAlignments } = results
     const alignmentComplete = AlignmentHelpers.areAlgnmentsComplete(targetWords, verseAlignments)
