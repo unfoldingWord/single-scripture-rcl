@@ -1,4 +1,4 @@
-import * as isEqual from 'deep-equal'
+import { isEqual } from '@react-hookz/deep-equal'
 
 /**
  * do quick comparison of two maps
