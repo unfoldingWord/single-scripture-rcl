@@ -433,3 +433,25 @@ export function verseObjectsHaveWords(verseObjects: VerseObjectsType) {
   }
   return false
 }
+
+/**
+ * extract just the alignments from verseObjects
+ * @param {VerseObjectsType} verseObjects
+ * @returns {VerseObjectsType} - just alignments
+ */
+export function getAlignments(verseObjects: VerseObjectsType):VerseObjectsType {
+  const alignmentsList = verseObjects.filter(vo => vo.tag === 'zaln')
+
+  // remove endTag
+  for (let i = 0; i < alignmentsList.length; i++) {
+    const alignment = alignmentsList[i]
+
+    if (alignment.endTag) {
+      const _alignment = { ...alignment }
+      delete _alignment.endTag
+      alignmentsList[i] = _alignment
+    }
+  }
+  return alignmentsList
+}
+

@@ -14,7 +14,7 @@ import {
   ServerConfig,
   VerseObjectsType,
 } from '../types'
-import { getScriptureResourceSettings, verseObjectsHaveWords } from '../utils/ScriptureSettings'
+import { getAlignments, getScriptureResourceSettings } from '../utils/ScriptureSettings'
 import { ORIGINAL_SOURCE } from '../utils'
 import { getVersesForRef } from './useScripture'
 
@@ -114,27 +114,6 @@ function getCurrentVerseUsfm(updatedVerseObjects:VerseObjectsType, initialVerseO
     targetVerseUSFM = UsfmFileConversionHelpers.convertVerseDataToUSFM(currentVerseObjects_)
   }
   return targetVerseUSFM
-}
-
-/**
- * extract just the alignments from verseObjects
- * @param {VerseObjectsType} verseObjects
- * @returns {Object[]} - just alignments
- */
-function getAlignments(verseObjects: VerseObjectsType) {
-  const alignmentsList = verseObjects.filter(vo => vo.tag === 'zaln')
-
-  // remove endTag
-  for (let i = 0; i < alignmentsList.length; i++) {
-    const alignment = alignmentsList[i]
-
-    if (alignment.endTag) {
-      const _alignment = { ...alignment }
-      delete _alignment.endTag
-      alignmentsList[i] = _alignment
-    }
-  }
-  return alignmentsList
 }
 
 /**
