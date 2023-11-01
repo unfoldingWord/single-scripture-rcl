@@ -2,10 +2,18 @@ import * as React from 'react'
 import useDeepCompareEffect from 'use-deep-compare-effect'
 import { VerseObjects } from 'scripture-resources-rcl'
 import { UsfmFileConversionHelpers } from 'word-aligner-rcl'
-import { ScriptureReference } from '../../types'
-import { getResourceMessage, LOADING_RESOURCE } from '../../utils'
+import { BookObjectsType, ScriptureReference } from '../../types'
+import {
+  getResourceMessage,
+  LOADING_RESOURCE,
+  verseObjectsHaveWords,
+} from '../../utils'
 import { ScriptureALignmentEditProps, useScriptureAlignmentEdit } from '../../hooks/useScriptureAlignmentEdit'
-import { Container, Content } from './styled'
+import {
+  Container,
+  Content,
+  EmptyContent,
+} from './styled'
 
 interface Props {
   /** optional styles to use for content **/
@@ -29,7 +37,7 @@ interface Props {
   /** function to be called when verse alignment has finished */
   onAlignmentFinish: Function;
   // original scripture bookObjects for current book
-  originalScriptureBookObjects: object,
+  originalScriptureBookObjects: BookObjectsType,
   /** current reference **/
   reference: ScriptureReference;
   /** optional styles to use for reference **/
@@ -72,6 +80,7 @@ const TextAreaStyle = {
   height: '60%',
   width: '100%',
   minWidth: '220px',
+  minHeight: '100px',
   fontSize: '16px',
 }
 
@@ -102,12 +111,10 @@ function ScripturePane({
   const [state, setState_] = React.useState({
     doingAlignment: false,
     newText: null,
-    urlError: null,
   })
   const {
     doingAlignment,
     newText,
-    urlError,
   } = state
 
   function setState(newState) {
@@ -166,17 +173,19 @@ function ScripturePane({
       aligned,
       alignerData,
       currentVerseObjects,
-      initialVerseObjects,
       editing,
-      unsavedChanges,
+      enableEdit,
+      initialVerseObjects,
       newVerseText,
     },
   } = _scriptureAlignmentEdit
 
-  if (isVerseSelectedForAlignment && !alignerData && !doingAlignment) {
-    console.log(`ScripturePane - verse selected for alignment`, basicReference)
-    handleAlignmentClick()
-  }
+  React.useEffect(() => {
+    if (isVerseSelectedForAlignment && !alignerData && !doingAlignment) {
+      console.log(`ScripturePane - verse selected for alignment`, basicReference)
+      handleAlignmentClick()
+    }
+  }, [isVerseSelectedForAlignment, alignerData, doingAlignment])
 
   // const verseChanged = React.useMemo(() => {
   //   return (newVerseText !== newText)
@@ -239,6 +248,41 @@ function ScripturePane({
     setEditing(false, newText)
   }
 
+  const verseObjects = currentVerseObjects || initialVerseObjects
+  const noWords = React.useMemo(() => !verseObjectsHaveWords(verseObjects), [currentVerseObjects, initialVerseObjects])
+
+  /**
+   * determine what UI to show based on state
+   * @param {boolean} editing - if true show edit mode
+   * @param {boolean} enableEdit - if true then edit is enabled
+   * @param {boolean} noWords - if true then there are no displayable words
+   */
+  function verseContent(editing, enableEdit, noWords) {
+    if (editing) {
+      return <textarea
+        defaultValue={newVerseText || initialVerseText}
+        onChange={onTextChange}
+        onBlur={onBlur}
+        style={textAreaStyle}
+        autoFocus
+      />
+    }
+
+    if (noWords && enableEdit) { // show a clickable message in the case that there is no text to click on
+      return <EmptyContent>
+        Click to Edit
+      </EmptyContent>
+    }
+
+    return <VerseObjects
+      verseKey={`${reference.chapter}:${reference.verse}`}
+      verseObjects={verseObjects}
+      disableWordPopover={disableWordPopover}
+      getLexiconData={getLexiconData}
+      translate={translate}
+    />
+  }
+
   return (
     <Container style={{ direction, width: '100%', paddingBottom: '0.5em' }}>
       {resourceMessage ?
@@ -253,23 +297,7 @@ function ScripturePane({
             setEditing && setEditing(true)
           }}
           >
-            {editing ?
-              <textarea
-                defaultValue={newVerseText || initialVerseText}
-                onChange={onTextChange}
-                onBlur={onBlur}
-                style={textAreaStyle}
-                autoFocus
-              />
-              :
-              <VerseObjects
-                verseKey={`${reference.chapter}:${reference.verse}`}
-                verseObjects={currentVerseObjects || initialVerseObjects}
-                disableWordPopover={disableWordPopover}
-                getLexiconData={getLexiconData}
-                translate={translate}
-              />
-            }
+            {verseContent(editing, enableEdit, noWords)}
           </span>
         </Content>
       }
