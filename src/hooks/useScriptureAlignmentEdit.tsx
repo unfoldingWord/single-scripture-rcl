@@ -116,41 +116,6 @@ function getCurrentVerseUsfm(updatedVerseObjects:VerseObjectsType, initialVerseO
   return targetVerseUSFM
 }
 
-/**
- * compare initial alignment with final to see if changed
- * @param {string} prefix
- * @param {VerseObjectsType} updatedVerseObjects
- * @param {VerseObjectsType} initialVerseObjects
- * @returns {boolean} true if changed
- */
-function isMigrated(prefix:string, updatedVerseObjects:VerseObjectsType, initialVerseObjects:VerseObjectsType):boolean {
-  const updatedAlignments = getAlignments(updatedVerseObjects)
-  const initialAlignments = getAlignments(initialVerseObjects)
-  let same = updatedAlignments.length === initialAlignments.length // first make sure lengths are the same
-  let firstDiff
-
-  if (same) { // even if lengths are the same double check each alignment
-    for (let i = 0; i < updatedAlignments.length; i++) {
-      const updatedAlignment = updatedAlignments[i]
-      const initialAlignment = initialAlignments[i]
-
-      if (!isEqual(updatedAlignment, initialAlignment)) {
-        firstDiff = i
-        same = false
-        break
-      }
-    }
-  }
-
-  const different = !same
-
-  if (different) {
-    console.log(`${prefix} - target verse alignments migrated to match original language, first difference is at ${firstDiff}`, updatedVerseObjects, initialVerseObjects)
-  }
-
-  return different
-}
-
 // TODO: remove
 function checkForDataCorruption(prefix, targetAlignment) {
   let targetAlignmentText = targetAlignment || ''
@@ -328,13 +293,22 @@ export function useScriptureAlignmentEdit({
     return verseObjects
   }, [originalScriptureBookObjects, chapter, verse, projectId])
 
+  /**
+   * get current verseObjects
+   * @param {VerseObjectsType} _updatedVerseObjects - optional overrides updatedVerseObjects
+   */
+  function getCurrentVerseObjects(_updatedVerseObjects: VerseObjectsType = updatedVerseObjects) {
+    const currentVerseObjects_ = _updatedVerseObjects || initialVerseObjects
+    return currentVerseObjects_
+  }
+
   React.useEffect(() => { // update alignment status when aligner is hidden
     const notEmpty = !!initialVerseObjects
     let aligned_ = false
 
     if (!alignerData) { // skip if aligner is being shown
       if (notEmpty) { // skip if empty
-        const currentVerseObjects_ = updatedVerseObjects || initialVerseObjects
+        const currentVerseObjects_ = getCurrentVerseObjects()
 
         if (!enableAlignment) {
           aligned_ = true
@@ -388,7 +362,7 @@ export function useScriptureAlignmentEdit({
     if (verseTextChanged && newVerseText) {
       console.log(`getChanges - applying new text:`, newVerseText)
       checkForDataCorruption('getChanges()', newVerseText)
-      const currentVerseObjects_ = updatedVerseObjects_ || initialVerseObjects
+      const currentVerseObjects_ = getCurrentVerseObjects(updatedVerseObjects_)
       updatedVerseObjects_ && console.log(`getChanges - applying updated alignments`)
       const { targetVerseObjects } = AlignmentHelpers.updateAlignmentsToTargetVerse(currentVerseObjects_, newVerseText)
       checkForDataCorruption('getChanges()', targetVerseObjects)
@@ -412,6 +386,53 @@ export function useScriptureAlignmentEdit({
   }
 
   /**
+   * compare initial alignments with final to see if changed
+   * @param {string} prefix
+   * @param {VerseObjectsType} _updatedVerseObjects
+   * @param {VerseObjectsType} _initialVerseObjects
+   * @returns {boolean} true if changed
+   */
+  function isMigrated(prefix:string, _updatedVerseObjects:VerseObjectsType = updatedVerseObjects, _initialVerseObjects:VerseObjectsType = initialVerseObjects):boolean {
+    const updatedAlignments = getAlignments(_updatedVerseObjects)
+    const initialAlignments = getAlignments(_initialVerseObjects)
+    let same = updatedAlignments.length === initialAlignments.length // first make sure lengths are the same
+    let firstDiff
+
+    if (same) { // even if lengths are the same double check each alignment
+      for (let i = 0; i < updatedAlignments.length; i++) {
+        const updatedAlignment = updatedAlignments[i]
+        const initialAlignment = initialAlignments[i]
+
+        if (!isEqual(updatedAlignment, initialAlignment)) {
+          firstDiff = i
+          same = false
+          break
+        }
+      }
+    }
+
+    const different = !same
+
+    if (different) {
+      console.log(`${prefix} - target verse alignments migrated to match original language, first difference is at ${firstDiff}`, updatedVerseObjects, initialVerseObjects)
+    }
+
+    return different
+  }
+
+  /**
+   * do alignments migration
+   * @param {string} prefix
+   * @param {VerseObjectsType} updatedVerseObjects
+   */
+  function migrateAlignments(prefix: string, updatedVerseObjects: VerseObjectsType = null): VerseObjectsType {
+    updatedVerseObjects = updatedVerseObjects || getCurrentVerseObjects()
+    const _updatedVerseObjects = migrateOriginalLanguageHelpers.migrateTargetAlignmentsToOriginal(updatedVerseObjects, originalVerseObjects)
+    isMigrated(prefix, _updatedVerseObjects, updatedVerseObjects)
+    return _updatedVerseObjects
+  }
+
+  /**
    * callback for when user clicked on alignment button - will show if not already shown
    */
   async function handleAlignmentClick() {
@@ -427,9 +448,7 @@ export function useScriptureAlignmentEdit({
 
         if (originalVerseObjects) {
           originalVerseUsfm = UsfmFileConversionHelpers.convertVerseDataToUSFM(originalVerseObjects)
-          const currentVerseObjects = updatedVerseObjects || initialVerseObjects
-          _updatedVerseObjects = migrateOriginalLanguageHelpers.migrateTargetAlignmentsToOriginal(currentVerseObjects, originalVerseObjects)
-          isMigrated('handleAlignmentClick()', _updatedVerseObjects, currentVerseObjects)
+          _updatedVerseObjects = migrateAlignments('handleAlignmentClick()')
           checkForDataCorruption('handleAlignmentClick()', _updatedVerseObjects)
         }
 
@@ -460,7 +479,7 @@ export function useScriptureAlignmentEdit({
    * @param {AlignerResultsDataType} _newAlignments - results of aligner
    */
   function updateVerseWithNewAlignments(_newAlignments: AlignerResultsDataType = newAlignments):VerseObjectsType {
-    const currentVerseObjects_ = updatedVerseObjects || initialVerseObjects
+    const currentVerseObjects_ = getCurrentVerseObjects()
     const targetVerseText = newVerseText || UsfmFileConversionHelpers.convertVerseDataToUSFM(currentVerseObjects_)
     checkForDataCorruption('updateVerseWithNewAlignments()', targetVerseText)
     const verseUsfm = AlignmentHelpers.addAlignmentsToVerseUSFM(_newAlignments.targetWords, _newAlignments.verseAlignments, targetVerseText)
@@ -516,12 +535,16 @@ export function useScriptureAlignmentEdit({
     if (enableEdit) {
       if (editing_ !== editing) {
         _newVerseText = _newVerseText || initialVerseText
-        let _updatedVerseObjects = updatedVerseObjects
+        let _updatedVerseObjects = updatedVerseObjects || currentVerseObjects
         const verseTextChanged = _newVerseText !== initialVerseText
         const newState = {
           editing: editing_,
           newVerseText: _newVerseText,
           verseTextChanged,
+        }
+
+        if (editing_ ) { // by default do migration of alignments to match latest original language
+          _updatedVerseObjects = migrateAlignments('setEditing()', _updatedVerseObjects)
         }
 
         if (!verseTextChanged) {
@@ -555,12 +578,8 @@ export function useScriptureAlignmentEdit({
    * @param {string} _initialVerseText - initial verse text
    */
   function setVerseChanged(changed: boolean, newVerseText: string, _initialVerseText: string) {
-    checkForDataCorruption('setVerseChanged()', newVerseText)
     const _targetVerseObjects = currentVerseObjects || initialVerseObjects
-    checkForDataCorruption('setVerseChanged()', _targetVerseObjects)
-    const migratedVerseObjects = migrateOriginalLanguageHelpers.migrateTargetAlignmentsToOriginal(_targetVerseObjects, originalVerseObjects)
-    isMigrated('setVerseChanged()', _targetVerseObjects, migratedVerseObjects)
-    const { targetVerseText } = AlignmentHelpers.updateAlignmentsToTargetVerse(migratedVerseObjects, newVerseText)
+    const { targetVerseText } = AlignmentHelpers.updateAlignmentsToTargetVerse(_targetVerseObjects, newVerseText)
     checkForDataCorruption('setVerseChanged()', targetVerseText)
     const aligned = isUsfmAligned(targetVerseText, originalVerseObjects)
     const verseTextChanged = newVerseText !== initialVerseText
