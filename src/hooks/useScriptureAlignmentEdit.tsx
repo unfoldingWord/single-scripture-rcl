@@ -116,24 +116,6 @@ function getCurrentVerseUsfm(updatedVerseObjects:VerseObjectsType, initialVerseO
   return targetVerseUSFM
 }
 
-// TODO: remove
-function checkForDataCorruption(prefix, targetAlignment) {
-  let targetAlignmentText = targetAlignment || ''
-
-  if (typeof targetAlignment !== 'string') {
-    targetAlignmentText = JSON.stringify(targetAlignment)
-  }
-
-  const invalidCharPos = targetAlignmentText.indexOf('�')
-  const invalidCharacterFound = invalidCharPos >= 0 // this should not be found, because invalid character
-
-  if (invalidCharacterFound) {
-    console.log(`${prefix} - invalid Character found`, targetAlignment)
-  }
-
-  return invalidCharacterFound
-}
-
 /**
  * return true if only spaces in content
  * @param {string} text
@@ -315,12 +297,9 @@ export function useScriptureAlignmentEdit({
         } else if (newVerseText && (newVerseText !== initialVerseText)) {
           const results = AlignmentHelpers.updateAlignmentsToTargetVerse(currentVerseObjects_, newVerseText)
           aligned_ = isUsfmAligned(results?.targetVerseText, originalVerseObjects)
-          // TODO: remove all
-          checkForDataCorruption('useEffect - recheck alignments', results?.targetVerseText)
         } else {
           const targetVerseUSFM = UsfmFileConversionHelpers.convertVerseDataToUSFM(currentVerseObjects_)
           aligned_ = isUsfmAligned(targetVerseUSFM, originalVerseObjects)
-          checkForDataCorruption('useEffect - recheck alignments', targetVerseUSFM)
         }
       }
 
@@ -356,21 +335,17 @@ export function useScriptureAlignmentEdit({
     if (newAlignments) { // if unsaved alignment changes, apply them
       console.log(`getChanges - applying unsaved alignments}`)
       updatedVerseObjects_ = updateVerseWithNewAlignments()
-      checkForDataCorruption('getChanges()', updatedVerseObjects_)
     }
 
     if (verseTextChanged && newVerseText) {
       console.log(`getChanges - applying new text:`, newVerseText)
-      checkForDataCorruption('getChanges()', newVerseText)
       const currentVerseObjects_ = getCurrentVerseObjects(updatedVerseObjects_)
       updatedVerseObjects_ && console.log(`getChanges - applying updated alignments`)
       const { targetVerseObjects } = AlignmentHelpers.updateAlignmentsToTargetVerse(currentVerseObjects_, newVerseText)
-      checkForDataCorruption('getChanges()', targetVerseObjects)
       updatedVerseObjects_ = targetVerseObjects
     } else { // only alignment changes to upload
       updatedVerseObjects_ && console.log(`getChanges - applying updated alignments`, { newVerseText, updatedVerseObjects_ })
       updatedVerseObjects_ = updatedVerseObjects_ || initialVerseObjects
-      checkForDataCorruption('getChanges()', updatedVerseObjects_)
     }
 
     if (updatedVerseObjects_) {
@@ -444,12 +419,10 @@ export function useScriptureAlignmentEdit({
         console.log(`handleAlignmentClick - toggle ON alignment`)
         let originalVerseUsfm = null
         let _updatedVerseObjects = updatedVerseObjects
-        checkForDataCorruption('handleAlignmentClick()', updatedVerseObjects || initialVerseObjects)
 
         if (originalVerseObjects) {
           originalVerseUsfm = UsfmFileConversionHelpers.convertVerseDataToUSFM(originalVerseObjects)
           _updatedVerseObjects = migrateAlignments('handleAlignmentClick()')
-          checkForDataCorruption('handleAlignmentClick()', _updatedVerseObjects)
         }
 
         const targetVerseUSFM = getCurrentVerseUsfm(_updatedVerseObjects, initialVerseObjects, verseTextChanged, newVerseText)
@@ -481,10 +454,8 @@ export function useScriptureAlignmentEdit({
   function updateVerseWithNewAlignments(_newAlignments: AlignerResultsDataType = newAlignments):VerseObjectsType {
     const currentVerseObjects_ = getCurrentVerseObjects()
     const targetVerseText = newVerseText || UsfmFileConversionHelpers.convertVerseDataToUSFM(currentVerseObjects_)
-    checkForDataCorruption('updateVerseWithNewAlignments()', targetVerseText)
     const verseUsfm = AlignmentHelpers.addAlignmentsToVerseUSFM(_newAlignments.targetWords, _newAlignments.verseAlignments, targetVerseText)
     const alignedVerseObjects = usfmHelpers.usfmVerseToJson(verseUsfm)
-    checkForDataCorruption('updateVerseWithNewAlignments()', alignedVerseObjects)
     return alignedVerseObjects
   }
 
@@ -551,8 +522,6 @@ export function useScriptureAlignmentEdit({
           // fallback to make sure text from verseObjects matches current text
           const verseText = UsfmFileConversionHelpers.getUsfmForVerseContent({ verseObjects: currentVerseObjects } )
 
-          checkForDataCorruption('setEditing()', verseText)
-
           if (hasTextChangedSignificantly(verseText, _newVerseText)) {
             // apply alignment to current text
             const { targetVerseObjects } = AlignmentHelpers.updateAlignmentsToTargetVerse(currentVerseObjects, _newVerseText)
@@ -563,9 +532,6 @@ export function useScriptureAlignmentEdit({
 
         setState(newState)
         const _alignmentsChanged = (_updatedVerseObjects && !isEqual(initialVerseObjects, _updatedVerseObjects))
-        checkForDataCorruption('setEditing()', initialVerseObjects)
-        checkForDataCorruption('setEditing()', _updatedVerseObjects)
-
         callSetSavedState(verseTextChanged || _alignmentsChanged, newState )
       }
     }
@@ -580,7 +546,6 @@ export function useScriptureAlignmentEdit({
   function setVerseChanged(changed: boolean, newVerseText: string, _initialVerseText: string) {
     const _targetVerseObjects = currentVerseObjects || initialVerseObjects
     const { targetVerseText } = AlignmentHelpers.updateAlignmentsToTargetVerse(_targetVerseObjects, newVerseText)
-    checkForDataCorruption('setVerseChanged()', targetVerseText)
     const aligned = isUsfmAligned(targetVerseText, originalVerseObjects)
     const verseTextChanged = newVerseText !== initialVerseText
 
