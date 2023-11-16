@@ -5,6 +5,15 @@ import {
   MANIFEST_NOT_LOADED_ERROR,
   SCRIPTURE_NOT_LOADED_ERROR,
 } from 'translation-helps-rcl'
+import { core } from 'scripture-resources-rcl'
+import usfmjs from 'usfm-js'
+import {
+  BookFetchParams,
+  ScriptureReference,
+  ScriptureResource,
+  ServerConfig,
+  VerseObjectsType,
+} from '../types'
 import {
   BOOK_NOT_FOUND_ERROR_MSG,
   LOADING_RESOURCE,
@@ -19,7 +28,7 @@ import {
   TARGET_LITERAL,
   TARGET_SIMPLIFIED,
 } from './common'
-import {VerseObjectsType} from '../types';
+import { delay } from './delay'
 
 export const DISABLE_WORD_POPOVER = true // disable word popover for every scripture pane but original languages
 
@@ -455,3 +464,87 @@ export function getAlignments(verseObjects: VerseObjectsType):VerseObjectsType {
   return alignmentsList
 }
 
+/**
+ * do a fetch of manifest and book of the bible specified in fetchParams
+ * @param {BookFetchParams} fetchParams
+ */
+export async function fetchBibleBookCore(fetchParams: BookFetchParams) {
+  try {
+    console.log(`fetchBibleBookCore() - FETCHING bible ${fetchParams?.resourceLink}`, fetchParams)
+
+    // fetch manifest data
+    await delay(100)
+    const resource = await core.resourceFromResourceLink(fetchParams)
+
+    if (!resource?.manifest || !resource?.project?.file) {
+      const errorMsg = resource?.manifest ? 'parsing resource manifest' : 'loading resource manifest'
+      console.warn(`fetchBibleBookCore() - error ${errorMsg}`, fetchParams )
+      return { error: errorMsg, resourceError: true }
+    }
+
+    console.log(`fetchBibleBookCore() - LOADED bible manifest, fetching book  ${fetchParams?.resourceLink}`, fetchParams)
+    await delay(100)
+    const response = await resource?.project?.file()
+    // parse book usfm
+    const bibleUsfm = response && core.getResponseData(response)
+    await delay(100)
+    const bookObjects = bibleUsfm && usfmjs.toJSON(bibleUsfm) // convert to bible objects
+
+    if (!bookObjects) {
+      const errorMsg = bibleUsfm ? 'fetching book of the bible' : 'parsing book of the bible'
+      console.warn(`fetchBibleBookCore() - error ${errorMsg}`, fetchParams )
+      return { error: errorMsg }
+    }
+
+    const {
+      name,
+      sha,
+      url,
+    } = response?.data || {}
+
+    console.log(`fetchBibleBookCore() - LOADED bible book,  ${fetchParams?.resourceLink}`, fetchParams)
+    return {
+      ...resource,
+      bibleUsfm,
+      bookObjects,
+      name,
+      response,
+      sha,
+      url,
+    }
+  } catch (e) {
+    const errorMsg = 'hard error loading resource'
+    console.error(`fetchBibleBookCore() - ${errorMsg}`, fetchParams, e )
+    return { error: errorMsg }
+  }
+}
+
+/**
+ * do a fetch of manifest and book of the bible specified in fetchParams
+ * @param {string} server - server to access
+ * @param {ServerConfig} config
+ * @param {ScriptureResource} resource
+ * @param {ScriptureReference} reference
+ */
+export async function fetchBibleBook(server: string, config: ServerConfig, resource: ScriptureResource, reference: ScriptureReference) {
+  const ref_ = resource?.branch || resource?.ref
+  const resourceLink = getResourceLink({
+    ...resource,
+    resourceId: resource?.projectId || '',
+    projectId: reference?.projectId || '',
+    ref: ref_,
+  })
+
+  let fetchParams: BookFetchParams = {
+    config: {
+      ...config,
+      server,
+    },
+    resource,
+    reference,
+    resourceLink,
+  }
+
+  const results = await fetchBibleBookCore(fetchParams)
+  return results
+}
