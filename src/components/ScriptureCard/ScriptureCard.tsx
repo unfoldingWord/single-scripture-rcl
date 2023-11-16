@@ -26,7 +26,7 @@ import { ScripturePane, ScriptureSelector } from '..'
 import { useScriptureSettings } from '../../hooks/useScriptureSettings'
 import {
   cleanupVerseObjects,
-  fetchBook,
+  fetchBibleBook,
   fixOccurrence,
   getBookNameFromUsfmFileName,
   getResourceLink,
@@ -645,7 +645,7 @@ export default function ScriptureCard({
         console.error('saveChangesToCloud() - saving changed scripture failed, retrying')
         await delay(100)
         // @ts-ignore
-        const results = await fetchBook(server, httpConfig, scriptureConfig?.resource, scriptureConfig?.reference)
+        const results = await fetchBibleBook(server, httpConfig, scriptureConfig?.resource, scriptureConfig?.reference)
         error = results?.error
         let _saveContent = saveContent
         let fileSha = null

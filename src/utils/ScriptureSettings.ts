@@ -8,7 +8,9 @@ import {
 import { core } from 'scripture-resources-rcl'
 import usfmjs from 'usfm-js'
 import {
-  ScriptureReference, ScriptureResource,
+  BookFetchParams,
+  ScriptureReference,
+  ScriptureResource,
   ServerConfig,
   VerseObjectsType,
 } from '../types'
@@ -464,48 +466,25 @@ export function getAlignments(verseObjects: VerseObjectsType):VerseObjectsType {
 
 /**
  * do a fetch of manifest and book of the bible specified in fetchParams
- * @param {string} server - server to access
- * @param {ServerConfig} config
- * @param {ScriptureResource} resource
- * @param {ScriptureReference} reference
+ * @param {BookFetchParams} fetchParams
  */
-export async function fetchBook(server: string, config: ServerConfig, resource: ScriptureResource, reference: ScriptureReference) {
-  let fetchParams = null
-
+export async function fetchBibleBookCore(fetchParams: BookFetchParams) {
   try {
-    fetchParams = {
-      config: {
-        ...config,
-        server,
-      },
-      resource,
-      reference,
-    }
-
-    const ref_ = resource?.branch || resource?.ref
-    const resourceLink = getResourceLink({
-      ...resource,
-      resourceId: resource?.projectId || '',
-      projectId: reference?.projectId || '',
-      ref: ref_,
-    })
-    fetchParams.resourceLink = resourceLink
-
-    console.log(`fetchBook() - FETCHING bible ${resourceLink}`, fetchParams)
+    console.log(`fetchBibleBookCore() - FETCHING bible ${fetchParams?.resourceLink}`, fetchParams)
 
     // fetch manifest data
     await delay(100)
-    const _resource = await core.resourceFromResourceLink(fetchParams)
+    const resource = await core.resourceFromResourceLink(fetchParams)
 
-    if (!_resource?.manifest || !_resource?.project?.file) {
-      const errorMsg = _resource?.manifest ? 'parsing resource manifest' : 'loading resource manifest'
+    if (!resource?.manifest || !resource?.project?.file) {
+      const errorMsg = resource?.manifest ? 'parsing resource manifest' : 'loading resource manifest'
       console.warn(`fetchBook() - error ${errorMsg}`, fetchParams )
-      return { error: errorMsg }
+      return { error: errorMsg, resourceError: true }
     }
 
-    console.log(`fetchBook() - LOADED bible manifest, fetching book  ${resourceLink}`, fetchParams)
+    console.log(`fetchBook() - LOADED bible manifest, fetching book  ${fetchParams?.resourceLink}`, fetchParams)
     await delay(100)
-    const response = await _resource?.project?.file()
+    const response = await resource?.project?.file()
     // parse book usfm
     const bibleUsfm = response && core.getResponseData(response)
     await delay(100)
@@ -523,8 +502,9 @@ export async function fetchBook(server: string, config: ServerConfig, resource: 
       url,
     } = response?.data || {}
 
-    console.log(`fetchBook() - LOADED bible book,  ${resourceLink}`, fetchParams)
+    console.log(`fetchBook() - LOADED bible book,  ${fetchParams?.resourceLink}`, fetchParams)
     return {
+      ...resource,
       bibleUsfm,
       bookObjects,
       name,
@@ -537,4 +517,34 @@ export async function fetchBook(server: string, config: ServerConfig, resource: 
     console.error(`fetchBook() - ${errorMsg}`, fetchParams, e )
     return { error: errorMsg }
   }
+}
+
+/**
+ * do a fetch of manifest and book of the bible specified in fetchParams
+ * @param {string} server - server to access
+ * @param {ServerConfig} config
+ * @param {ScriptureResource} resource
+ * @param {ScriptureReference} reference
+ */
+export async function fetchBibleBook(server: string, config: ServerConfig, resource: ScriptureResource, reference: ScriptureReference) {
+  const ref_ = resource?.branch || resource?.ref
+  const resourceLink = getResourceLink({
+    ...resource,
+    resourceId: resource?.projectId || '',
+    projectId: reference?.projectId || '',
+    ref: ref_,
+  })
+
+  let fetchParams: BookFetchParams = {
+    config: {
+      ...config,
+      server,
+    },
+    resource,
+    reference,
+    resourceLink,
+  }
+
+  const results = await fetchBibleBookCore(fetchParams)
+  return results
 }
