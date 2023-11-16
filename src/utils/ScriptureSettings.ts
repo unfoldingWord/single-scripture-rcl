@@ -478,11 +478,11 @@ export async function fetchBibleBookCore(fetchParams: BookFetchParams) {
 
     if (!resource?.manifest || !resource?.project?.file) {
       const errorMsg = resource?.manifest ? 'parsing resource manifest' : 'loading resource manifest'
-      console.warn(`fetchBook() - error ${errorMsg}`, fetchParams )
+      console.warn(`fetchBibleBookCore() - error ${errorMsg}`, fetchParams )
       return { error: errorMsg, resourceError: true }
     }
 
-    console.log(`fetchBook() - LOADED bible manifest, fetching book  ${fetchParams?.resourceLink}`, fetchParams)
+    console.log(`fetchBibleBookCore() - LOADED bible manifest, fetching book  ${fetchParams?.resourceLink}`, fetchParams)
     await delay(100)
     const response = await resource?.project?.file()
     // parse book usfm
@@ -492,7 +492,7 @@ export async function fetchBibleBookCore(fetchParams: BookFetchParams) {
 
     if (!bookObjects) {
       const errorMsg = bibleUsfm ? 'fetching book of the bible' : 'parsing book of the bible'
-      console.warn(`fetchBook() - error ${errorMsg}`, fetchParams )
+      console.warn(`fetchBibleBookCore() - error ${errorMsg}`, fetchParams )
       return { error: errorMsg }
     }
 
@@ -502,7 +502,7 @@ export async function fetchBibleBookCore(fetchParams: BookFetchParams) {
       url,
     } = response?.data || {}
 
-    console.log(`fetchBook() - LOADED bible book,  ${fetchParams?.resourceLink}`, fetchParams)
+    console.log(`fetchBibleBookCore() - LOADED bible book,  ${fetchParams?.resourceLink}`, fetchParams)
     return {
       ...resource,
       bibleUsfm,
@@ -514,7 +514,7 @@ export async function fetchBibleBookCore(fetchParams: BookFetchParams) {
     }
   } catch (e) {
     const errorMsg = 'hard error loading resource'
-    console.error(`fetchBook() - ${errorMsg}`, fetchParams, e )
+    console.error(`fetchBibleBookCore() - ${errorMsg}`, fetchParams, e )
     return { error: errorMsg }
   }
 }

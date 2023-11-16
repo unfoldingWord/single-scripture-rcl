@@ -297,7 +297,7 @@ export function useScripture({ // hook for fetching scripture
         setState({
           resourceState: {
             loadingResource: false,
-            resource: response,
+            response,
           },
         })
         return
