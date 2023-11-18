@@ -643,7 +643,7 @@ export default function ScriptureCard({
 
       if (!success) { // if save failed, attempt a retry
         console.error('saveChangesToCloud() - saving changed scripture failed, retrying')
-        await delay(100)
+        await delay(500) // since we had an error, wait for data to update on server before getting the latest
         // @ts-ignore
         // fetch the latest book content, so we can tell if latest changes were saved and have the latest file sha
         const results = await fetchBibleBook(server, httpConfig, scriptureConfig?.resource, scriptureConfig?.reference)
@@ -660,13 +660,13 @@ export default function ScriptureCard({
             success = true
           } else {
             if (saveDiffPatch) {
+              await delay(100) // allow UI to update before running computationally expensive function
               // regenerate the patch against the latest content
               const diffPatch = getPatch(saveFullBibleContent?.filename, savedBibleUsfm, editedBibleUsfm, false)
               _saveContent = diffPatch
               fileSha = results?.sha
             }
 
-            await delay(100)
             success = await uploadFunction(userEditBranchName, _saveContent, fileSha) // push change to server
             if (!success) {
               error = 'saving changed scripture failed on second attempt'

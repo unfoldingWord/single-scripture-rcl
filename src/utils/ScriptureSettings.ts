@@ -473,7 +473,6 @@ export async function fetchBibleBookCore(fetchParams: BookFetchParams) {
     console.log(`fetchBibleBookCore() - FETCHING bible ${fetchParams?.resourceLink}`, fetchParams)
 
     // fetch manifest data
-    await delay(100)
     const resource = await core.resourceFromResourceLink(fetchParams)
 
     if (!resource?.manifest || !resource?.project?.file) {
@@ -483,11 +482,9 @@ export async function fetchBibleBookCore(fetchParams: BookFetchParams) {
     }
 
     console.log(`fetchBibleBookCore() - LOADED bible manifest, fetching book  ${fetchParams?.resourceLink}`, fetchParams)
-    await delay(100)
     const response = await resource?.project?.file()
     // parse book usfm
     const bibleUsfm = response && core.getResponseData(response)
-    await delay(100)
     const bookObjects = bibleUsfm && usfmjs.toJSON(bibleUsfm) // convert to bible objects
 
     if (!bookObjects) {
