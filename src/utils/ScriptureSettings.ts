@@ -465,7 +465,12 @@ export function getAlignments(verseObjects: VerseObjectsType):VerseObjectsType {
 }
 
 /**
- * do a fetch of manifest and book of the bible specified in fetchParams
+ * do a fetch of manifest and book of the bible specified in fetchParams.
+ *
+ *    TRICKY - this function is being called by every scripture card simultaneously during book navigation, so it is
+ *      very important that it does not cause significant delays (particularly on slower devices) and block UI or
+ *      state updates.
+ *
  * @param {BookFetchParams} fetchParams
  */
 export async function fetchBibleBookCore(fetchParams: BookFetchParams) {
