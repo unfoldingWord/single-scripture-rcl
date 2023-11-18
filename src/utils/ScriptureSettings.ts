@@ -485,6 +485,7 @@ export async function fetchBibleBookCore(fetchParams: BookFetchParams) {
     const response = await resource?.project?.file()
     // parse book usfm
     const bibleUsfm = response && core.getResponseData(response)
+    await delay(100) // allow UI to update between two computationally expensive functions
     const bookObjects = bibleUsfm && usfmjs.toJSON(bibleUsfm) // convert to bible objects
 
     if (!bookObjects) {
