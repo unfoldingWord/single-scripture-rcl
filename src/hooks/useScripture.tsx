@@ -4,7 +4,6 @@ import {
   useState,
 } from 'react'
 import { core } from 'scripture-resources-rcl'
-import usfmjs from 'usfm-js'
 import {
   CONTENT_NOT_FOUND_ERROR,
   ERROR_STATE,
@@ -18,7 +17,11 @@ import useDeepCompareEffect from 'use-deep-compare-effect'
 import { getVerses } from 'bible-reference-range'
 import { isEqual } from '@react-hookz/deep-equal'
 import { AlignmentHelpers, UsfmFileConversionHelpers } from 'word-aligner-rcl'
-import { delay, verseObjectsHaveWords } from '../utils'
+import {
+  delay,
+  fetchBibleBookCore,
+  verseObjectsHaveWords,
+} from '../utils'
 import {
   cleanupVerseObjects,
   getBookNameFromUsfmFileName,
@@ -26,6 +29,7 @@ import {
   parseResourceLink,
 } from '../utils/ScriptureSettings'
 import {
+  BookFetchParams,
   BookObjectsType,
   ScriptureResource,
   ScriptureReference,
@@ -121,11 +125,7 @@ export function useScripture({ // hook for fetching scripture
     fetchCount: number,
     fetched: boolean,
     fetchedBook: string,
-    fetchParams: {
-      config: {},
-      reference: {},
-      resourceLink: string,
-    },
+    fetchParams: BookFetchParams|null,
     ignoreSha: string|null,
     initialized: boolean,
     resourceState: {
@@ -160,11 +160,7 @@ export function useScripture({ // hook for fetching scripture
     fetchCount: 0,
     fetched: false,
     fetchedBook: '',
-    fetchParams: {
-      config: {},
-      reference: {},
-      resourceLink: '',
-    },
+    fetchParams: null,
     ignoreSha: null,
     initialized: false,
     resourceState: {
@@ -189,7 +185,7 @@ export function useScripture({ // hook for fetching scripture
     ref = null,
   } = resource_ || {}
 
-  const { projectId: bookId} = reference || {}
+  const { projectId: bookId } = reference || {}
 
   const _state: StateTypes = state // Tricky: work-around for bug that standard typescript type casting does not work in .tsx files
   const {
@@ -273,7 +269,7 @@ export function useScripture({ // hook for fetching scripture
    * @param {object} fetchParams
    * @param {string} ignoreSha - optional previous sha - ignore responses that came back for this previous book commit
    */
-  async function fetchBook(fetchParams, ignoreSha = null) {
+  async function fetchBook(fetchParams: BookFetchParams, ignoreSha = null) {
     try {
       const fetchLink = `${fetchParams?.resourceLink}/${fetchParams?.reference?.projectId}`
 
@@ -294,58 +290,28 @@ export function useScripture({ // hook for fetching scripture
         resourceState: { loadingResource: true },
       })
 
-      // fetch manifest data
-      await delay(100)
-      const _resource = await core.resourceFromResourceLink(fetchParams)
+      const response = await fetchBibleBookCore(fetchParams)
 
-      if (!_resource?.manifest || !_resource?.project?.file) {
-        const errorMsg = _resource?.manifest ? 'parsing resource manifest' : 'loading resource manifest'
-        console.warn(`useScripture.fetchBook() - error ${errorMsg}`, fetchParams )
+      if (!response || response?.error) {
+        console.log(`useScripture.warn() -Error FETCHING bible ${resource_?.projectId}`, response)
         setState({
           resourceState: {
             loadingResource: false,
-            resource: _resource,
+            response,
           },
         })
         return
       }
 
-      console.log(`useScripture.fetchBook() - LOADED bible manifest, fetching book ${resource_?.projectId} resourceLink is now ${fetchParams?.resourceLink} and resourceLink_=${fetchParams?.resourceLink_}`, fetchParams)
-      await delay(100)
-      const response = await _resource?.project?.file()
-      // parse book usfm
-      const bibleUsfm = response && core.getResponseData(response)
-      await delay(100)
-      const bookObjects = bibleUsfm && usfmjs.toJSON(bibleUsfm) // convert to bible objects
-
-      if (!bookObjects) {
-        const errorMsg = bibleUsfm ? 'fetching book of the bible' : 'parsing book of the bible'
-        console.warn(`useScripture.fetchBook() - error ${errorMsg}`, fetchParams )
-        setState({
-          resourceState: {
-            loadingResource: false,
-            resource: _resource,
-          },
-        })
-        return
-      }
-
-      const { name, sha, url } = response?.data || {}
-
-      console.log(`useScripture.fetchBook() - LOADED bible book ${resource_?.projectId} resourceLink is now ${fetchParams?.resourceLink} and resourceLink_=${fetchParams?.resourceLink_}`, fetchParams)
+      console.log(`useScripture.fetchBook() - LOADED bible book ${resource_?.projectId} resourceLink is now ${fetchParams?.resourceLink}}`, fetchParams)
       setState(
         {
           resourceState: {
             loadingResource: false,
             fetchedResources: {
-              ..._resource,
-              bibleUsfm,
-              bookObjects,
+              ...response,
               fetchCount: _fetchCount,
-              name,
               reference: fetchParams?.reference,
-              sha,
-              url,
             },
           },
         },
@@ -539,7 +505,7 @@ export function useScripture({ // hook for fetching scripture
    */
   function reloadResource(ignoreSha = null, ref = null) {
     console.log(`useScripture.reloadResource() ignoreSha: ${ignoreSha}` )
-    const _fetchParams = { ...fetchParams }
+    const _fetchParams: BookFetchParams = { ...fetchParams }
 
     if (ref && fetchParams?.resourceLink) {
       const {

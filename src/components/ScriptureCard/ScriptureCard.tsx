@@ -26,6 +26,7 @@ import { ScripturePane, ScriptureSelector } from '..'
 import { useScriptureSettings } from '../../hooks/useScriptureSettings'
 import {
   cleanupVerseObjects,
+  fetchBibleBook,
   fixOccurrence,
   getBookNameFromUsfmFileName,
   getResourceLink,
@@ -172,6 +173,7 @@ export default function ScriptureCard({
     saveClicked: false,
     saveContent: null,
     saveDiffPatch: false,
+    saveFullBibleContent: null,
     selections: new Map(),
     showAlignmentPopup: false,
     startSave: false,
@@ -194,6 +196,7 @@ export default function ScriptureCard({
     saveClicked,
     saveContent,
     saveDiffPatch,
+    saveFullBibleContent,
     selections,
     showAlignmentPopup,
     startSave,
@@ -591,52 +594,97 @@ export default function ScriptureCard({
   })
 
   React.useEffect(() => { // when we get a save saveError
-    if (saveError && isSaveError) {
+    if (saveError && isSaveError && !startSave) { // if error then show after save completes, since we may retry
       console.log(`save error`, saveError)
       onResourceError && onResourceError(null, false, null, `Error saving ${languageId_}_${resourceId} ${saveError}`, true)
     }
-  }, [saveError, isSaveError])
+  }, [saveError, isSaveError, startSave])
 
   React.useEffect(() => { // when startSave goes true, save edits to user branch and then clear startSave
+    function _saveSuccesful() {
+      console.log(`saveChangesToCloud() - save scripture edits success`)
+      setCardsSaving(prevCardsSaving => prevCardsSaving.filter(cardId => cardId !== cardResourceId))
+      setState({
+        startSave: false,
+      })
+
+      const unsavedCardIndices = Object.keys(unsavedChangesList)
+
+      if (unsavedCardIndices?.length) {
+        for (const cardIndex of unsavedCardIndices) {
+          const {clearChanges} = unsavedChangesList[cardIndex]
+          clearChanges && clearChanges()
+        }
+      }
+
+      console.info('saveChangesToCloud() - Reloading resource')
+      setState({
+        startSave: false,
+        readyForFetch: true,
+        saveFullBibleContent: null,
+        saveContent: null,
+        ref: userEditBranchName,
+      })
+      delay(100).then(() => {
+        setCardsSaving(prevCardsSaving => prevCardsSaving.filter(cardId => cardId !== cardResourceId))
+        scriptureConfig?.reloadResource(sha, userEditBranchName)
+      })
+      return true
+    }
+
     const _saveEdit = async () => { // begin uploading new USFM
       console.info(`saveChangesToCloud() - Using sha: ${sha}`)
-      let saveFunction = onSaveEdit
+      let uploadFunction = onSaveEdit
       if (saveDiffPatch) {
-        saveFunction = onSaveEditPatch // if we are sending up a diffpatch, we will use this method
+        uploadFunction = onSaveEditPatch // if we are sending up a diffpatch, we will use this method
       }
-      await saveFunction(userEditBranchName).then((success) => { // push change to server
-        if (success) {
-          console.log(`saveChangesToCloud() - save scripture edits success`)
-          setCardsSaving(prevCardsSaving => prevCardsSaving.filter(cardId => cardId !== cardResourceId))
-          setState({
-            startSave: false,
-          })
+      let success = await uploadFunction(userEditBranchName)// push change to server
+      let error = success ? null : 'saving changed scripture failed'
 
-          const unsavedCardIndices = Object.keys(unsavedChangesList)
+      if (!success) { // if save failed, attempt a retry
+        console.error('saveChangesToCloud() - saving changed scripture failed, retrying')
+        await delay(500) // since we had an error, wait for data to update on server before getting the latest
+        // @ts-ignore
+        // fetch the latest book content, so we can tell if latest changes were saved and have the latest file sha
+        const results = await fetchBibleBook(server, httpConfig, scriptureConfig?.resource, scriptureConfig?.reference)
+        error = results?.error
+        let _saveContent = saveContent
+        let fileSha = null
+        const savedBibleUsfm = results?.bibleUsfm
+        const editedBibleUsfm = saveFullBibleContent?.new
+        let upToDate = savedBibleUsfm === editedBibleUsfm // check if new bible content differs from latest on repo
 
-          if (unsavedCardIndices?.length) {
-            for (const cardIndex of unsavedCardIndices) {
-              const { clearChanges } = unsavedChangesList[cardIndex]
-              clearChanges && clearChanges()
+        if (!error) {
+          if (upToDate) { // if the data we are trying to save matches what is now on the server there is nothing to do
+            console.log('saveChangesToCloud() - data was correctly uploaded, so nothing more to do')
+            success = true
+          } else {
+            if (saveDiffPatch) {
+              await delay(100) // allow UI to update before running computationally expensive function
+              // regenerate the patch against the latest content
+              const diffPatch = getPatch(saveFullBibleContent?.filename, savedBibleUsfm, editedBibleUsfm, false)
+              _saveContent = diffPatch
+              fileSha = results?.sha
+            }
+
+            success = await uploadFunction(userEditBranchName, _saveContent, fileSha) // push change to server
+            if (!success) {
+              error = 'saving changed scripture failed on second attempt'
+            } else {
+              console.log('saveChangesToCloud() - save successful on second attempt')
             }
           }
-
-          console.info('saveChangesToCloud() - Reloading resource')
-          setState({
-            startSave: false,
-            readyForFetch: true,
-            ref: userEditBranchName,
-          })
-          delay(100).then(() => {
-            setCardsSaving(prevCardsSaving => prevCardsSaving.filter(cardId => cardId !== cardResourceId))
-            scriptureConfig?.reloadResource(sha, userEditBranchName)
-          })
-        } else {
-          console.error('saveChangesToCloud() - saving changed scripture failed')
-          setCardsSaving(prevCardsSaving => prevCardsSaving.filter(cardId => cardId !== cardResourceId))
-          setState({ startSave: false })
         }
-      })
+      }
+
+      if (!error && success) { // if no error message and save was a success
+        return _saveSuccesful() // nothing to do
+      }
+
+      console.error(`saveChangesToCloud() - ${error || 'unknown save error'}`)
+      setCardsSaving(prevCardsSaving => prevCardsSaving.filter(cardId => cardId !== cardResourceId))
+      setState({startSave: false})
+      return false
     }
 
     if (startSave) {
@@ -734,11 +782,11 @@ export default function ScriptureCard({
         const unsavedCardIndices = Object.keys(unsavedChangesList)
 
         if (unsavedCardIndices?.length) {
-          let bibleUsfm_ = getCurrentBook(scriptureConfig, bookId) // get original USFM
-          let bibleUsfm = bibleUsfm_ // make a copy to edit
+          let bibleUsfmInitial = getCurrentBook(scriptureConfig, bookId) // get original USFM
+          let bibleUsfmNew = bibleUsfmInitial // make a copy to edit
           let mergeFail = false
 
-          if (bibleUsfm_) {
+          if (bibleUsfmInitial) {
             let cardNum = 0
 
             for (const cardIndex of unsavedCardIndices) {
@@ -752,12 +800,12 @@ export default function ScriptureCard({
                   updatedVerseObjects,
                 } = getChanges(state)
 
-                if (updatedVerseObjects && bibleUsfm) { // just replace verse
-                  newUsfm = mergeVerseObjectsIntoBibleUsfm(bibleUsfm, ref, updatedVerseObjects, cardNum)
+                if (updatedVerseObjects && bibleUsfmNew) { // just replace verse
+                  newUsfm = mergeVerseObjectsIntoBibleUsfm(bibleUsfmNew, ref, updatedVerseObjects, cardNum)
                 }
 
                 if (newUsfm) {
-                  bibleUsfm = newUsfm
+                  bibleUsfmNew = newUsfm
                 } else {
                   mergeFail = true
                   break
@@ -767,6 +815,8 @@ export default function ScriptureCard({
           }
 
           let saveDiffPatch = false // if true then we will send up a diffpatch instead of the whole book
+          let _saveFullBibleContent = null
+          let _saveContent = bibleUsfmNew
 
           if (mergeFail) { // if we failed to merge, fallback to brute force verse objects to USFM
             console.log(`saveChangesToCloud(${cardNum}) - verse not found, falling back to inserting verse object`)
@@ -800,28 +850,34 @@ export default function ScriptureCard({
               }
             }
 
-            bibleUsfm = usfmjs.toUSFM(newBookJson, { forcedNewLines: true })
+            _saveContent = usfmjs.toUSFM(newBookJson, { forcedNewLines: true })
           } else { // if only changed a few verses, we will just make a diffpatch instead of sending the whole book
             const filename = scriptureConfig?.resourceState?.resource?.name // Like "57-TIT.usfm"
-            if (filename && bibleUsfm && bibleUsfm_) { // make sure we have everything needed to make a patch
-              if (bibleUsfm_ === bibleUsfm) { // if no data change, then skip save because DCS crashes on an empty patch
+            if (filename && bibleUsfmNew && bibleUsfmInitial) { // make sure we have everything needed to make a patch
+              if (bibleUsfmInitial === bibleUsfmNew) { // if no data change, then skip save because DCS crashes on an empty patch
                 console.warn(`saveChangesToCloud() - there is nothing to save, skipping`)
                 setState({ saveClicked: false })
                 return
               }
-              const diffPatch = getPatch(filename, bibleUsfm_, bibleUsfm, false)
-              bibleUsfm_ = diffPatch // replace whole book with patch data (much shorter)
+              const diffPatch = getPatch(filename, bibleUsfmInitial, bibleUsfmNew, false)
               saveDiffPatch = true
+              _saveContent = diffPatch // replace whole book content with just patch data (much faster uploads)
+              _saveFullBibleContent = {  // keep track of patch data in case we need to retry save
+                filename,
+                initial: bibleUsfmInitial,
+                new: bibleUsfmNew,
+              }
             }
           }
 
-          if (bibleUsfm) {
-            console.log(`saveChangesToCloud() - saving new USFM: ${bibleUsfm.substring(0, 100)}...`)
+          if (bibleUsfmNew) {
+            console.log(`saveChangesToCloud() - saving new USFM: ${bibleUsfmNew.substring(0, 100)}...`)
             setCardsSaving(prevCardsSaving => [...prevCardsSaving, cardResourceId])
             setState({
-              saveContent: bibleUsfm_,
+              saveContent: _saveContent,
               saveClicked: false,
               saveDiffPatch,
+              saveFullBibleContent: _saveFullBibleContent,
               startSave: true,
             })
           } else {

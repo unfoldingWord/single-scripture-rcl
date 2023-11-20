@@ -83,3 +83,13 @@ export interface ScriptureConfig {
   fetchResponse: { data: {sha: string} }
 }
 
+export interface BookFetchParams {
+  config: {} | ServerConfig;
+  // TODO: document all the formats supported in
+  // see parseResourceLink in scripture-resources-rcl for other formats supported,
+  // but most common is <owner>/<language>/<resourceId>/<branch>/<bookId> (e.g. ru_gl/ru/rlob/master/tit)
+  resourceLink?: string;
+  // parameters used to generate resourceLink if it's not present
+  resource?: ScriptureResource;
+  reference?: ScriptureReference;
+}
