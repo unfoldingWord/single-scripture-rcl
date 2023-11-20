@@ -25,7 +25,7 @@ export function getPatch(fileName, originalFileContents, editedFileContents, jso
   let diffResult = createPatch(fileName, originalFileContents, editedFileContents)
 
   if (jsonEscape) {
-    diffResult = escapeJsonStringChars(diffResult);
+    diffResult = escapeJsonStringChars(diffResult)
   }
   return diffResult
 }
