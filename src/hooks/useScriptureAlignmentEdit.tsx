@@ -10,8 +10,8 @@ import { isEqual } from '@react-hookz/deep-equal'
 import {
   BookObjectsType,
   ScriptureConfig,
-  ScriptureReference,
-  ServerConfig,
+  ScriptureReferenceType,
+  ServerConfigType,
   VerseObjectsType,
 } from '../types'
 import { getAlignments, getScriptureResourceSettings } from '../utils/ScriptureSettings'
@@ -44,13 +44,13 @@ export interface ScriptureALignmentEditProps {
   // current verse selected from initialVerseObjects[]
   currentIndex: number,
   // reference for verse selected for alignment
-  currentVerseRef: ScriptureReference,
+  currentVerseRef: ScriptureReferenceType,
   // if true then editing is allowed
   enableEdit: boolean,
   // if true then alignment is allowed
   enableAlignment: boolean,
   // configuration to use for http communication
-  httpConfig: ServerConfig,
+  httpConfig: ServerConfigType,
   // array of the initial verseObjects for current reference
   initialVerseObjects: VerseObjectsType,
   // initial text for verse
@@ -66,7 +66,7 @@ export interface ScriptureALignmentEditProps {
   // original scripture bookObjects for current book
   originalScriptureBookObjects: BookObjectsType,
   /** current reference **/
-  reference: ScriptureReference;
+  reference: ScriptureReferenceType;
   // details about the current scripture loaded
   scriptureConfig: ScriptureConfig,
   // settings to be used for scripture
@@ -210,11 +210,11 @@ export function useScriptureAlignmentEdit({
   } = _state
   const chapter = reference?.chapter
   const verse = reference?.verse
-  const projectId = reference?.projectId
+  const bookId = reference?.bookId
   const basicReference = { // only has the three basic fields
     chapter,
     verse,
-    projectId,
+    bookId,
   }
 
   function setState(newState) {
@@ -246,7 +246,6 @@ export function useScriptureAlignmentEdit({
 
   // @ts-ignore
   httpConfig = httpConfig || {}
-  const bookId = projectId
   const originalScriptureSettings = getScriptureResourceSettings(
     bookId, originalScriptureSettings_, isNewTestament, originalRepoUrl,
   )
@@ -273,7 +272,7 @@ export function useScriptureAlignmentEdit({
       }
     }
     return verseObjects
-  }, [originalScriptureBookObjects, chapter, verse, projectId])
+  }, [originalScriptureBookObjects, chapter, verse, bookId])
 
   /**
    * get current verseObjects

@@ -9,9 +9,9 @@ import { core } from 'scripture-resources-rcl'
 import usfmjs from 'usfm-js'
 import {
   BookFetchParams,
-  ScriptureReference,
-  ScriptureResource,
-  ServerConfig,
+  ScriptureReferenceType,
+  ScriptureResourceType,
+  ServerConfigType,
   VerseObjectsType,
 } from '../types'
 import {
@@ -525,16 +525,16 @@ export async function fetchBibleBookCore(fetchParams: BookFetchParams) {
 /**
  * do a fetch of manifest and book of the bible specified in fetchParams
  * @param {string} server - server to access
- * @param {ServerConfig} config
- * @param {ScriptureResource} resource
- * @param {ScriptureReference} reference
+ * @param {ServerConfigType} config
+ * @param {ScriptureResourceType} resource
+ * @param {ScriptureReferenceType} reference
  */
-export async function fetchBibleBook(server: string, config: ServerConfig, resource: ScriptureResource, reference: ScriptureReference) {
+export async function fetchBibleBook(server: string, config: ServerConfigType, resource: ScriptureResourceType, reference: ScriptureReferenceType) {
   const ref_ = resource?.branch || resource?.ref
   const resourceLink = getResourceLink({
     ...resource,
     resourceId: resource?.projectId || '',
-    projectId: reference?.projectId || '',
+    bookId: reference?.bookId || '',
     ref: ref_,
   })
 

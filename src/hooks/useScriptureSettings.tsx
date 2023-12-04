@@ -100,7 +100,7 @@ export function useScriptureSettings({
   useUserLocalStorage,
   wholeBook = false,
 }) {
-  const bookId = reference?.projectId
+  const bookId = reference?.bookId
   const isNewTestament = isNT(bookId)
   const scriptureDefaultSettings = getScriptureObject({
     disableWordPopover,

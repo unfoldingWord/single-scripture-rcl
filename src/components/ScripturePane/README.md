@@ -8,7 +8,7 @@ import { ScripturePane, useScripture } from "../.."
 
 const EnglishExample = {
   reference: {
-    projectId: "tit",
+    bookId: "tit",
     chapter: 1,
     verse: 5,
   },
@@ -23,7 +23,7 @@ const EnglishExample = {
 
 const HebrewExample = {
   reference: {
-    projectId: "psa",
+    bookId: "psa",
     chapter: 119,
     verse: 166,
   },
@@ -38,7 +38,7 @@ const HebrewExample = {
 
 const GreekExample = {
   reference: {
-    projectId: "tit",
+    bookId: "tit",
     chapter: 1,
     verse: 5,
   },
@@ -88,7 +88,9 @@ function Component() {
   const [editing, setEditing] = useState(false)
 
   const scriptureConfig = useScripture({
-    ...scripture, config
+    ...scripture,
+    config,
+    readyForFetch: true,
   });
 
   const refStyle = {
@@ -104,6 +106,14 @@ function Component() {
   function setEditing_(state) {
     console.log(`setEditing(${state})`)
     setEditing(state)
+  }
+
+  const { chapter, verse } = scripture.reference
+  var bookObjects = scriptureConfig && scriptureConfig.bookObjects;
+  let initialVerseObjects = bookObjects && bookObjects.chapters && bookObjects.chapters[chapter] && bookObjects.chapters[chapter][verse];
+  initialVerseObjects = initialVerseObjects && initialVerseObjects.verseObjects || []
+  const scriptureAlignmentEditConfig = {
+    initialVerseObjects
   }
 
   return (
@@ -129,7 +139,7 @@ function Component() {
         server={config.server}
         editing={editing}
         setEditing={setEditing_}
-        scriptureAlignmentEditConfig={{}}
+        scriptureAlignmentEditConfig={scriptureAlignmentEditConfig}
       />
     </Card>
   );

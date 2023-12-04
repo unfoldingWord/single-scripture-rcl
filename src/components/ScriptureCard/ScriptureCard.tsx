@@ -44,6 +44,7 @@ import {
 } from '../../utils'
 import { VerseSelectorPopup } from '../VerseSelectorPopup'
 import { getPatch } from '../../utils/files'
+import { ScriptureReferenceType, VerseObjectsType } from '../../types'
 
 const KEY_FONT_SIZE_BASE = 'scripturePaneFontSize_'
 const label = 'Version'
@@ -141,7 +142,7 @@ export default function ScriptureCard({
   onMinimize,
   onResourceError,
   originalScriptureBookObjects,
-  reference,
+  reference: reference_,
   resource: {
     owner,
     languageId,
@@ -161,7 +162,12 @@ export default function ScriptureCard({
   useUserLocalStorage,
   updateMergeState,
 }) {
-  const bookId = reference?.projectId
+  const bookId = reference_?.bookId || reference_?.projectId // older versions use projectId, so fall back to that
+  const reference = {
+    bookId,
+    chapter: reference_?.chapter,
+    verse: reference_?.verse,
+  }
   const [state, setState_] = React.useState({
     checkForEditBranch: 0,
     currentReference: null,
@@ -175,6 +181,7 @@ export default function ScriptureCard({
     saveDiffPatch: false,
     saveFullBibleContent: null,
     selections: new Map(),
+    selectionsRefs: '',
     showAlignmentPopup: false,
     startSave: false,
     urlError: null,
@@ -198,6 +205,7 @@ export default function ScriptureCard({
     saveDiffPatch,
     saveFullBibleContent,
     selections,
+    selectionsRefs,
     showAlignmentPopup,
     startSave,
     urlError,
@@ -253,7 +261,6 @@ export default function ScriptureCard({
   const fetchedResource = scriptureConfig?.resourceState
   // @ts-ignore
   const repo = `${scriptureConfig?.resource?.languageId}_${scriptureConfig?.resource?.projectId}`
-  const reference_ = scriptureConfig?.reference || null
   const usingOriginalBible = isOriginalBible(scriptureConfig['resource']?.projectId)
 
 
@@ -559,7 +566,7 @@ export default function ScriptureCard({
 
   function getBookName() {
     // @ts-ignore
-    const bookCaps = scriptureConfig?.reference?.projectId ? scriptureConfig.reference.projectId.toUpperCase() : ''
+    const bookCaps = scriptureConfig?.reference?.bookId ? scriptureConfig.reference.bookId.toUpperCase() : ''
     return `${bookIndex}-${bookCaps}.usfm`
   }
 
@@ -703,11 +710,11 @@ export default function ScriptureCard({
   /**
    * convert updatedVerseObjects to USFM and merge into the bibleUsfm
    * @param {string} bibleUsfm - USFM of bible
-   * @param {object} ref - reference of verse to merge in
-   * @param {object[]} updatedVerseObjects - new verse in verseObject format
+   * @param {ScriptureReferenceType} ref - reference of verse to merge in
+   * @param {VerseObjectsType} updatedVerseObjects - new verse in verseObject format
    * @param {number} cardNum
    */
-  function mergeVerseObjectsIntoBibleUsfm(bibleUsfm, ref, updatedVerseObjects, cardNum: number) {
+  function mergeVerseObjectsIntoBibleUsfm(bibleUsfm: string, ref: ScriptureReferenceType, updatedVerseObjects: VerseObjectsType, cardNum: number) {
     let newUsfm
     const chapterChunks = bibleUsfm?.split('\\c ')
     const chapterIndex = findRefInArray(ref?.chapter, chapterChunks)
@@ -996,9 +1003,11 @@ export default function ScriptureCard({
     // update states that have changed
     if (!areMapsTheSame(verseObjectsMap, _map)) {
       newState.verseObjectsMap = _map
+      // @ts-ignore
+      newState.selectionsRefs = _map ? [..._map.keys()].join(';') : '' // combine all the verse references into a single verse reference for the selections
     }
 
-    const booksNotSame = reference?.projectId !== currentReference?.projectId
+    const booksNotSame = reference?.bookId !== currentReference?.bookId
 
     if (booksNotSame || !areVersesSame(versesForRef, _versesForRef)) {
       newState.versesForRef = _versesForRef
@@ -1037,7 +1046,7 @@ export default function ScriptureCard({
     })
   }, [_reference])
 
-  const updateVersesAlignmentStatus = (reference, aligned) => {
+  const updateVersesAlignmentStatus = (reference: ScriptureReferenceType, aligned: boolean) => {
     setState_(prevState => ({
       ...prevState,
       versesAlignmentStatus: { ...prevState.versesAlignmentStatus, [`${reference.chapter}:${reference.verse}`]: aligned },
@@ -1061,11 +1070,11 @@ export default function ScriptureCard({
     const initialVerseObjects = _currentVerseData?.verseData?.verseObjects || []
     // @ts-ignore
     const { chapter, verse } = _currentVerseData || {}
-    const projectId = currentReference?.projectId || reference?.projectId
+    const bookId_ = currentReference?.bookId || bookId
     const _reference = {
       ..._versesForRef,
       chapter,
-      projectId,
+      bookId: bookId_,
       verse,
     }
     const _scriptureAlignmentEditConfig = {
@@ -1165,15 +1174,18 @@ export default function ScriptureCard({
     return newItems
   }
 
+  const selectionBookObjects = originalScriptureBookObjects?.chapters
+
   return (
     <SelectionsContextProvider
-      selections={selections}
+      bookObject={selectionBookObjects || {}}
+      occurrence={fixOccurrence(selectedQuote?.occurrence)}
       onSelections={newSelections => {
         // console.log('onSelections', newSelections)
       }}
-      quote={selectedQuote?.quote}
-      occurrence={fixOccurrence(selectedQuote?.occurrence)}
-      verseObjectsMap={verseObjectsMap}
+      quote={selectedQuote?.quote || ''}
+      refString={selectionsRefs}
+      selections={selections}
     >
       <Card
         id={`scripture_card_${cardNum}`}
@@ -1257,8 +1269,10 @@ ScriptureCard.propTypes = {
   /** the original scripture bookObjects for current book */
   originalScriptureBookObjects: PropTypes.object,
   reference: PropTypes.shape({
-    /** projectId (bookID) to use */
-    projectId: PropTypes.string.isRequired,
+    /** book ID to use, older libraries used projectId */
+    bookId: PropTypes.string.isRequired,
+    /** older libraries used projectId instead of bookId */
+    projectId: PropTypes.string,
     /** current chapter number */
     chapter: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
     /** current verse number */
