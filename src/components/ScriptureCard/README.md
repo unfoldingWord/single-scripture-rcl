@@ -13,12 +13,12 @@ import * as translation from './translation.json'
 
 const showNT = true; // set to false to show OT
 const ntRef = {
-  projectId: "tit",
+  bookId: "tit",
   chapter: 1,
   verse: 5,
 }
 const otRef = {
-  projectId: "psa",
+  bookId: "psa",
   chapter: 119,
   verse: 166,
 }

@@ -1,17 +1,17 @@
-export interface ScriptureReference {
-  projectId: string;
+export interface ScriptureReferenceType {
+  bookId: string;
   chapter: number;
   verse: number|string;
 }
 
-export interface ServerConfig {
+export interface ServerConfigType {
   server: string;
   cache: {
     maxAge: number;
   }
 }
 
-export interface ScriptureResource {
+export interface ScriptureResourceType {
   languageId: string;
   projectId: string;
   owner: string;
@@ -73,10 +73,10 @@ export interface BookObjectsType { // parsed USFM content for a book of the bibl
 }
 
 export interface ScriptureConfig {
-  reference: ScriptureReference;
-  resource: ScriptureResource;
+  reference: ScriptureReferenceType;
+  resource: ScriptureResourceType;
   resourceLink: string;
-  config: ServerConfig;
+  config: ServerConfigType;
   disableWordPopover?: boolean;
   reloadResource: Function;
   versesForRef: { chapter: string, verse: string, data: object }[];
@@ -84,12 +84,12 @@ export interface ScriptureConfig {
 }
 
 export interface BookFetchParams {
-  config: {} | ServerConfig;
+  config: {} | ServerConfigType;
   // TODO: document all the formats supported in
   // see parseResourceLink in scripture-resources-rcl for other formats supported,
   // but most common is <owner>/<language>/<resourceId>/<branch>/<bookId> (e.g. ru_gl/ru/rlob/master/tit)
   resourceLink?: string;
   // parameters used to generate resourceLink if it's not present
-  resource?: ScriptureResource;
-  reference?: ScriptureReference;
+  resource?: ScriptureResourceType;
+  reference?: ScriptureReferenceType;
 }

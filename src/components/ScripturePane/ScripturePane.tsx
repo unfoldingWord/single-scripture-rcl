@@ -2,7 +2,7 @@ import * as React from 'react'
 import useDeepCompareEffect from 'use-deep-compare-effect'
 import { VerseObjects } from 'scripture-resources-rcl'
 import { UsfmFileConversionHelpers } from 'word-aligner-rcl'
-import { BookObjectsType, ScriptureReference } from '../../types'
+import { BookObjectsType, ScriptureReferenceType } from '../../types'
 import {
   getResourceMessage,
   LOADING_RESOURCE,
@@ -39,7 +39,7 @@ interface Props {
   // original scripture bookObjects for current book
   originalScriptureBookObjects: BookObjectsType,
   /** current reference **/
-  reference: ScriptureReference;
+  reference: ScriptureReferenceType;
   /** optional styles to use for reference **/
   refStyle: any;
   /** object that contains resource loading status or fetching errors */
@@ -135,15 +135,10 @@ function ScripturePane({
 
   const {
     chapter,
-    projectId,
+    bookId,
     verse,
-  } = reference
+  } = reference || {}
   direction = direction || 'ltr'
-  const basicReference = {
-    chapter,
-    verse,
-    projectId,
-  }
 
   refStyle = refStyle || {
     fontFamily: 'Noto Sans',
@@ -182,7 +177,7 @@ function ScripturePane({
 
   React.useEffect(() => {
     if (isVerseSelectedForAlignment && !alignerData && !doingAlignment) {
-      console.log(`ScripturePane - verse selected for alignment`, basicReference)
+      console.log(`ScripturePane - verse selected for alignment`, reference)
       handleAlignmentClick()
     }
   }, [isVerseSelectedForAlignment, alignerData, doingAlignment])
@@ -201,7 +196,7 @@ function ScripturePane({
 
   React.useEffect(() => {
     updateVersesAlignmentStatus && updateVersesAlignmentStatus(reference, aligned)
-  }, [aligned, chapter, verse, projectId])
+  }, [aligned, chapter, verse, bookId])
 
   React.useEffect(() => {
     if (alignerData && !doingAlignment) {
@@ -209,7 +204,7 @@ function ScripturePane({
       setState({ doingAlignment: true })
     } else {
       if (!doingAlignment) {
-        console.log(`ScripturePane - alignerData went false unexpected`, { basicReference, alignerData, doingAlignment })
+        console.log(`ScripturePane - alignerData went false unexpected`, { reference, alignerData, doingAlignment })
       }
 
       setWordAlignerStatus && setWordAlignerStatus(_scriptureAlignmentEdit)
@@ -234,7 +229,7 @@ function ScripturePane({
     clearChanges()
     setInitialVerseText(verseText)
     setState({ newText: null })
-  }, [{ basicReference, initialVerseObjects }])
+  }, [{ reference, initialVerseObjects }])
 
   function onTextChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
     const newVerseText = event?.target?.value
@@ -248,7 +243,7 @@ function ScripturePane({
     setEditing(false, newText)
   }
 
-  const verseObjects = currentVerseObjects || initialVerseObjects
+  const verseObjects = currentVerseObjects || initialVerseObjects || []
   const noWords = React.useMemo(() => !verseObjectsHaveWords(verseObjects), [currentVerseObjects, initialVerseObjects])
 
   /**

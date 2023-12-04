@@ -5,7 +5,7 @@ import { getScriptureResourceSettings } from '../utils/ScriptureSettings'
 /**
  * hook to get a scripture resource
  * @param {object} scriptureSettings - info about the scripture being referenced
- * @param {object} reference
+ * @param {ScriptureReferenceType} reference
  * @param {boolean} isNewTestament
  * @param {string} originalRepoUrl - optional path to repo for original language
  * @param {string} currentLanguageId - optional over-ride for transient case where language in scripture settings have not yet updated
@@ -27,7 +27,7 @@ export function useScriptureResources({
   scriptureSettings,
   wholeBook = false,
 }) {
-  const bookId = reference?.projectId
+  const bookId = reference?.bookId
 
   if (appRef !== scriptureSettings.ref) {
     scriptureSettings = { ...scriptureSettings, ref: appRef }

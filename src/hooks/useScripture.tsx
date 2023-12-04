@@ -31,9 +31,9 @@ import {
 import {
   BookFetchParams,
   BookObjectsType,
-  ScriptureResource,
-  ScriptureReference,
-  ServerConfig,
+  ScriptureResourceType,
+  ScriptureReferenceType,
+  ServerConfigType,
   VerseObjectsType,
   VerseReferencesType,
 } from '../types'
@@ -41,13 +41,13 @@ import { parseResourceManifest } from './parseResourceManifest'
 
 interface Props {
   /** reference for scripture **/
-  reference: ScriptureReference;
+  reference: ScriptureReferenceType;
   /** where to get data **/
-  config: ServerConfig;
+  config: ServerConfigType;
   /** optional direct path to bible resource, in format ${owner}/${languageId}/${projectId}/${branch} **/
   resourceLink: string|undefined;
   /** optional resource object to use to build resourceLink **/
-  resource: ScriptureResource|undefined;
+  resource: ScriptureResourceType|undefined;
   /** if true then fetch the entire book */
   wholeBook: boolean;
   /** if true then settings are ready for fetching data */
@@ -101,7 +101,7 @@ export function getVersesForRefStr(refStr, bookObjects, languageId): VerseRefere
 
 /**
  * get the verse objects for the reference object
- * @param {object} reference
+ * @param {ScriptureReferenceType} reference
  * @param {object} bookObjects - parsed usfm for book
  * @param {string} languageId
  * @return {array|null} - of verseObjects
@@ -185,7 +185,7 @@ export function useScripture({ // hook for fetching scripture
     ref = null,
   } = resource_ || {}
 
-  const { projectId: bookId } = reference || {}
+  const { bookId } = reference || {}
 
   const _state: StateTypes = state // Tricky: work-around for bug that standard typescript type casting does not work in .tsx files
   const {
@@ -221,7 +221,7 @@ export function useScripture({ // hook for fetching scripture
         resourceLink = getResourceLink({
           owner,
           languageId,
-          resourceId: bookId,
+          resourceId: resource_?.projectId,
           ref: ref_,
         })
       }
@@ -271,7 +271,7 @@ export function useScripture({ // hook for fetching scripture
    */
   async function fetchBook(fetchParams: BookFetchParams, ignoreSha = null) {
     try {
-      const fetchLink = `${fetchParams?.resourceLink}/${fetchParams?.reference?.projectId}`
+      const fetchLink = `${fetchParams?.resourceLink}/${fetchParams?.reference?.bookId}`
 
       if (ignoreSha) {
         const fetchedShaMatchesIgnoreSha = ignoreSha === resourceState?.sha // we will reload if ignoreSha given and it matches current sha
@@ -365,7 +365,7 @@ export function useScripture({ // hook for fetching scripture
     if (isSameBook) {
       const bibleUsfm_ = fetchedResources?.bibleUsfm
       const bookObjects = fetchedResources?.bookObjects
-      const versesForRef = fetchVersesForRef(bookObjects)
+      const versesForRef = getVersesForRef_(bookObjects)
 
       console.log(`useScripture.validateResponse() - correct book, expectedBookId is ${expectedBookId}`, { sha, url })
       const newState = {
@@ -471,7 +471,7 @@ export function useScripture({ // hook for fetching scripture
    * get the verses for current reference or reference range
    * @param {BookObjectsType} _bookObjects
    */
-  function fetchVersesForRef(_bookObjects: BookObjectsType = bookObjects): VerseObjectsType {
+  function getVersesForRef_(_bookObjects: BookObjectsType = bookObjects): VerseObjectsType {
     let newVersesForRef = []
 
     if (_bookObjects) {
@@ -530,7 +530,7 @@ export function useScripture({ // hook for fetching scripture
   }
 
   // @ts-ignore
-  const currentBookRef = fetchParams?.reference?.projectId
+  const currentBookRef = fetchParams?.reference?.bookId
 
   useEffect(() => {
     if (currentBookRef) {
@@ -556,7 +556,7 @@ export function useScripture({ // hook for fetching scripture
       // }
     } else {
       const _bookObjects = fetchedBookSame ? bookObjects : null
-      _versesForRef = fetchVersesForRef(_bookObjects)
+      _versesForRef = getVersesForRef_(_bookObjects)
       // console.log(`useScripture _bookObjects is ${!!_bookObjects} and books are the same ${fetchedBook}`, { content, fetchParams })
     }
 
