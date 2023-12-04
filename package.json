@@ -82,7 +82,7 @@
     "react-dom": "^17.0.1",
     "react-icons": "^4.8.0",
     "react-styleguidist": "11.2.0",
-    "scripture-resources-rcl": "5.5.8",
+    "scripture-resources-rcl": "^5.5.8",
     "style-loader": "^2.0.0",
     "tc-ui-toolkit": "^5.3.3",
     "translation-helps-rcl": "^3.4.2",
