@@ -506,7 +506,7 @@ export function useScriptureAlignmentEdit({
     if (enableEdit) {
       if (editing_ !== editing) {
         _newVerseText = _newVerseText || initialVerseText
-        let _updatedVerseObjects = updatedVerseObjects || currentVerseObjects
+        let _updatedVerseObjects = null
         const verseTextChanged = _newVerseText !== initialVerseText
         const newState = {
           editing: editing_,
@@ -514,20 +514,13 @@ export function useScriptureAlignmentEdit({
           verseTextChanged,
         }
 
-        if (editing_ ) { // by default do migration of alignments to match latest original language
-          _updatedVerseObjects = migrateAlignments('setEditing()', _updatedVerseObjects)
-        }
-
-        if (!verseTextChanged) {
-          // fallback to make sure text from verseObjects matches current text
-          const verseText = UsfmFileConversionHelpers.getUsfmForVerseContent({ verseObjects: currentVerseObjects } )
-
-          if (hasTextChangedSignificantly(verseText, _newVerseText)) {
-            // apply alignment to current text
-            const { targetVerseObjects } = AlignmentHelpers.updateAlignmentsToTargetVerse(currentVerseObjects, _newVerseText)
-            _updatedVerseObjects = targetVerseObjects // update verseObjects to match current text
-            newState['updatedVerseObjects'] = _updatedVerseObjects
-          }
+        if (!editing_ && verseTextChanged) { // if done editing and verse has changed, update the verse objects
+          // do migration of alignments to match latest original language
+          _updatedVerseObjects = migrateAlignments('setEditing()', updatedVerseObjects || currentVerseObjects)
+          // apply alignments from updated verseObjects to edited verse text
+          const { targetVerseObjects } = AlignmentHelpers.updateAlignmentsToTargetVerse(_updatedVerseObjects, _newVerseText)
+          _updatedVerseObjects = targetVerseObjects // update verseObjects to match current text
+          newState['updatedVerseObjects'] = _updatedVerseObjects
         }
 
         setState(newState)
