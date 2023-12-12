@@ -11910,7 +11910,7 @@ schema-utils@^3.0.0:
     ajv "^6.12.5"
     ajv-keywords "^3.5.2"
 
-scripture-resources-rcl@5.5.8:
+scripture-resources-rcl@^5.5.8:
   version "5.5.8"
   resolved "https://registry.yarnpkg.com/scripture-resources-rcl/-/scripture-resources-rcl-5.5.8.tgz#edca70cb18f8c02b1c9c195a43bb3e8044fa6a09"
   integrity sha512-RC82kGdA8jaclxwABRXFJkw9Bh5Ig3juBJY+vig8qsVLEU6EiHSuB5htz8BxkNPVUw7y5wpxxJeCb0rEATmEJA==
