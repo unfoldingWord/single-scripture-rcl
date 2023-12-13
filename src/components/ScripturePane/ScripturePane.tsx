@@ -2,13 +2,17 @@ import * as React from 'react'
 import useDeepCompareEffect from 'use-deep-compare-effect'
 import { VerseObjects } from 'scripture-resources-rcl'
 import { UsfmFileConversionHelpers } from 'word-aligner-rcl'
-import { BookObjectsType, ScriptureReferenceType } from '../../types'
+import {
+  BookObjectsType,
+  ScriptureALignmentEditProps,
+  ScriptureReferenceType
+} from '../../types'
 import {
   getResourceMessage,
   LOADING_RESOURCE,
   verseObjectsHaveWords,
 } from '../../utils'
-import { ScriptureALignmentEditProps, useScriptureAlignmentEdit } from '../../hooks/useScriptureAlignmentEdit'
+import { useScriptureAlignmentEdit } from '../../hooks/useScriptureAlignmentEdit'
 import {
   Container,
   Content,

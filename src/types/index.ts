@@ -93,3 +93,70 @@ export interface BookFetchParams {
   resource?: ScriptureResourceType;
   reference?: ScriptureReferenceType;
 }
+
+export interface StartEdit {
+  (): Promise<string>;
+}
+
+export type LanguageType = {
+  languageId: string, // short language code such as "en"
+  direction: string, // language direction "ltr" or "rtl"
+};
+
+export interface AlignerDataType {
+  wordBank?: Object[], // list of wordbank word (target language words) in format needed by word-aligner-rcl
+  alignments?: Object[], // list of word alignments in format needed by word-aligner-rcl
+  errorMessage?: string, // if present then we don't have necessary data to do alignment
+}
+
+export interface AlignerResultsDataType {
+  targetWords?: Object[], // list of target language words in format used in word-aligner-rcl
+  verseAlignments?: Object[], // list of word alignments in format used by word-aligner-rcl
+}
+
+export interface ScriptureALignmentEditProps {
+  // index to use for book (e.g. `01` for `GEN`)
+  bookIndex: string,
+  // current verse selected from initialVerseObjects[]
+  currentIndex: number,
+  // reference for verse selected for alignment
+  currentVerseRef: ScriptureReferenceType,
+  // if true then editing is allowed
+  enableEdit: boolean,
+  // if true then alignment is allowed
+  enableAlignment: boolean,
+  // configuration to use for http communication
+  httpConfig: ServerConfigType,
+  // array of the initial verseObjects for current reference
+  initialVerseObjects: VerseObjectsType,
+  // initial text for verse
+  initialVerseText: string,
+  // flag that we are working on NT book
+  isNewTestament: boolean,
+  // user name of logged in user
+  loggedInUser: string,
+  // owner to use when fetching original language resources
+  originalLanguageOwner: string,
+  // url for the original language repo
+  originalRepoUrl: string,
+  // original scripture bookObjects for current book
+  originalScriptureBookObjects: BookObjectsType,
+  /** current reference **/
+  reference: ScriptureReferenceType;
+  // details about the current scripture loaded
+  scriptureConfig: ScriptureConfig,
+  // settings to be used for scripture
+  scriptureSettings: { },
+  // callback to save current verse edit and alignment changes
+  setSavedChanges: Function,
+  // source language code such as `hbo`
+  sourceLanguage: string,
+  // callback to create a user branch for saving edit data
+  startEditBranch: StartEdit,
+  // current target language
+  targetLanguage: LanguageType,
+  // title to show in alignment
+  title: string,
+  // branch name currently being used (e.g. `master` or user branch)
+  workingResourceBranch: string,
+}
