@@ -2,8 +2,10 @@ import * as React from 'react'
 import useDeepCompareEffect from 'use-deep-compare-effect'
 import { VerseObjects } from 'scripture-resources-rcl'
 import { UsfmFileConversionHelpers } from 'word-aligner-rcl'
+import { CircularProgress } from 'translation-helps-rcl'
 import { BookObjectsType, ScriptureReferenceType } from '../../types'
 import {
+  delay,
   getResourceMessage,
   LOADING_RESOURCE,
   verseObjectsHaveWords,
@@ -52,6 +54,8 @@ interface Props {
   scriptureAlignmentEditConfig: ScriptureALignmentEditProps,
   /** server */
   server: string|undefined;
+  /** callback to flag that we are editing */
+  setEditVerse: Function;
   /** callback to flag unsaved status */
   setSavedChanges: Function;
   // callback for change in word alignment status
@@ -102,6 +106,7 @@ function ScripturePane({
   resourceLink,
   saving,
   scriptureAlignmentEditConfig,
+  setEditVerse,
   setSavedChanges,
   setWordAlignerStatus,
   server,
@@ -111,10 +116,12 @@ function ScripturePane({
   const [state, setState_] = React.useState({
     doingAlignment: false,
     newText: null,
+    processingEdit: false,
   })
   const {
     doingAlignment,
     newText,
+    processingEdit, // true when we are processing edit text after onBlur
   } = state
 
   function setState(newState) {
@@ -177,10 +184,14 @@ function ScripturePane({
 
   React.useEffect(() => {
     if (isVerseSelectedForAlignment && !alignerData && !doingAlignment) {
-      console.log(`ScripturePane - verse selected for alignment`, reference)
-      handleAlignmentClick()
+      if (!editing && !processingEdit) {
+        console.log(`ScripturePane - verse selected for alignment`, reference)
+        handleAlignmentClick()
+      } else {
+        console.log(`ScripturePane - verse not ready for alignment`, {editing, processingEdit})
+      }
     }
-  }, [isVerseSelectedForAlignment, alignerData, doingAlignment])
+  }, [isVerseSelectedForAlignment, alignerData, doingAlignment, editing, processingEdit])
 
   // const verseChanged = React.useMemo(() => {
   //   return (newVerseText !== newText)
@@ -231,17 +242,22 @@ function ScripturePane({
     setState({ newText: null })
   }, [{ reference, initialVerseObjects }])
 
-  function onTextChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
-    const newVerseText = event?.target?.value
-    const changed = newVerseText !== initialVerseText
-    // console.log(`SP.onTextChange`, { changed, newText: newVerseText, initialVerseText })
-    setVerseChanged(changed, newVerseText, initialVerseText)
-    setState({ newText: newVerseText })
+  function onBlur(event: React.ChangeEvent<HTMLTextAreaElement>) {
+    const newVerseText = event?.target?.value // get new text
+    setState({ newText: newVerseText, processingEdit: true })
+    delay(500).then(() => {
+      setEditing(false, newVerseText) // process the latest edit after states update
+    })
   }
 
-  function onBlur(event: React.ChangeEvent<HTMLTextAreaElement>) {
-    setEditing(false, newText)
-  }
+  React.useEffect(() => { // monitor for edit state chagnes and call back status to scripture card
+    if (!editing && processingEdit) {
+      setState({ processingEdit: false })
+    }
+    const _editing = editing || processingEdit
+    const verseRef = `${reference.chapter}:${reference.verse}`
+    setEditVerse && setEditVerse(verseRef, _editing)
+  }, [editing, processingEdit])
 
   const verseObjects = currentVerseObjects || initialVerseObjects || []
   const noWords = React.useMemo(() => !verseObjectsHaveWords(verseObjects), [currentVerseObjects, initialVerseObjects])
@@ -251,12 +267,16 @@ function ScripturePane({
    * @param {boolean} editing - if true show edit mode
    * @param {boolean} enableEdit - if true then edit is enabled
    * @param {boolean} noWords - if true then there are no displayable words
+   * @param {boolean} processingEdit - true if edit is being processes
    */
-  function verseContent(editing, enableEdit, noWords) {
+  function verseContent(editing, enableEdit, noWords, processingEdit) {
+    if (processingEdit) { // put up spinner while processing the edit
+      return <CircularProgress size={40}/>
+    }
+
     if (editing) {
       return <textarea
         defaultValue={newVerseText || initialVerseText}
-        onChange={onTextChange}
         onBlur={onBlur}
         style={textAreaStyle}
         autoFocus
@@ -292,7 +312,7 @@ function ScripturePane({
             setEditing && setEditing(true)
           }}
           >
-            {verseContent(editing, enableEdit, noWords)}
+            {verseContent(editing, enableEdit, noWords, processingEdit)}
           </span>
         </Content>
       }

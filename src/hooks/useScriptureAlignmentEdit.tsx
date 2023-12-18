@@ -506,6 +506,7 @@ export function useScriptureAlignmentEdit({
       if (editing_ !== editing) {
         _newVerseText = _newVerseText || initialVerseText
         let _updatedVerseObjects = null
+        const verseTextChangedFromLastEdit = _newVerseText !== newVerseText
         const verseTextChanged = _newVerseText !== initialVerseText
         const newState = {
           editing: editing_,
@@ -513,13 +514,20 @@ export function useScriptureAlignmentEdit({
           verseTextChanged,
         }
 
-        if (!editing_ && verseTextChanged) { // if done editing and verse has changed, update the verse objects
-          // do migration of alignments to match latest original language
-          _updatedVerseObjects = migrateAlignments('setEditing()', updatedVerseObjects || currentVerseObjects)
-          // apply alignments from updated verseObjects to edited verse text
-          const { targetVerseObjects } = AlignmentHelpers.updateAlignmentsToTargetVerse(_updatedVerseObjects, _newVerseText)
-          _updatedVerseObjects = targetVerseObjects // update verseObjects to match current text
-          newState['updatedVerseObjects'] = _updatedVerseObjects
+        if (!editing_) { // if done editing and verse has changed, update the verse objects
+          if (verseTextChanged) { // if verse has changed from initial, update the verse objects
+            // do migration of alignments to match latest original language
+            _updatedVerseObjects = migrateAlignments('setEditing()', updatedVerseObjects || currentVerseObjects)
+            // apply alignments from updated verseObjects to edited verse text
+            const { targetVerseObjects } = AlignmentHelpers.updateAlignmentsToTargetVerse(_updatedVerseObjects, _newVerseText)
+            _updatedVerseObjects = targetVerseObjects // update verseObjects to match current text
+            newState['updatedVerseObjects'] = _updatedVerseObjects
+          } else if (verseTextChangedFromLastEdit) { // if verse changed from last time (went back to initial text), update the verse objects without migration
+            _updatedVerseObjects = updatedVerseObjects || currentVerseObjects
+            const { targetVerseObjects } = AlignmentHelpers.updateAlignmentsToTargetVerse(_updatedVerseObjects, _newVerseText)
+            _updatedVerseObjects = targetVerseObjects // update verseObjects to match current text
+            newState['updatedVerseObjects'] = _updatedVerseObjects
+          }
         }
 
         setState(newState)
