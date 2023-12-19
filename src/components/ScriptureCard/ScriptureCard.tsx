@@ -457,7 +457,7 @@ export default function ScriptureCard({
     }
   }
 
-  const disableChangeButtons = editVerse // we don't want to allow clicking on change buttons while editing
+  const disableChangeButtons = !!editVerse // we don't want to allow clicking on change buttons while editing
 
   function onMenuClose() {
     // console.log(`onMenuClose()`)
