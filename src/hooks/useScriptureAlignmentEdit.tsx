@@ -517,7 +517,7 @@ export function useScriptureAlignmentEdit({
         if (!editing_ && verseTextChangedFromLastEdit) { // if done editing and verse has changed, update the verse objects
           _updatedVerseObjects = updatedVerseObjects || currentVerseObjects
 
-          if (verseTextChangedFromOrig) { // if verse has changed from initial, update the verse objects
+          if (verseTextChangedFromOrig) { // if verse has changed from initial, migrate alignments in the verse objects
             // do migration of alignments to match latest original language
             _updatedVerseObjects = migrateAlignments('setEditing()', _updatedVerseObjects)
           }

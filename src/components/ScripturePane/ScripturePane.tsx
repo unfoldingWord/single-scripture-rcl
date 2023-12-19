@@ -250,7 +250,7 @@ function ScripturePane({
     })
   }
 
-  React.useEffect(() => { // monitor for edit state chagnes and call back status to scripture card
+  React.useEffect(() => { // monitor for edit state changes and call back with edit status to scripture card
     if (!editing && processingEdit) {
       setState({ processingEdit: false })
     }
@@ -267,7 +267,7 @@ function ScripturePane({
    * @param {boolean} editing - if true show edit mode
    * @param {boolean} enableEdit - if true then edit is enabled
    * @param {boolean} noWords - if true then there are no displayable words
-   * @param {boolean} processingEdit - true if edit is being processes
+   * @param {boolean} processingEdit - true if edit is being processed
    */
   function verseContent(editing, enableEdit, noWords, processingEdit) {
     if (processingEdit) { // put up spinner while processing the edit

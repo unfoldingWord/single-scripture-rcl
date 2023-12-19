@@ -450,7 +450,7 @@ export default function ScriptureCard({
    * @param {boolean} editing - true when editing
    */
   function setEditVerse(verseRef, editing) {
-    if (editing && (verseRef !== editVerse)) { // if we need to set flag that we are editing this verse
+    if (editing && (verseRef !== editVerse)) { // check if we need to set flag that we are editing this verse
       setState({ editVerse: verseRef })
     } else if (!editing && (verseRef === editVerse)) { // clear edit flag if it is for current edit verse
       setState({ editVerse: null })
@@ -1140,7 +1140,7 @@ export default function ScriptureCard({
   const handleAlignButtonClick = () => {
     if (versesForRef?.length > 1) { // if there are multiple verses shown in card, need to prompt user for which verse to align
       setState({ showAlignmentPopup: true })
-    } else if (versesForRef?.length === 1) { // if only one verse is shown, then edit that verse
+    } else if (versesForRef?.length === 1) { // if only one verse is shown on card, then edit that verse
       setState({ verseSelectedForAlignment: versesForRef[0] })
     }
   }
