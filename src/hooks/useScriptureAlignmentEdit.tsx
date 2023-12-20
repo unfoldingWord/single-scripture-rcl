@@ -522,7 +522,7 @@ export function useScriptureAlignmentEdit({
             _updatedVerseObjects = migrateAlignments('setEditing()', _updatedVerseObjects)
           }
 
-          // apply alignments from updated verseObjects to edited verse text
+          // apply alignments from updated verseObjects to edited verse text and generate new verse objects
           const { targetVerseObjects } = AlignmentHelpers.updateAlignmentsToTargetVerse(_updatedVerseObjects, _newVerseText)
           _updatedVerseObjects = targetVerseObjects // update verseObjects to match current text
           newState['updatedVerseObjects'] = _updatedVerseObjects

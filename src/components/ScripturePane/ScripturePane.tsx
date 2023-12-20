@@ -183,27 +183,15 @@ function ScripturePane({
   } = _scriptureAlignmentEdit
 
   React.useEffect(() => {
-    if (isVerseSelectedForAlignment && !alignerData && !doingAlignment) {
-      if (!editing && !processingEdit) {
+    if (isVerseSelectedForAlignment && !alignerData && !doingAlignment) { // check if edit for this verse is selected and not already doing alignment
+      if (!editing && !processingEdit) { // make sure edit completed
         console.log(`ScripturePane - verse selected for alignment`, reference)
         handleAlignmentClick()
       } else {
-        console.log(`ScripturePane - verse not ready for alignment`, {editing, processingEdit})
+        console.log(`ScripturePane - still editing verse, not ready for alignment`, {editing, processingEdit})
       }
     }
   }, [isVerseSelectedForAlignment, alignerData, doingAlignment, editing, processingEdit])
-
-  // const verseChanged = React.useMemo(() => {
-  //   return (newVerseText !== newText)
-  // }, [newVerseText, newText])
-  //
-  // React.useEffect(() => {
-  //   if (newVerseText !== newText) {
-  //     console.log(`ScripturePane - new verse text diverged`, { newVerseText, newText })
-  //   } else {
-  //     console.log(`ScripturePane - new verse text converged`, { newVerseText })
-  //   }
-  // }, [verseChanged])
 
   React.useEffect(() => {
     updateVersesAlignmentStatus && updateVersesAlignmentStatus(reference, aligned)
@@ -245,14 +233,14 @@ function ScripturePane({
   function onBlur(event: React.ChangeEvent<HTMLTextAreaElement>) {
     const newVerseText = event?.target?.value // get new text
     setState({ newText: newVerseText, processingEdit: true })
-    delay(500).then(() => { // allow state to update
+    delay(500).then(() => { // allow state to update before processing new text
       setEditing(false, newVerseText).then(() => { // process the latest edit
         setState({processingEdit: false})
       })
     })
   }
 
-  React.useEffect(() => { // monitor for edit state changes and call back with edit status to scripture card
+  React.useEffect(() => { // monitor for edit state changes and call back to scripture card with edit status
     const _editing = editing || processingEdit
     const verseRef = `${reference.chapter}:${reference.verse}`
     setEditVerse && setEditVerse(verseRef, _editing)
@@ -266,7 +254,7 @@ function ScripturePane({
    * @param {boolean} editing - if true show edit mode
    * @param {boolean} enableEdit - if true then edit is enabled
    * @param {boolean} noWords - if true then there are no displayable words
-   * @param {boolean} processingEdit - true if edit is being processed
+   * @param {boolean} processingEdit - if true then edit is being processed
    */
   function verseContent(editing, enableEdit, noWords, processingEdit) {
     if (processingEdit) { // put up spinner while processing the edit
