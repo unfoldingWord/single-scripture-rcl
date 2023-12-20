@@ -506,17 +506,23 @@ export function useScriptureAlignmentEdit({
       if (editing_ !== editing) {
         _newVerseText = _newVerseText || initialVerseText
         let _updatedVerseObjects = null
-        const verseTextChanged = _newVerseText !== initialVerseText
+        const verseTextChangedFromLastEdit = _newVerseText !== newVerseText
+        const verseTextChangedFromInitial = _newVerseText !== initialVerseText
         const newState = {
           editing: editing_,
           newVerseText: _newVerseText,
-          verseTextChanged,
+          verseTextChanged: verseTextChangedFromInitial,
         }
 
-        if (!editing_ && verseTextChanged) { // if done editing and verse has changed, update the verse objects
-          // do migration of alignments to match latest original language
-          _updatedVerseObjects = migrateAlignments('setEditing()', updatedVerseObjects || currentVerseObjects)
-          // apply alignments from updated verseObjects to edited verse text
+        if (!editing_ && verseTextChangedFromLastEdit) { // if done editing and verse has changed, update the verse objects
+          _updatedVerseObjects = updatedVerseObjects || currentVerseObjects
+
+          if (verseTextChangedFromInitial) { // if verse has changed from initial, migrate alignments in the verse objects
+            // do migration of alignments to match latest original language
+            _updatedVerseObjects = migrateAlignments('setEditing()', _updatedVerseObjects)
+          }
+
+          // apply alignments from updated verseObjects to edited verse text and generate new verse objects
           const { targetVerseObjects } = AlignmentHelpers.updateAlignmentsToTargetVerse(_updatedVerseObjects, _newVerseText)
           _updatedVerseObjects = targetVerseObjects // update verseObjects to match current text
           newState['updatedVerseObjects'] = _updatedVerseObjects
@@ -524,7 +530,7 @@ export function useScriptureAlignmentEdit({
 
         setState(newState)
         const _alignmentsChanged = (_updatedVerseObjects && !isEqual(initialVerseObjects, _updatedVerseObjects))
-        callSetSavedState(verseTextChanged || _alignmentsChanged, newState )
+        callSetSavedState(verseTextChangedFromInitial || _alignmentsChanged, newState )
       }
     }
   }

@@ -172,6 +172,7 @@ export default function ScriptureCard({
     checkForEditBranch: 0,
     currentReference: null,
     editBranchReady: false,
+    editVerse: null,
     haveUnsavedChanges: false,
     lastSelectedQuote: null,
     readyForFetch: false,
@@ -196,6 +197,7 @@ export default function ScriptureCard({
     checkForEditBranch,
     currentReference,
     editBranchReady,
+    editVerse, // keep track of verse being editted
     haveUnsavedChanges,
     lastSelectedQuote,
     readyForFetch,
@@ -394,7 +396,7 @@ export default function ScriptureCard({
   React.useEffect(() => {
     if (!isEqual(reference, currentReference)) {
       // console.log(`ScriptureCard reference changed`, reference)
-      setState({ currentReference: reference })
+      setState({ currentReference: reference, editVerse: null })
     }
   }, [reference])
 
@@ -441,6 +443,21 @@ export default function ScriptureCard({
 
     return <ScriptureSelector {...scriptureSelectionConfig} style={style} errorMessage={urlError} />
   }
+
+  /**
+   * set edit state for specific verse
+   * @param {string} verseRef - reference of verse being edited or finished edit
+   * @param {boolean} editing - true when editing
+   */
+  function setEditVerse(verseRef, editing) {
+    if (editing && (verseRef !== editVerse)) { // check if we need to set flag that we are editing this verse
+      setState({ editVerse: verseRef })
+    } else if (!editing && (verseRef === editVerse)) { // clear edit flag if it is for current edit verse
+      setState({ editVerse: null })
+    }
+  }
+
+  const disableChangeButtons = !!editVerse // we don't want to allow clicking on change buttons while editing
 
   function onMenuClose() {
     // console.log(`onMenuClose()`)
@@ -1111,6 +1128,7 @@ export default function ScriptureCard({
         saving={startSave}
         // @ts-ignore
         scriptureAlignmentEditConfig={_scriptureAlignmentEditConfig}
+        setEditVerse={setEditVerse}
         setWordAlignerStatus={setWordAlignerStatus}
         server={server}
         translate={translate}
@@ -1120,9 +1138,9 @@ export default function ScriptureCard({
   })
 
   const handleAlignButtonClick = () => {
-    if (versesForRef?.length > 1) {
+    if (versesForRef?.length > 1) { // if there are multiple verses shown in card, need to prompt user for which verse to align
       setState({ showAlignmentPopup: true })
-    } else if (versesForRef?.length === 1) {
+    } else if (versesForRef?.length === 1) { // if only one verse is shown on card, then edit that verse
       setState({ verseSelectedForAlignment: versesForRef[0] })
     }
   }
@@ -1144,7 +1162,8 @@ export default function ScriptureCard({
       alignIcon = <RxLink2 id={`valid_icon_${resourceId}`} color='#BBB' />
       alignButtonText = 'Alignment is Valid'
     } else {
-      alignIcon = <RxLinkBreak2 id={`invalid_alignment_icon_${resourceId}`} color='#000' />
+      const color = disableChangeButtons ? '#BBB' : '#000' // gray out button if disabled
+      alignIcon = <RxLinkBreak2 id={`invalid_alignment_icon_${resourceId}`} color={color} />
       alignButtonText = 'Alignment is Invalid'
     }
 
@@ -1153,7 +1172,7 @@ export default function ScriptureCard({
         <IconButton
           id={`alignment_icon_${resourceId}`}
           key='checking-button'
-          onClick={handleAlignButtonClick}
+          onClick={disableChangeButtons ? null : handleAlignButtonClick}
           title={alignButtonText}
           aria-label={alignButtonText}
           style={{ cursor: 'pointer' }}
@@ -1207,7 +1226,7 @@ export default function ScriptureCard({
         onMenuClose={onMenuClose}
         onMinimize={onMinimize ? () => onMinimize(id, scriptureTitle) : null}
         editable={enableEdit || enableAlignment}
-        saved={startSave || !haveUnsavedChanges}
+        saved={disableChangeButtons || startSave || !haveUnsavedChanges} // gray out save button if disabled, if saving, or if no unsaved changes
         onSaveEdit={() => setState({ saveClicked: true })}
         onRenderToolbar={onRenderToolbar}
       >
