@@ -507,17 +507,17 @@ export function useScriptureAlignmentEdit({
         _newVerseText = _newVerseText || initialVerseText
         let _updatedVerseObjects = null
         const verseTextChangedFromLastEdit = _newVerseText !== newVerseText
-        const verseTextChangedFromOrig = _newVerseText !== initialVerseText
+        const verseTextChangedFromInitial = _newVerseText !== initialVerseText
         const newState = {
           editing: editing_,
           newVerseText: _newVerseText,
-          verseTextChanged: verseTextChangedFromOrig,
+          verseTextChanged: verseTextChangedFromInitial,
         }
 
         if (!editing_ && verseTextChangedFromLastEdit) { // if done editing and verse has changed, update the verse objects
           _updatedVerseObjects = updatedVerseObjects || currentVerseObjects
 
-          if (verseTextChangedFromOrig) { // if verse has changed from initial, migrate alignments in the verse objects
+          if (verseTextChangedFromInitial) { // if verse has changed from initial, migrate alignments in the verse objects
             // do migration of alignments to match latest original language
             _updatedVerseObjects = migrateAlignments('setEditing()', _updatedVerseObjects)
           }
@@ -530,7 +530,7 @@ export function useScriptureAlignmentEdit({
 
         setState(newState)
         const _alignmentsChanged = (_updatedVerseObjects && !isEqual(initialVerseObjects, _updatedVerseObjects))
-        callSetSavedState(verseTextChangedFromOrig || _alignmentsChanged, newState )
+        callSetSavedState(verseTextChangedFromInitial || _alignmentsChanged, newState )
       }
     }
   }
