@@ -182,9 +182,9 @@ function ScripturePane({
     },
   } = _scriptureAlignmentEdit
 
-  React.useEffect(() => {
+  React.useEffect(() => { // monitor if we need to start alignment
     if (isVerseSelectedForAlignment && !alignerData && !doingAlignment) { // check if edit for this verse is selected and not already doing alignment
-      if (!editing && !processingEdit) { // make sure edit completed
+      if (!editing && !processingEdit) { // make sure not still editing or processing edit
         console.log(`ScripturePane - verse selected for alignment`, reference)
         handleAlignmentClick()
       } else {
@@ -230,12 +230,16 @@ function ScripturePane({
     setState({ newText: null })
   }, [{ reference, initialVerseObjects }])
 
+  /**
+   * when focus is changed from text editing, get final text and do processing of final text
+   * @param {React.ChangeEvent<HTMLTextAreaElement>} event - DOM event info
+   */
   function onBlur(event: React.ChangeEvent<HTMLTextAreaElement>) {
     const newVerseText = event?.target?.value // get new text
-    setState({ newText: newVerseText, processingEdit: true })
+    setState({ newText: newVerseText, processingEdit: true }) // show spinner while processing edit text
     delay(500).then(() => { // allow state to update before processing new text
-      setEditing(false, newVerseText).then(() => { // process the latest edit
-        setState({processingEdit: false})
+      setEditing(false, newVerseText).then(() => { // process the latest edit text
+        setState({processingEdit: false}) // now done, remove spinner
       })
     })
   }
