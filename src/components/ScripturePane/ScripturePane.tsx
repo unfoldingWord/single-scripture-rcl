@@ -245,15 +245,14 @@ function ScripturePane({
   function onBlur(event: React.ChangeEvent<HTMLTextAreaElement>) {
     const newVerseText = event?.target?.value // get new text
     setState({ newText: newVerseText, processingEdit: true })
-    delay(500).then(() => {
-      setEditing(false, newVerseText) // process the latest edit after states update
+    delay(500).then(() => { // allow state to update
+      setEditing(false, newVerseText).then(() => { // process the latest edit
+        setState({processingEdit: false})
+      })
     })
   }
 
   React.useEffect(() => { // monitor for edit state changes and call back with edit status to scripture card
-    if (!editing && processingEdit) {
-      setState({ processingEdit: false })
-    }
     const _editing = editing || processingEdit
     const verseRef = `${reference.chapter}:${reference.verse}`
     setEditVerse && setEditVerse(verseRef, _editing)
