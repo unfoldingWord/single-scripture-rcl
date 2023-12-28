@@ -492,6 +492,7 @@ export default function ScriptureCard({
   const contentStyle = React.useMemo(() => ({
     fontFamily: 'Noto Sans',
     fontSize: `${scaledFontSize}%`,
+    ...(isHebrew ? {lineHeight: '2.0em'} : {})
   }), [scaledFontSize])
 
   const scriptureLabel = <Title>{scriptureTitle}</Title>
