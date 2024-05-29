@@ -1,11 +1,23 @@
 /// <reference types="jest" />
 import path from 'path'
 import fs from 'fs-extra'
-import { escapeJsonStringChars, getPatch } from '../files'
+import {
+  applyPatchToString,
+  escapeJsonStringChars,
+  getPatch,
+} from '../files'
+
+////////////////////////////////
+// to apply a patech file from command line do: `patch test.txt < patch.txt`
+////////////////////////////////
 
 const fileName = '57-TIT.usfm'
 const filePath = path.join(__dirname, './fixture', fileName)
+const diffPath = path.join(__dirname, './fixture/diff')
 const titUsfm = fs.readFileSync(filePath, 'utf-8')
+const initialUSFM = getDiffFile('initialUSFM.txt')
+const finalUSFM = getDiffFile('finalUSFM.txt')
+const patch = getDiffFile('patch.txt')
 
 describe('escapeJsonStringChars', () => {
   it('should escape invalid characters', () => {
@@ -50,4 +62,37 @@ describe('getPatch', () => {
     console.log(diffResult)
     expect(diffResult).toMatchSnapshot()
   })
+
+  it('generate patch for USFM should succeed', () => {
+    // given
+    const expectedDiff = patch
+
+    // when
+    const diffResult = getPatch('32-JON.usfm', initialUSFM, finalUSFM, false)
+
+    // then
+    expect(diffResult).toEqual(expectedDiff)
+  })
 })
+
+describe('applyPatch', () => {
+  it('apply patch for USFM should succeed', () => {
+    // given
+    const expectedFinal = finalUSFM
+
+    // when
+    const newData = applyPatchToString(initialUSFM, patch)
+
+    // then
+    expect(newData).toEqual(expectedFinal)
+  })
+})
+
+////////////////////////////////
+// helpers
+////////////////////////////////
+
+function getDiffFile(filename) {
+  const data = fs.readFileSync(path.join(diffPath, filename), 'utf-8')
+  return data
+}
