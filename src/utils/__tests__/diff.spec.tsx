@@ -8,7 +8,9 @@ import {
 } from '../files'
 
 ////////////////////////////////
-// to apply a patech file from command line do: `patch test.txt < patch.txt`
+// to apply a patch file from command line do: `patch test.txt < patch.txt`
+//
+// to create a diff file from command line do `diff -U 4 initialUSFM.txt finalUSFM.txt > generated.patch`
 ////////////////////////////////
 
 const fileName = '57-TIT.usfm'
