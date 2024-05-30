@@ -92,8 +92,16 @@ export interface ScriptureALignmentEditProps {
  */
 function isUsfmAligned(targetVerseUSFM:string, originalVerseObjects:VerseObjectsType):boolean {
   originalVerseObjects = originalVerseObjects?.length ? originalVerseObjects : null // make sure not passing empty Array
-  const { alignments, wordBank } = AlignmentHelpers.extractAlignmentsFromTargetVerse(targetVerseUSFM, originalVerseObjects)
-  return AlignmentHelpers.areAlgnmentsComplete(wordBank, alignments)
+
+  if ( targetVerseUSFM && originalVerseObjects) {
+    const {
+      alignments,
+      wordBank,
+    } = AlignmentHelpers.extractAlignmentsFromTargetVerse(targetVerseUSFM, originalVerseObjects)
+    return AlignmentHelpers.areAlgnmentsComplete(wordBank, alignments)
+  }
+
+  return null
 }
 
 /**
@@ -454,6 +462,11 @@ export function useScriptureAlignmentEdit({
     const currentVerseObjects_ = getCurrentVerseObjects()
     const targetVerseText = newVerseText || UsfmFileConversionHelpers.convertVerseDataToUSFM(currentVerseObjects_)
     const verseUsfm = AlignmentHelpers.addAlignmentsToVerseUSFM(_newAlignments.targetWords, _newAlignments.verseAlignments, targetVerseText)
+
+    if (!verseUsfm) {
+      console.error(`updateVerseWithNewAlignments() - error merging alignments`)
+    }
+
     const alignedVerseObjects = usfmHelpers.usfmVerseToJson(verseUsfm)
     return alignedVerseObjects
   }

@@ -657,6 +657,13 @@ export default function ScriptureCard({
       return true
     }
 
+    function logChanged(comment, initial, final, diff, sha) {
+      console.error(`${comment} - sha:`, sha)
+      console.error(`initial`, initial)
+      console.error(`final`, final)
+      console.error(`diff`, diff)
+    }
+
     const _saveEdit = async () => { // begin uploading new USFM
       console.info(`saveChangesToCloud() - Using sha: ${sha}`)
       let uploadFunction = onSaveEdit
@@ -667,6 +674,7 @@ export default function ScriptureCard({
       let error = success ? null : 'saving changed scripture failed'
 
       if (!success) { // if save failed, attempt a retry
+        logChanged('saveChangesToCloud() - saving changed scripture failed, sent', saveFullBibleContent?.initial, saveFullBibleContent?.new, saveContent, sha)
         console.error('saveChangesToCloud() - saving changed scripture failed, retrying')
         await delay(500) // since we had an error, wait for data to update on server before getting the latest
         // @ts-ignore
@@ -694,6 +702,7 @@ export default function ScriptureCard({
 
             success = await uploadFunction(userEditBranchName, _saveContent, fileSha) // push change to server
             if (!success) {
+              logChanged('saveChangesToCloud() - saving changed scripture failed on second attempt, sent', savedBibleUsfm, editedBibleUsfm, _saveContent, fileSha)
               error = 'saving changed scripture failed on second attempt'
             } else {
               console.log('saveChangesToCloud() - save successful on second attempt')

@@ -1,4 +1,4 @@
-import { createPatch } from 'diff'
+import { applyPatch, createPatch } from 'diff'
 
 /**
  * replace any characters that are not compatible with a json string content
@@ -29,3 +29,14 @@ export function getPatch(fileName, originalFileContents, editedFileContents, jso
   }
   return diffResult
 }
+
+/**
+ *
+ * @param {string} originalFileContents - original file contents
+ * @return {string} - updated file contents
+ */
+export function applyPatchToString(originalText, diff) {
+  let newContents = applyPatch(originalText, diff)
+  return newContents
+}
+
