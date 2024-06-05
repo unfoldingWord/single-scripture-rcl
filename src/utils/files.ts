@@ -19,10 +19,11 @@ export function escapeJsonStringChars(diffFile) {
  * @param {string} originalFileContents - original file contents
  * @param {string} editedFileContents - new file contents
  * @param {boolean} jsonEscape - if true then we escape characters to fit in json string contents
+ * @param {number} contextLines - number of context lines to include in patch
  * @return {string} - differences between files
  */
-export function getPatch(fileName, originalFileContents, editedFileContents, jsonEscape = false) {
-  let diffResult = createPatch(fileName, originalFileContents, editedFileContents)
+export function getPatch(fileName, originalFileContents, editedFileContents, jsonEscape = false, contextLines = 4) {
+  let diffResult = createPatch(fileName, originalFileContents, editedFileContents, undefined, undefined, { context: contextLines })
 
   if (jsonEscape) {
     diffResult = escapeJsonStringChars(diffResult)
