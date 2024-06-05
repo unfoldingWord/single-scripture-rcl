@@ -170,6 +170,7 @@ export default function ScriptureCard({
   }
   const [state, setState_] = React.useState({
     checkForEditBranch: 0,
+    contextLines: 4,
     currentReference: null,
     editBranchReady: false,
     editVerse: null,
@@ -195,6 +196,7 @@ export default function ScriptureCard({
   })
   const {
     checkForEditBranch,
+    contextLines,
     currentReference,
     editBranchReady,
     editVerse, // keep track of verse being editted
@@ -675,7 +677,7 @@ export default function ScriptureCard({
 
       if (!success) { // if save failed, attempt a retry
         logChanged('saveChangesToCloud() - saving changed scripture failed, sent', saveFullBibleContent?.initial, saveFullBibleContent?.new, saveContent, sha)
-        console.error('saveChangesToCloud() - saving changed scripture failed, retrying')
+        console.error(`saveChangesToCloud() - saving changed scripture failed, retrying - context lines are ${contextLines}`)
         await delay(500) // since we had an error, wait for data to update on server before getting the latest
         // @ts-ignore
         // fetch the latest book content, so we can tell if latest changes were saved and have the latest file sha
@@ -692,10 +694,13 @@ export default function ScriptureCard({
             console.log('saveChangesToCloud() - data was correctly uploaded, so nothing more to do')
             success = true
           } else {
+            let newContextLines = contextLines + 1
             if (saveDiffPatch) {
               await delay(100) // allow UI to update before running computationally expensive function
-              // regenerate the patch against the latest content
-              const diffPatch = getPatch(saveFullBibleContent?.filename, savedBibleUsfm, editedBibleUsfm, false)
+              // regenerate the patch against the latest content and add more lines of context
+              // TRICKY - we have noticed that DCS will fail the patch sometimes, but if we increase the context line count it will succeed, so we are increasing the context line count
+              console.log(`saveChangesToCloud() - context lines are now ${newContextLines}`)
+              const diffPatch = getPatch(saveFullBibleContent?.filename, savedBibleUsfm, editedBibleUsfm, false, newContextLines)
               _saveContent = diffPatch
               fileSha = results?.sha
             }
@@ -704,11 +709,18 @@ export default function ScriptureCard({
             if (!success) {
               logChanged('saveChangesToCloud() - saving changed scripture failed on second attempt, sent', savedBibleUsfm, editedBibleUsfm, _saveContent, fileSha)
               error = 'saving changed scripture failed on second attempt'
+              newContextLines++ // if failed increase the count for next attempt
             } else {
               console.log('saveChangesToCloud() - save successful on second attempt')
             }
+            if (newContextLines > 10) {
+              newContextLines = 4
+            }
+            setState({contextLines: newContextLines})
           }
         }
+      } else {
+        console.log(`saveChangesToCloud() - success with diff`, saveContent)
       }
 
       if (!error && success) { // if no error message and save was a success
@@ -893,7 +905,7 @@ export default function ScriptureCard({
                 setState({ saveClicked: false })
                 return
               }
-              const diffPatch = getPatch(filename, bibleUsfmInitial, bibleUsfmNew, false)
+              const diffPatch = getPatch(filename, bibleUsfmInitial, bibleUsfmNew, false, contextLines)
               saveDiffPatch = true
               _saveContent = diffPatch // replace whole book content with just patch data (much faster uploads)
               _saveFullBibleContent = {  // keep track of patch data in case we need to retry save
