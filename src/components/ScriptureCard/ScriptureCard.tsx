@@ -711,7 +711,7 @@ export default function ScriptureCard({
               error = 'saving changed scripture failed on second attempt'
               newContextLines++ // if failed increase the count for next attempt
             } else {
-              console.log('saveChangesToCloud() - save successful on second attempt')
+              console.log('saveChangesToCloud() - save successful on second with diff', saveContent)
             }
             if (newContextLines > 10) {
               newContextLines = 4
@@ -719,8 +719,6 @@ export default function ScriptureCard({
             setState({contextLines: newContextLines})
           }
         }
-      } else {
-        console.log(`saveChangesToCloud() - success with diff`, saveContent)
       }
 
       if (!error && success) { // if no error message and save was a success
