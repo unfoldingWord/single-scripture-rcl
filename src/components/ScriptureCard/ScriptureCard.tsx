@@ -676,8 +676,8 @@ export default function ScriptureCard({
       let error = success ? null : 'saving changed scripture failed'
 
       if (!success) { // if save failed, attempt a retry
-        logChanged('saveChangesToCloud() - saving changed scripture failed, sent', saveFullBibleContent?.initial, saveFullBibleContent?.new, saveContent, sha)
-        console.error(`saveChangesToCloud() - saving changed scripture failed, retrying - context lines are ${contextLines}`)
+        // logChanged('saveChangesToCloud() - saving changed scripture failed, sent', saveFullBibleContent?.initial, saveFullBibleContent?.new, saveContent, sha)
+        console.error(`saveChangesToCloud() - saving changed scripture failed, retrying - context lines are ${contextLines}, diff:\n`, saveContent)
         await delay(500) // since we had an error, wait for data to update on server before getting the latest
         // @ts-ignore
         // fetch the latest book content, so we can tell if latest changes were saved and have the latest file sha
