@@ -162,6 +162,7 @@ export default function ScriptureCard({
   useUserLocalStorage,
   updateMergeState,
 }) {
+  const saveInProgress = React.useRef(false); // Add ref to track save operation
   const bookId = reference_?.bookId || reference_?.projectId // older versions use projectId, so fall back to that
   const reference = {
     bookId,
@@ -623,7 +624,8 @@ export default function ScriptureCard({
   React.useEffect(() => { // when we get a save saveError
     if (saveError && isSaveError && !startSave) { // if error then show after save completes, since we may retry
       console.log(`save error`, saveError)
-      onResourceError && onResourceError(null, false, null, `Error saving ${languageId_}_${resourceId} ${saveError}`, true)
+      onResourceError && onResourceError(null, false, null, `Error saving ${languageId}_${cardResourceId} ${saveError}`, true)
+      saveInProgress.current = false; // Reset the flag on error
     }
   }, [saveError, isSaveError, startSave])
 
@@ -656,6 +658,7 @@ export default function ScriptureCard({
         setCardsSaving(prevCardsSaving => prevCardsSaving.filter(cardId => cardId !== cardResourceId))
         scriptureConfig?.reloadResource(sha, userEditBranchName)
       })
+      saveInProgress.current = false; // Reset the flag on success
       return true
     }
 
@@ -667,12 +670,19 @@ export default function ScriptureCard({
     }
 
     const _saveEdit = async () => { // begin uploading new USFM
+      if (saveInProgress.current) {
+        console.log('saveChangesToCloud() - Save already in progress, skipping duplicate call');
+        return;
+      }
+
+      saveInProgress.current = true;
       console.info(`saveChangesToCloud() - Using sha: ${sha}`)
       let uploadFunction = onSaveEdit
       if (saveDiffPatch) {
         uploadFunction = onSaveEditPatch // if we are sending up a diffpatch, we will use this method
       }
-      let success = await uploadFunction(userEditBranchName)// push change to server
+
+      let success = await uploadFunction(userEditBranchName).then(r => r).catch(() => false)// push change to server
       let error = success ? null : 'saving changed scripture failed'
 
       if (!success) { // if save failed, attempt a retry
@@ -728,6 +738,7 @@ export default function ScriptureCard({
       console.error(`saveChangesToCloud() - ${error || 'unknown save error'}`)
       setCardsSaving(prevCardsSaving => prevCardsSaving.filter(cardId => cardId !== cardResourceId))
       setState({startSave: false})
+      saveInProgress.current = false; // Reset the flag on failure
       return false
     }
 
@@ -742,6 +753,7 @@ export default function ScriptureCard({
         _saveEdit()
       }
     }
+
   }, [startSave, editBranchReady, sha])
 
   /**
