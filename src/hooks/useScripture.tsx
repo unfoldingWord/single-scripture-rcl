@@ -275,6 +275,7 @@ export function useScripture({ // hook for fetching scripture
 
       if (ignoreSha) {
         const fetchedShaMatchesIgnoreSha = ignoreSha === resourceState?.sha // we will reload if ignoreSha given and it matches current sha
+
         if ((fetchLink === resourceState?.resource?.resourceLink) && !fetchedShaMatchesIgnoreSha) { // see if we already fetched this
           console.log(`useScripture.fetchBook() - Already fetching resourceLink ${resourceState?.resource?.resourceLink} and ignoreSha=${ignoreSha}`, fetchParams)
           return
@@ -287,14 +288,7 @@ export function useScripture({ // hook for fetching scripture
         fetchCount: _fetchCount,
         fetched: false,
         ignoreSha,
-        resourceState: {
-          loadingResource: true,
-          // reset states before fetch
-          contentNotFoundError: false,
-          scriptureNotLoadedError: false,
-          manifestNotFoundError: false,
-          invalidManifestError: false,
-        },
+        resourceState: { loadingResource: true },
       })
 
       const response = await fetchBibleBookCore(fetchParams)
@@ -483,9 +477,11 @@ export function useScripture({ // hook for fetching scripture
 
     if (_bookObjects) {
       newVersesForRef = getVersesForRef(reference, _bookObjects, languageId)
+
       if (reference?.verse === 'front') { // special handling for front matter
         const verseData = newVersesForRef?.[0]?.verseData
         const initialVerseObjects = verseData?.verseObjects
+
         if (initialVerseObjects && !verseObjectsHaveWords(initialVerseObjects)) {
           for (const vo of initialVerseObjects) {
             if (vo['tag'] === 'd') { // check for descriptive title
