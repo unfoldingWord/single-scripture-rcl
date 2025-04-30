@@ -142,7 +142,7 @@ function allSpaces(text:string):boolean {
  * @param {string} newVerseText
  * @param {string} initialVerseText
  */
-function hasTextChangedSignificantly(newVerseText:string, initialVerseText:string):boolean {
+export function hasTextChangedSignificantly(newVerseText:string, initialVerseText:string):boolean {
   let changed = newVerseText !== initialVerseText
 
   if (changed && newVerseText) { // make sure it's significant
@@ -417,10 +417,9 @@ export function useScriptureAlignmentEdit({
   /**
    * callback for when user clicked on alignment button - will show if not already shown
    */
-  async function handleAlignmentClick() {
+  function handleAlignmentClick() {
     if (enableAlignment) {
       let _alignerData: AlignerDataType = null
-      await startEditBranch()
 
       if (!alignerData) { // if word aligner not shown
         console.log(`handleAlignmentClick - toggle ON alignment`)
