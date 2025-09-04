@@ -28,9 +28,11 @@ type LanguageType = {
 };
 
 interface AlignerDataType {
-    wordBank?: Object[], // list of wordbank word (target language words) in format needed by word-aligner-rcl
-    alignments?: Object[], // list of word alignments in format needed by word-aligner-rcl
-    errorMessage?: string, // if present then we don't have necessary data to do alignment
+  wordBank?: Object[], // list of wordbank word (target language words) in format needed by word-aligner-rcl
+  alignments?: Object[], // list of word alignments in format needed by word-aligner-rcl
+  errorMessage?: string, // if present then we don't have necessary data to do alignment
+  bibleUsfm?: string, // bible USFM with alignments
+  resourceLink?: string, // identifier for resource such as "unfoldingWord/en/ult/master/mat"
 }
 
 interface AlignerResultsDataType {
@@ -437,7 +439,17 @@ export function useScriptureAlignmentEdit({
           targetWords: wordBank,
           verseAlignments: alignments,
         } = AlignmentHelpers.parseUsfmToWordAlignerData(targetVerseUSFM, originalVerseUsfm)
-        _alignerData = { wordBank, alignments }
+        // @ts-ignore
+        const bibleUsfm = scriptureConfig?.bibleUsfm || ''
+        // @ts-ignore
+        const resourceLink = scriptureConfig?.resourceState?.resource?.resourceLink || alignerData?.scriptureConfig?.resourceLink || ''
+
+        _alignerData = {
+          wordBank,
+          alignments,
+          bibleUsfm,
+          resourceLink,
+        }
 
         if (!alignments?.length) {
           _alignerData.errorMessage = 'There are no words to align in the Original language'

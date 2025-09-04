@@ -359,7 +359,7 @@ export function useScripture({ // hook for fetching scripture
     }
 
     if (ignoreSha === sha) {
-      console.log(`useScripture.validateResponse() - the sha is the same as the ignore sha ${sha}`, { sha, url })
+      console.warn(`useScripture.validateResponse() - the sha is the same as the ignore sha ${sha}`, { sha, url })
       isSameBook = false
     }
 
