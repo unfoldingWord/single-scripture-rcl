@@ -274,7 +274,8 @@ function ScripturePane({
       />
     }
 
-    if ((noWords && !verseObjects?.length) && enableEdit) { // show a clickable message in the case that there is no text to click on
+    const noVerseContent = noWords && !verseObjects?.length; //TRICKY - just because there are no words doesn't mean there is not content, so also check for unaligned content
+    if (noVerseContent && enableEdit) { // show a clickable message in the case that there is no text to click on
       return <EmptyContent>
         Click to Edit
       </EmptyContent>
