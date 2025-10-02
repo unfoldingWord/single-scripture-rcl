@@ -215,15 +215,20 @@ export function useScripture({ // hook for fetching scripture
       console.log(`useScripture - readyForFetch true, initializing`)
       let resourceLink = readyForFetch && resourceLink_
 
-      if (!resourceLink_ && resource_) {
-        const ref_ = ref || branch
+      if (resource_) {
+        // check if resourceLink_ does not exist or in case ref has been updated
+        const createLink = !resourceLink_ || (ref && (ref !== branch))
 
-        resourceLink = getResourceLink({
-          owner,
-          languageId,
-          resourceId: resource_?.projectId,
-          ref: ref_,
-        })
+        if (createLink) {
+          const ref_ = ref || branch
+
+          resourceLink = getResourceLink({
+            owner,
+            languageId,
+            resourceId: resource_?.projectId,
+            ref: ref_,
+          })
+        }
       }
 
       const bookRef = { ...reference }
