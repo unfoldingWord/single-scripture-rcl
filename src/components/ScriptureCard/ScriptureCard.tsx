@@ -421,7 +421,8 @@ export default function ScriptureCard({
 
     if (error) { // if error was found do callback
       const resourceStatus = scriptureConfig?.resourceStatus
-      const resourceLink = getResourceLink(scriptureConfig)
+      // @ts-ignore
+      const resourceLink = getResourceLink(scriptureConfig?.resource)
       const message = getResourceMessage(resourceStatus, server, resourceLink, isNT_)
       const isAccessError = resourceStatus[MANIFEST_NOT_LOADED_ERROR]
       onResourceError && onResourceError(message, isAccessError, resourceStatus)
