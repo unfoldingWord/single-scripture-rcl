@@ -356,7 +356,7 @@ export default function ScriptureCard({
     if (cardResourceId && !usingOriginalBible) {
       updateMergeState && updateMergeState(
         cardResourceId,
-        scriptureConfig.title,
+        scriptureConfig.title || scriptureSettings.title,
         mergeFromMaster,
         mergeToMaster,
         callUpdateUserBranch,
