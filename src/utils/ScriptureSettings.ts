@@ -34,7 +34,8 @@ export const DISABLE_WORD_POPOVER = true // disable word popover for every scrip
 
 export function getResourceLink(scripture) {
   const ref = scripture.ref || scripture.branch
-  return `${scripture.owner}/${scripture.languageId}/${scripture.resourceId}/${ref}`
+  const resourceId = scripture.resourceId || scripture.projectId
+  return `${scripture.owner}/${scripture.languageId}/${resourceId}/${ref}`
 }
 
 export function parseResourceLink(resourceLink) {

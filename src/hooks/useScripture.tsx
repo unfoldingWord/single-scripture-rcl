@@ -310,15 +310,19 @@ export function useScripture({ // hook for fetching scripture
       }
 
       console.log(`useScripture.fetchBook() - LOADED bible book ${resource_?.projectId} resourceLink is now ${fetchParams?.resourceLink}}`, fetchParams)
+      const fetchedResources = {
+        ...response,
+        fetchCount: _fetchCount,
+        reference: fetchParams?.reference,
+      }
+      const resource = { manifest: fetchedResources?.manifest }
+
       setState(
         {
           resourceState: {
             loadingResource: false,
-            fetchedResources: {
-              ...response,
-              fetchCount: _fetchCount,
-              reference: fetchParams?.reference,
-            },
+            fetchedResources,
+            resource,
           },
         },
       )
