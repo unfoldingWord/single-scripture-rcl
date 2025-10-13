@@ -1,6 +1,7 @@
 // @ts-ignore
 import {
   useEffect,
+  useRef,
   useState,
 } from 'react'
 import { core } from 'scripture-resources-rcl'
@@ -13,12 +14,10 @@ import {
   MANIFEST_NOT_LOADED_ERROR,
   SCRIPTURE_NOT_LOADED_ERROR,
 } from 'translation-helps-rcl'
-import useDeepCompareEffect from 'use-deep-compare-effect'
 import { getVerses } from 'bible-reference-range'
 import { isEqual } from '@react-hookz/deep-equal'
 import { AlignmentHelpers, UsfmFileConversionHelpers } from 'word-aligner-rcl'
 import {
-  delay,
   fetchBibleBookCore,
   verseObjectsHaveWords,
 } from '../utils'
@@ -155,6 +154,8 @@ export function useScripture({ // hook for fetching scripture
     versesForRef: any[],
   }
 
+  const fetching = useRef(false)
+
   const [state, setState_] = useState({
     bibleUsfm: null,
     bookObjects: null,
@@ -252,6 +253,7 @@ export function useScripture({ // hook for fetching scripture
       }
 
       if (!isEqual(newFetchParams, fetchParams)) {
+        console.log(`useScripture - parameters changed`, { newFetchParams, fetchParams })
         setState({
           fetchParams: newFetchParams,
           fetched: false,
@@ -277,6 +279,11 @@ export function useScripture({ // hook for fetching scripture
    */
   async function fetchBook(fetchParams: BookFetchParams, ignoreSha = null) {
     try {
+      if (fetching.current) {
+        console.log(`useScripture.fetchBook() - already fetching`, fetchParams)
+        return
+      }
+
       const fetchLink = `${fetchParams?.resourceLink}/${fetchParams?.reference?.bookId}`
 
       if (ignoreSha) {
@@ -288,6 +295,7 @@ export function useScripture({ // hook for fetching scripture
         }
       }
 
+      fetching.current = true // block other fetches while running
       const _fetchCount = fetchCount + 1
       console.log(`useScripture.fetchBook() - FETCHING bible ${resource_?.projectId} resourceLink is now ${fetchParams?.resourceLink} and ignoreSha=${ignoreSha}`, fetchParams)
       setState({
@@ -307,23 +315,19 @@ export function useScripture({ // hook for fetching scripture
             response,
           },
         })
+        fetching.current = false
         return
       }
 
       console.log(`useScripture.fetchBook() - LOADED bible book ${resource_?.projectId} resourceLink is now ${fetchParams?.resourceLink}}`, fetchParams)
-      setState(
-        {
-          resourceState: {
-            loadingResource: false,
-            fetchedResources: {
-              ...response,
-              fetchCount: _fetchCount,
-              reference: fetchParams?.reference,
-            },
-            unprocessed: true,
-          },
-        },
-      )
+
+      const fetchedResources = {
+        ...response,
+        fetchCount: _fetchCount,
+        reference: fetchParams?.reference,
+      }
+
+      validateResponse(fetchedResources, fetchParams)
     } catch (e) {
       console.error(`useScripture.fetchBook() - hard error loading resource`, fetchParams, e )
       setState({
@@ -332,6 +336,7 @@ export function useScripture({ // hook for fetching scripture
           resource: null,
         },
       })
+      fetching.current = false
     }
   }
 
@@ -342,7 +347,7 @@ export function useScripture({ // hook for fetching scripture
   /**
    * make sure last fetch response is for current book/branch
    */
-  function validateResponse() {
+  function validateResponse(fetchedResources, fetchParams: BookFetchParams) {
     let isSameBook = false
     // @ts-ignore
     const expectedBookId = bookId || 'zzz'
@@ -396,18 +401,9 @@ export function useScripture({ // hook for fetching scripture
       }
 
       setState(newState)
+      fetching.current = false
     }
   }
-
-  useDeepCompareEffect(() => { // validate response to make sure from latest request
-    if (readyForFetch && fetchedResources) {
-      if (!fetched && fetchedResources?.fetchCount === fetchCount) {
-        delay(500).then(() => {
-          validateResponse()
-        })
-      }
-    }
-  }, [{ readyForFetch, fetchedResources }])
 
   const resource = resourceState?.resource
   const unprocessed = resourceState?.unprocessed
@@ -428,14 +424,6 @@ export function useScripture({ // hook for fetching scripture
     [ERROR_STATE]: error,
     [INITIALIZED_STATE]: initialized,
   }
-
-  useEffect(() => {
-    //TODO: remove
-    console.log(`useScripture - resourceStatus changed`, {
-      resourceStatus,
-      resourceState,
-    })
-  }, [resourceStatus, resourceState])
 
   useEffect(() => {
     if (!readyForFetch) {

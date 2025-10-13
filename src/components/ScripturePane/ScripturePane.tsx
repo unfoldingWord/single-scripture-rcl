@@ -138,9 +138,6 @@ function ScripturePane({
     resourceMessage = 'Pre-' + LOADING_RESOURCE
   } else {
     resourceMessage = getResourceMessage(resourceStatus, server, resourceLink, isNT)
-    if (resourceMessage) {
-      console.log(`ScripturePane - message error`, resourceStatus)
-    }
   }
 
   const {

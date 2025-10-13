@@ -531,6 +531,7 @@ export async function fetchBibleBookCore(fetchParams: BookFetchParams) {
  * @param {ScriptureReferenceType} reference
  */
 export async function fetchBibleBook(server: string, config: ServerConfigType, resource: ScriptureResourceType, reference: ScriptureReferenceType) {
+  console.log(`fetchBibleBook() - loading bible book`, resource)
   const ref_ = resource?.branch || resource?.ref
   const resourceLink = getResourceLink({
     ...resource,
@@ -550,5 +551,6 @@ export async function fetchBibleBook(server: string, config: ServerConfigType, r
   }
 
   const results = await fetchBibleBookCore(fetchParams)
+  console.log(`fetchBibleBook() - bible book load finished`, resource)
   return results
 }
