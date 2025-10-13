@@ -34,7 +34,8 @@ export const DISABLE_WORD_POPOVER = true // disable word popover for every scrip
 
 export function getResourceLink(scripture) {
   const ref = scripture.ref || scripture.branch
-  return `${scripture.owner}/${scripture.languageId}/${scripture.resourceId}/${ref}`
+  const resourceId = scripture.resourceId || scripture.projectId
+  return `${scripture.owner}/${scripture.languageId}/${resourceId}/${ref}`
 }
 
 export function parseResourceLink(resourceLink) {
@@ -88,7 +89,7 @@ export function getScriptureObject({
  */
 export function getVerseDataFromScripConfig(scriptureConfig, verseNum) {
   return scriptureConfig?.versesForRef?.find(
-    verseRef => verseRef.verse === verseNum
+    verseRef => verseRef.verse === verseNum,
   )
 }
 
@@ -530,6 +531,7 @@ export async function fetchBibleBookCore(fetchParams: BookFetchParams) {
  * @param {ScriptureReferenceType} reference
  */
 export async function fetchBibleBook(server: string, config: ServerConfigType, resource: ScriptureResourceType, reference: ScriptureReferenceType) {
+  console.log(`fetchBibleBook() - loading bible book`, resource)
   const ref_ = resource?.branch || resource?.ref
   const resourceLink = getResourceLink({
     ...resource,
@@ -549,5 +551,6 @@ export async function fetchBibleBook(server: string, config: ServerConfigType, r
   }
 
   const results = await fetchBibleBookCore(fetchParams)
+  console.log(`fetchBibleBook() - bible book load finished`, resource)
   return results
 }
