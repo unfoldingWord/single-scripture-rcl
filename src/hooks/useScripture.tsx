@@ -122,7 +122,6 @@ export function useScripture({ // hook for fetching scripture
     bibleUsfm: string,
     bookObjects: BookObjectsType,
     fetchCount: number,
-    fetched: boolean,
     fetchedBook: string,
     fetchParams: BookFetchParams|null,
     ignoreSha: string|null,
@@ -160,7 +159,6 @@ export function useScripture({ // hook for fetching scripture
     bibleUsfm: null,
     bookObjects: null,
     fetchCount: 0,
-    fetched: false,
     fetchedBook: '',
     fetchParams: null,
     ignoreSha: null,
@@ -194,7 +192,6 @@ export function useScripture({ // hook for fetching scripture
     bibleUsfm,
     bookObjects,
     fetchCount,
-    fetched,
     fetchedBook,
     fetchParams,
     ignoreSha,
@@ -202,7 +199,6 @@ export function useScripture({ // hook for fetching scripture
     resourceState,
     versesForRef,
   } = _state
-  const fetchedResources = resourceState?.fetchedResources
 
   function setState(newState) {
     setState_(prevState => ({ ...prevState, ...newState }))

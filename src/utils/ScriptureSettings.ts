@@ -89,7 +89,7 @@ export function getScriptureObject({
  */
 export function getVerseDataFromScripConfig(scriptureConfig, verseNum) {
   return scriptureConfig?.versesForRef?.find(
-    verseRef => verseRef.verse === verseNum
+    verseRef => verseRef.verse === verseNum,
   )
 }
 
