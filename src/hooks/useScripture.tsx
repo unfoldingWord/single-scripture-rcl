@@ -129,6 +129,7 @@ export function useScripture({ // hook for fetching scripture
     ignoreSha: string|null,
     initialized: boolean,
     resourceState: {
+      unprocessed?: boolean,
       bibleUsfm: string,
       bookObjects: BookObjectsType,
       content: {},
@@ -310,19 +311,16 @@ export function useScripture({ // hook for fetching scripture
       }
 
       console.log(`useScripture.fetchBook() - LOADED bible book ${resource_?.projectId} resourceLink is now ${fetchParams?.resourceLink}}`, fetchParams)
-      const fetchedResources = {
-        ...response,
-        fetchCount: _fetchCount,
-        reference: fetchParams?.reference,
-      }
-      const resource = { manifest: fetchedResources?.manifest }
-
       setState(
         {
           resourceState: {
             loadingResource: false,
-            fetchedResources,
-            resource,
+            fetchedResources: {
+              ...response,
+              fetchCount: _fetchCount,
+              reference: fetchParams?.reference,
+            },
+            unprocessed: true,
           },
         },
       )
@@ -393,6 +391,7 @@ export function useScripture({ // hook for fetching scripture
           sha,
           url,
         },
+        unprocessed: false,
         versesForRef,
       }
 
@@ -411,13 +410,14 @@ export function useScripture({ // hook for fetching scripture
   }, [{ readyForFetch, fetchedResources }])
 
   const resource = resourceState?.resource
+  const unprocessed = resourceState?.unprocessed
   const { title, version } = parseResourceManifest(resource)
   const loading = resourceState?.loadingResource || resourceState?.loadingContent || !readyForFetch
   const contentNotFoundError = !resourceState?.bibleUsfm
   const scriptureNotLoadedError = !resourceState?.bookObjects
   const manifestNotFoundError = !resource?.manifest
   const invalidManifestError = !title || !version || !languageId
-  const error = readyForFetch && initialized && !loading &&
+  const error = readyForFetch && initialized && !loading && !unprocessed &&
     (contentNotFoundError || scriptureNotLoadedError || manifestNotFoundError || invalidManifestError)
   const resourceStatus = {
     [LOADING_STATE]: loading,
@@ -428,6 +428,14 @@ export function useScripture({ // hook for fetching scripture
     [ERROR_STATE]: error,
     [INITIALIZED_STATE]: initialized,
   }
+
+  useEffect(() => {
+    //TODO: remove
+    console.log(`useScripture - resourceStatus changed`, {
+      resourceStatus,
+      resourceState,
+    })
+  }, [resourceStatus, resourceState])
 
   useEffect(() => {
     if (!readyForFetch) {
