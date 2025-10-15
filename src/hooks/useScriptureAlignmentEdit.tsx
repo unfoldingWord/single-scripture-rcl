@@ -32,6 +32,7 @@ interface AlignerDataType {
   alignments?: Object[], // list of word alignments in format needed by word-aligner-rcl
   errorMessage?: string, // if present then we don't have necessary data to do alignment
   bibleUsfm?: string, // bible USFM with alignments
+  originalScriptureBookObjects?: Object, // original language for book
   resourceLink?: string, // identifier for resource such as "unfoldingWord/en/ult/master/mat"
 }
 
@@ -449,6 +450,7 @@ export function useScriptureAlignmentEdit({
           alignments,
           bibleUsfm,
           resourceLink,
+          originalScriptureBookObjects,
         }
 
         if (!alignments?.length) {
