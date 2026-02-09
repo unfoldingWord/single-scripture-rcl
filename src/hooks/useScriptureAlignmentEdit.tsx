@@ -270,7 +270,9 @@ export function useScriptureAlignmentEdit({
 
     if (originalScriptureBookObjects) {
       // @ts-ignore
-      const verses = getVersesForRef(basicReference, originalScriptureBookObjects, originalScriptureBookObjects?.languageId)
+      const languageId = originalScriptureBookObjects?.languageId
+      const origBookId = originalScriptureBookObjects?.bookId
+      const verses = getVersesForRef(basicReference, originalScriptureBookObjects, languageId)
 
       if (verses?.length) {
         for (const verseReference of verses) {
@@ -281,6 +283,10 @@ export function useScriptureAlignmentEdit({
           }
         }
       }
+
+      console.log(`originalVerseObjects() - Original scripture found for bookId: ${bookId}, origBookId: ${origBookId}, languageId: ${languageId}, chapter: ${chapter}, verse: ${verse}`)
+    } else {
+      console.log(`originalVerseObjects() - Original scripture book objects are null or undefined for bookId: ${bookId}, chapter: ${chapter}, verse: ${verse}`)
     }
     return verseObjects
   }, [originalScriptureBookObjects, chapter, verse, bookId])
@@ -522,7 +528,7 @@ export function useScriptureAlignmentEdit({
   }
 
   /**
-   * callback for button to set editing state
+   * callback to enable/disable verse editor
    * @param {boolean} editing_ - if true, editor is shown, otherwise editor is hidden
    * @param {string} _newVerseText - optional verse text
    */

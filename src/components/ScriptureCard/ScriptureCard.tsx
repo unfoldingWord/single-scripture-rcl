@@ -139,6 +139,7 @@ export default function ScriptureCard({
   id,
   isNT,
   loggedInUser,
+  mergeCheck,
   onMinimize,
   onResourceError,
   originalScriptureBookObjects,
@@ -308,7 +309,16 @@ export default function ScriptureCard({
       mergeStatus: mergeToMaster,
       updateStatus: mergeFromMaster,
     },
+    actions: {
+      checkMergeStatus,
+    }
   } = _useBranchMerger
+
+  React.useEffect(() => {
+    if (mergeCheck) {
+      checkMergeStatus && checkMergeStatus() // every time mergeCheck changes, check merge status again
+    }
+  }, [mergeCheck])
 
   const updateButtonProps = useContentUpdateProps({
     isSaving: startSave,
@@ -1311,6 +1321,7 @@ ScriptureCard.propTypes = {
   isNT: PropTypes.func.isRequired,
   /** user-name */
   loggedInUser: PropTypes.string,
+  mergeCheck: PropTypes.number, // if this changes, need to recheck merge status
   /** function to minimize the card (optional) */
   onMinimize: PropTypes.func,
   /** optional callback if error loading resource, parameter returned are:
