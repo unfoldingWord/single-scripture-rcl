@@ -6,6 +6,7 @@ import { CircularProgress } from 'translation-helps-rcl'
 import { BookObjectsType, ScriptureReferenceType } from '../../types'
 import {
   delay,
+  findNonWhiteSpaceChars,
   getResourceMessage,
   LOADING_RESOURCE,
   verseObjectsHaveWords,
@@ -86,6 +87,22 @@ const TextAreaStyle = {
   minWidth: '220px',
   minHeight: '100px',
   fontSize: '16px',
+}
+
+/**
+ * Checks if the given content is empty by verifying the presence of non-whitespace characters
+ * or if the provided verseObjects array is empty or undefined.
+ *
+ * @param {Array} verseObjects - An array of verse objects to be checked.
+ * @return {boolean} Returns true if the content is empty or contains only whitespace, false otherwise.
+ */
+function emptyContent(verseObjects) {
+  const hasNoVerses = !verseObjects?.length;
+  if (hasNoVerses) {
+    return true;
+  }
+
+  return !findNonWhiteSpaceChars(verseObjects);
 }
 
 function ScripturePane({
@@ -274,7 +291,7 @@ function ScripturePane({
       />
     }
 
-    const noVerseContent = noWords && !verseObjects?.length; //TRICKY - just because there are no words doesn't mean there is not content, so also check for unaligned content
+    const noVerseContent = noWords && emptyContent(verseObjects); //TRICKY - just because there are no words doesn't mean there is not visible content, so also check for that
     if (noVerseContent && enableEdit) { // show a clickable message in the case that there is no text to click on
       return <EmptyContent>
         Click to Edit
