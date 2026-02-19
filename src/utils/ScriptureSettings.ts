@@ -445,6 +445,49 @@ export function verseObjectsHaveWords(verseObjects: VerseObjectsType) {
 }
 
 /**
+ * Determines if there are any non-whitespace characters within the provided verse objects.
+ * The method traverses through the input, checking for non-empty strings in `word` or `text` type objects,
+ * optionally traversing child objects if present.
+ *
+ * @param {VerseObjectsType} verseObjects - The input objects to check for non-whitespace characters. This can be a string, an array of objects, or contain nested structures.
+ * @return {boolean} Returns `true` if any non-whitespace characters are found, otherwise `false`.
+ */
+export function findNonWhiteSpaceChars(verseObjects: VerseObjectsType) {
+  if (typeof verseObjects === 'string') {
+    // @ts-ignore
+    const notEmpty = verseObjects.trim()
+    return !!notEmpty
+  }
+
+  // @ts-ignore
+  if (verseObjects?.verseObjects) { // special case for verseObjects with verseObjects property
+    // @ts-ignore
+    return findNonWhiteSpaceChars(verseObjects.verseObjects)
+  }
+
+  if (verseObjects?.length) {
+    for (const vo of verseObjects) {
+      if ((vo.type === 'word') || (vo.type === 'text')) {
+        const text = vo.text?.trim()
+
+        if (text) {
+          return true
+        }
+      } else if (vo.children) {
+        const foundWords = findNonWhiteSpaceChars(vo.children)
+
+        if (foundWords) {
+          return true
+        }
+      }
+    }
+  }
+
+  return false
+}
+
+
+/**
  * extract just the alignments from verseObjects
  * @param {VerseObjectsType} verseObjects
  * @returns {VerseObjectsType} - just alignments
