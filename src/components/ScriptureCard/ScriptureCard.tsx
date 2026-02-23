@@ -26,6 +26,7 @@ import { ScripturePane, ScriptureSelector } from '..'
 import { useScriptureSettings } from '../../hooks/useScriptureSettings'
 import {
   cleanupVerseObjects,
+  emptyContent,
   fetchBibleBook,
   fixOccurrence,
   getBookNameFromUsfmFileName,
@@ -176,6 +177,7 @@ export default function ScriptureCard({
     currentReference: null,
     editBranchReady: false,
     editVerse: null,
+    foundOriginalContent: false,
     haveUnsavedChanges: false,
     lastSelectedQuote: null,
     readyForFetch: false,
@@ -202,6 +204,7 @@ export default function ScriptureCard({
     currentReference,
     editBranchReady,
     editVerse, // keep track of verse being editted
+    foundOriginalContent,
     haveUnsavedChanges,
     lastSelectedQuote,
     readyForFetch,
@@ -517,7 +520,7 @@ export default function ScriptureCard({
   }
 
   const enableEdit = !usingOriginalBible
-  const enableAlignment = !usingOriginalBible
+  const enableAlignment = !usingOriginalBible && foundOriginalContent
   const originalRepoUrl = isNewTestament ? greekRepoUrl : hebrewRepoUrl
   const scriptureAlignmentEditConfig = {
     authentication: canUseEditBranch ? authentication : null,
@@ -970,6 +973,7 @@ export default function ScriptureCard({
     const originalBookId = originalScriptureBookObjects?.bookId
     const bookVerseObject = originalScriptureBookObjects?.chapters
     let newSelectedQuote = null
+    let _foundOriginalContent = false
 
     // if we have everything we need to calculate selections
     if (_versesForRef?.length &&
@@ -1023,6 +1027,11 @@ export default function ScriptureCard({
             verseObjects = cleanupVerseObjects(verseObjects)
             originalVerses[chapter][_verse] = { verseObjects }
             _map.set(`${chapter}:${verse}`, verseObjects)
+
+            const isVerseNotEmpty = !emptyContent(verseObjects)
+            if (isVerseNotEmpty) {
+              _foundOriginalContent = true
+            }
           }
         }
 
@@ -1083,6 +1092,10 @@ export default function ScriptureCard({
       if (!areMapsTheSame(selections || (new Map()), newSelections)) {
         newState.selections = newSelections
       }
+    }
+
+    if (_foundOriginalContent != foundOriginalContent) {
+      newState.foundOriginalContent = _foundOriginalContent;
     }
 
     if (Object.keys(newState).length) {

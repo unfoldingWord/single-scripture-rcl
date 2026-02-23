@@ -488,6 +488,24 @@ export function findNonWhiteSpaceChars(verseObjects: VerseObjectsType) {
 
 
 /**
+ * Checks if the given content is empty by verifying the presence of non-whitespace characters
+ * or if the provided verseObjects array is empty or undefined.
+ *
+ * @param {Array} verseObjects - An array of verse objects to be checked.
+ * @return {boolean} Returns true if the content is empty or contains only whitespace, false otherwise.
+ */
+export function emptyContent(verseObjects) {
+  const hasNoVerses = !verseObjects?.length
+
+  if (hasNoVerses) {
+    return true
+  }
+
+  return !findNonWhiteSpaceChars(verseObjects);
+}
+
+
+/**
  * extract just the alignments from verseObjects
  * @param {VerseObjectsType} verseObjects
  * @returns {VerseObjectsType} - just alignments
