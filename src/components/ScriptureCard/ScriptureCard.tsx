@@ -1114,7 +1114,7 @@ export default function ScriptureCard({
     if (_versesForRef?.length &&
       bookVerseObject &&
       (bookId === originalBookId) &&
-      bookVerseObject[chapter] // we need to have data for chapter
+      bookVerseObject?.[chapter] // we need to have data for chapter
     ) {
       for (let i = 0, l = _versesForRef.length; i < l; i++) {
         const verseRef = _versesForRef[i]
@@ -1133,7 +1133,7 @@ export default function ScriptureCard({
             verseObjects = verseObjects.concat(vo)
           }
         } else {
-          verseObjects = bookVerseObject[chapter][verse]?.verseObjects
+          verseObjects = bookVerseObject[chapter]?.[verse]?.verseObjects
         }
 
         if (verseObjects) {
