@@ -26,6 +26,7 @@ import { ScripturePane, ScriptureSelector } from '..'
 import { useScriptureSettings } from '../../hooks/useScriptureSettings'
 import {
   cleanupVerseObjects,
+  emptyContent,
   fetchBibleBook,
   fixOccurrence,
   getBookNameFromUsfmFileName,
@@ -176,6 +177,7 @@ export default function ScriptureCard({
     currentReference: null,
     editBranchReady: false,
     editVerse: null,
+    foundOriginalContent: false,
     haveUnsavedChanges: false,
     lastSelectedQuote: null,
     readyForFetch: false,
@@ -202,6 +204,7 @@ export default function ScriptureCard({
     currentReference,
     editBranchReady,
     editVerse, // keep track of verse being editted
+    foundOriginalContent,
     haveUnsavedChanges,
     lastSelectedQuote,
     readyForFetch,
@@ -517,7 +520,7 @@ export default function ScriptureCard({
   }
 
   const enableEdit = !usingOriginalBible
-  const enableAlignment = !usingOriginalBible
+  const enableAlignment = !usingOriginalBible && foundOriginalContent
   const originalRepoUrl = isNewTestament ? greekRepoUrl : hebrewRepoUrl
   const scriptureAlignmentEditConfig = {
     authentication: canUseEditBranch ? authentication : null,
@@ -1098,6 +1101,62 @@ export default function ScriptureCard({
     selectedQuote,
   ])
 
+
+  // Check if original language content is available for the current verses.
+  // This sets foundOriginalContent state, which in turn is used to determine if
+  // alignment functionality should be enabled
+  React.useEffect(() => {
+    const originalBookId = originalScriptureBookObjects?.bookId
+    const bookVerseObject = originalScriptureBookObjects?.chapters
+    let _foundOriginalContent = false
+
+    // check if we have everything we need to get original verses
+    if (_versesForRef?.length &&
+      bookVerseObject &&
+      (bookId === originalBookId) &&
+      bookVerseObject[chapter] // we need to have data for chapter
+    ) {
+      for (let i = 0, l = _versesForRef.length; i < l; i++) {
+        const verseRef = _versesForRef[i]
+        const {
+          chapter,
+          verse,
+        } = verseRef
+
+        let verseObjects = []
+
+        if ((typeof verse === 'string') && (verse.includes('-'))) {
+          const verses = getVerses(bookVerseObject, `${chapter}:${verse}`)
+
+          for (const verseItem of verses) {
+            const vo = verseItem.verseData.verseObjects
+            verseObjects = verseObjects.concat(vo)
+          }
+        } else {
+          verseObjects = bookVerseObject[chapter][verse]?.verseObjects
+        }
+
+        if (verseObjects) {
+          verseObjects = cleanupVerseObjects(verseObjects)
+
+          const isVerseNotEmpty = !emptyContent(verseObjects)
+          if (isVerseNotEmpty) {
+            _foundOriginalContent = true
+          }
+        }
+      }
+    }
+
+    if (_foundOriginalContent != foundOriginalContent) {
+      setState({ foundOriginalContent: _foundOriginalContent })
+    }
+  }, [
+    bookId,
+    languageId_,
+    scriptureConfig?.versesForRef,
+    originalScriptureBookObjects,
+  ])
+
   React.useEffect(() => { // clear settings on verse change
     setState({
       versesAlignmentStatus: null,
@@ -1210,7 +1269,7 @@ export default function ScriptureCard({
       alignButtonText = 'Alignment is Invalid'
     }
 
-    if (setWordAlignerStatus && resourceId !== 'ORIGINAL_SOURCE') {
+    if (foundOriginalContent && setWordAlignerStatus && resourceId !== 'ORIGINAL_SOURCE') {
       newItems.push(
         <IconButton
           id={`alignment_icon_${resourceId}`}
