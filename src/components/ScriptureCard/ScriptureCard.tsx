@@ -1185,6 +1185,10 @@ export default function ScriptureCard({
     _versesForRef = [{ ...reference }]
   }
 
+  const handleChangedVerse = (reference: ScriptureReferenceType, verseObjects: VerseObjectsType ) => {
+    console.log('Changed Verse', reference, verseObjects)
+  }
+
   const renderedScripturePanes = _versesForRef?.map((_currentVerseData, index) => {
     const initialVerseObjects = _currentVerseData?.verseData?.verseObjects || []
     // @ts-ignore
@@ -1220,6 +1224,7 @@ export default function ScriptureCard({
         disableWordPopover={disableWordPopover_}
         fontSize={fontSize}
         getLexiconData={getLexiconData}
+        handleChangedVerse={handleChangedVerse}
         isNT={isNT_}
         isVerseSelectedForAlignment={isVerseSelectedForAlignment}
         key={index}
@@ -1297,16 +1302,21 @@ export default function ScriptureCard({
 
   const selectionBookObjects = originalScriptureBookObjects?.chapters
 
+  // we only want to check the target alignment if not using original bible
+  const targetVersesForRef = usingOriginalBible ? null : _versesForRef
+
   return (
     <SelectionsContextProvider
-      bookObject={selectionBookObjects || {}}
+      highlightOnlyCompleteQuotes={true}
       occurrence={fixOccurrence(selectedQuote?.occurrence)}
       onSelections={newSelections => {
         // console.log('onSelections', newSelections)
       }}
+      originalBookObjects={selectionBookObjects || {}}
       quote={selectedQuote?.quote || ''}
       refString={selectionsRefs}
       selections={selections}
+      targetVersesForRef={targetVersesForRef}
     >
       <Card
         id={`scripture_card_${cardNum}`}

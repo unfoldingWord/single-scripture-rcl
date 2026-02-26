@@ -17,6 +17,8 @@ import {
   Content,
   EmptyContent,
 } from './styled'
+import {isEqual} from "@react-hookz/deep-equal";
+import cloneDeep from 'lodash/cloneDeep';
 
 interface Props {
   /** optional styles to use for content **/
@@ -33,6 +35,8 @@ interface Props {
   fontSize: number;
   /** function to get latest lexicon data */
   getLexiconData: Function;
+  /** function to be called when verse objects have changed */
+  handleChangedVerse: Function;
   /** true if browsing NT */
   isNT: boolean;
   /** whether or not this current verse has been selected for alignment */
@@ -97,6 +101,7 @@ function ScripturePane({
   disableWordPopover,
   fontSize,
   getLexiconData,
+  handleChangedVerse,
   isNT,
   isVerseSelectedForAlignment,
   onAlignmentFinish,
@@ -116,11 +121,13 @@ function ScripturePane({
 } : Props) {
   const [state, setState_] = React.useState({
     doingAlignment: false,
+    lastVerseObject: null,
     newText: null,
     processingEdit: false,
   })
   const {
     doingAlignment,
+    lastVerseObject,
     newText,
     processingEdit, // true when we are processing edit text after onBlur
   } = state
@@ -247,12 +254,31 @@ function ScripturePane({
 
   React.useEffect(() => { // monitor for edit state changes and call back to scripture card with edit status
     const _editing = editing || processingEdit
-    const verseRef = `${reference.chapter}:${reference.verse}`
+    const verseRef = `${reference?.chapter}:${reference?.verse}`
     setEditVerse && setEditVerse(verseRef, _editing)
   }, [editing, processingEdit])
 
   const verseObjects = currentVerseObjects || initialVerseObjects || []
   const noWords = React.useMemo(() => !verseObjectsHaveWords(verseObjects), [currentVerseObjects, initialVerseObjects])
+
+  React.useEffect(() => { // monitor for verse object changes and call back to scripture card
+    let update = false;
+    if(currentVerseObjects?.length) {
+      const _currentVerseObjects = cloneDeep(currentVerseObjects)
+      if (lastVerseObject?.length) {
+        if (!isEqual(_currentVerseObjects, lastVerseObject)) {
+          handleChangedVerse?.(reference, _currentVerseObjects);
+          update = true;
+        }
+      } else {
+        update = true;
+      }
+
+      if (update) {
+        setState({lastVerseObject: _currentVerseObjects});
+      }
+    }
+  }, [currentVerseObjects])
 
   /**
    * determine what UI to show based on state
