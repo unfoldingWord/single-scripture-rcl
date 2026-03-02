@@ -1,6 +1,6 @@
 import * as React from 'react'
 import useDeepCompareEffect from 'use-deep-compare-effect'
-import { VerseObjects } from 'scripture-resources-rcl'
+import { VerseObjects, SelectionsContext } from 'scripture-resources-rcl'
 import { UsfmFileConversionHelpers } from 'word-aligner-rcl'
 import { CircularProgress } from 'translation-helps-rcl'
 import { BookObjectsType, ScriptureReferenceType } from '../../types'
@@ -17,8 +17,9 @@ import {
   Content,
   EmptyContent,
 } from './styled'
-import {isEqual} from "@react-hookz/deep-equal";
+import { isEqual } from "@react-hookz/deep-equal";
 import cloneDeep from 'lodash/cloneDeep';
+import { useContext } from "react";
 
 interface Props {
   /** optional styles to use for content **/
@@ -35,8 +36,6 @@ interface Props {
   fontSize: number;
   /** function to get latest lexicon data */
   getLexiconData: Function;
-  /** function to be called when verse objects have changed */
-  handleChangedVerse: Function;
   /** true if browsing NT */
   isNT: boolean;
   /** whether or not this current verse has been selected for alignment */
@@ -101,7 +100,6 @@ function ScripturePane({
   disableWordPopover,
   fontSize,
   getLexiconData,
-  handleChangedVerse,
   isNT,
   isVerseSelectedForAlignment,
   onAlignmentFinish,
@@ -139,6 +137,7 @@ function ScripturePane({
   const [initialVerseText, setInitialVerseText] = React.useState(null)
 
   let resourceMessage = ''
+  const _selectionsContext = useContext(SelectionsContext);
 
   if (saving) {
     resourceMessage = 'Saving Changes...'
@@ -267,7 +266,8 @@ function ScripturePane({
       const _currentVerseObjects = cloneDeep(currentVerseObjects)
       if (lastVerseObject?.length) {
         if (!isEqual(_currentVerseObjects, lastVerseObject)) {
-          handleChangedVerse?.(reference, _currentVerseObjects);
+          // @ts-ignore
+          _selectionsContext?.actions?.handleChangedVerse?.(reference, _currentVerseObjects);
           update = true;
         }
       } else {
