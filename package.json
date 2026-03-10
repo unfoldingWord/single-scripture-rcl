@@ -89,7 +89,7 @@
     "ts-jest": "^29.1.1",
     "use-deep-compare-effect": "1.8.1",
     "usfm-js": "3.4.2",
-    "uw-quote-helpers": "1.1.8",
+    "uw-quote-helpers": "^1.1.8",
     "webpack": "^4.44.2",
     "word-aligner": "^1.0.0",
     "word-aligner-rcl": "0.9.2"
