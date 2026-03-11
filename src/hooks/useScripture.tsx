@@ -572,6 +572,7 @@ export function useScripture({ // hook for fetching scripture
   return {
     bibleUsfm,
     bookObjects,
+    fetchedBook,
     getVersesForRef: _getVersesForRef,
     reference: fetchParams?.reference,
     reloadResource,

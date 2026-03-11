@@ -14185,7 +14185,7 @@ uuid@^8.3.2:
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-8.3.2.tgz#80d5b5ced271bb9af6c445f21a1a04c606cefbe2"
   integrity sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==
 
-uw-quote-helpers@1.1.8, uw-quote-helpers@^1.1.8:
+uw-quote-helpers@^1.1.8:
   version "1.1.8"
   resolved "https://registry.yarnpkg.com/uw-quote-helpers/-/uw-quote-helpers-1.1.8.tgz#a7889e025951d12aa76ecb3362258f5c7ab99d9b"
   integrity sha512-/uLPoxcyoiRiaKnOzmrLPdGG6Ru2Ts2EN6/maEe2Bzx7w1WSigvlifewWVzaekWZz3mn6HpyTQRjXF5y4MfnzQ==
