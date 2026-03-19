@@ -395,6 +395,22 @@ export function useScriptureAlignmentEdit({
         const initialAlignment = initialAlignments[i]
 
         if (!isEqual(updatedAlignment, initialAlignment)) {
+          // Find and log the first difference between alignment members
+          const updatedKeys = Object.keys(updatedAlignment)
+          const initialKeys = Object.keys(initialAlignment)
+          const allKeys = Array.from(new Set([...updatedKeys, ...initialKeys]))
+
+          for (const key of allKeys) {
+            if (!isEqual(updatedAlignment[key], initialAlignment[key])) {
+              console.log(`First difference in alignment ${i} at key "${key}":`, {
+                updated: updatedAlignment[key],
+                initial: initialAlignment[key],
+              })
+              break
+            }
+          }
+
+
           firstDiff = i
           same = false
           break
