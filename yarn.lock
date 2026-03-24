@@ -15035,10 +15035,10 @@ word-aligner-lib@1.0.1:
     word-aligner "1.0.3"
     wordmap-lexer "^0.3.6"
 
-word-aligner-rcl@1.3.6-beta:
-  version "1.3.6-beta"
-  resolved "https://registry.yarnpkg.com/word-aligner-rcl/-/word-aligner-rcl-1.3.6-beta.tgz#874996b632df525faedefa18fc2e2dbc4b881c50"
-  integrity sha512-rROwTV1TFCxFXluMAiUJBp7CQk/NfuQrumpwllzFN9gtTiY+xXd0VWW7eiSYJGM2LtJvxeDJeNvyz8GL85ClQg==
+word-aligner-rcl@1.3.6:
+  version "1.3.6"
+  resolved "https://registry.yarnpkg.com/word-aligner-rcl/-/word-aligner-rcl-1.3.6.tgz#6506cd188b75bb1daf8d2ee0b127616a10d31c30"
+  integrity sha512-bjWED5l6bSEkutV2HzZ4alcC6Rn8Piz4dLW9ktGS2K4Q4u8jc+Ol3AZGMo/SlNFooR22gKPfwBgl8ZCgZ7bJng==
   dependencies:
     "@emotion/react" "^11.10.0"
     "@emotion/styled" "^11.10.0"

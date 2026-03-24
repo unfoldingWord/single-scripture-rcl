@@ -7,6 +7,7 @@ import { getScriptureResourceSettings } from '../utils/ScriptureSettings'
  * @param {object} scriptureSettings - info about the scripture being referenced
  * @param {ScriptureReferenceType} reference
  * @param {boolean} isNewTestament
+ * @param {object} bibleRelations - optional bible relations array for scripture settings
  * @param {string} originalRepoUrl - optional path to repo for original language
  * @param {string} currentLanguageId - optional over-ride for transient case where language in scripture settings have not yet updated
  * @param {string} currentOwner - optional over-ride for transient case where owner in scripture settings have not yet updated
@@ -17,6 +18,7 @@ import { getScriptureResourceSettings } from '../utils/ScriptureSettings'
  */
 export function useScriptureResources({
   appRef = 'master',
+  bibleRelations = null,
   currentLanguageId = null,
   currentOwner = null,
   httpConfig = {},
@@ -38,7 +40,7 @@ export function useScriptureResources({
   }, [appRef, scriptureSettings.ref])
 
   const scriptureSettings_ = getScriptureResourceSettings(bookId, scriptureSettings, isNewTestament,
-    originalRepoUrl, currentLanguageId, currentOwner) // convert any default settings strings
+    originalRepoUrl, currentLanguageId, currentOwner, bibleRelations) // convert any default settings strings
 
   const scriptureConfig_ = {
     reference,

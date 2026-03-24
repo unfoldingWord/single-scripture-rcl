@@ -140,16 +140,36 @@ export function splitUrl(originalRepoUrl) {
  * @param {string} originalRepoUrl - optional path to repo for original language
  * @param {string} currentLanguageId - optional over-ride for transient case where language in scripture settings have not yet updated
  * @param {string} currentOwner - optional over-ride for transient case where owner in scripture settings have not yet updated
+ * @param {string[]} bibleRelations
  */
 export function getScriptureResourceSettings(
-  bookId, scriptureSettings_, isNewTestament,
+  bookId,
+  scriptureSettings_,
+  isNewTestament,
   originalRepoUrl=null,
   currentLanguageId=null,
   currentOwner=null,
+  bibleRelations=null,
 ) {
   const scriptureSettings = { ...scriptureSettings_ }
   scriptureSettings.disableWordPopover = DISABLE_WORD_POPOVER
   const resourceId = scriptureSettings_.resourceId
+
+  const LITERAL = 0
+  const SIMPLIFIED = 1
+
+  function getResourceId(bibleType:number): string {
+    if (bibleRelations?.length > bibleType) {
+      const relation = bibleRelations[bibleType]
+      return relation.resourceId;
+    }
+
+    if (bibleType === LITERAL) {
+      return scriptureSettings.languageId === 'en' ? 'ult' : 'glt'
+    } else { // otherwise simplified
+      return scriptureSettings.languageId === 'en' ? 'ust' : 'gst'
+    }
+  }
 
   if (resourceId === ORIGINAL_SOURCE) {
     // select original language Bible based on which testament the book belongs
@@ -172,11 +192,11 @@ export function getScriptureResourceSettings(
     scriptureSettings.disableWordPopover = false
   } else if (resourceId === TARGET_LITERAL) {
     cleanupAccountSettings(scriptureSettings, currentOwner, currentLanguageId)
-    scriptureSettings.resourceId = scriptureSettings.languageId === 'en' ? 'ult' : 'glt'
+    scriptureSettings.resourceId = getResourceId(LITERAL)
     scriptureSettings.resourceLink = getResourceLink(scriptureSettings)
   } else if (resourceId === TARGET_SIMPLIFIED) {
     cleanupAccountSettings(scriptureSettings, currentOwner, currentLanguageId)
-    scriptureSettings.resourceId = scriptureSettings.languageId === 'en' ? 'ust' : 'gst'
+    scriptureSettings.resourceId = getResourceId(SIMPLIFIED)
     scriptureSettings.resourceLink = getResourceLink(scriptureSettings)
   }
   return scriptureSettings

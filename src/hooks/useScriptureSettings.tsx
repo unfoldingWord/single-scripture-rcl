@@ -81,6 +81,7 @@ function isScriptureResource(subject) {
 
 export function useScriptureSettings({
   appRef,
+  bibleRelations,
   cardNum,
   disableWordPopover,
   greekRepoUrl,
@@ -149,6 +150,7 @@ export function useScriptureSettings({
   const originalRepoUrl = isNewTestament ? greekRepoUrl : hebrewRepoUrl
   const scriptureConfig = useScriptureResources({
     appRef,
+    bibleRelations,
     currentLanguageId: languageId,
     currentOwner: owner,
     httpConfig,
@@ -228,7 +230,7 @@ export function useScriptureSettings({
       let url_ = newUrl
 
       if (!url) { // if not a new resource
-        scriptureSettings = getScriptureResourceSettings(resourceId, bookId, isNewTestament, originalRepoUrl) // convert any default settings strings
+        scriptureSettings = getScriptureResourceSettings(resourceId, bookId, isNewTestament, originalRepoUrl, null, null, bibleRelations) // convert any default settings strings
         url_ = scriptureSettings.resourceLink
       }
 

@@ -128,6 +128,7 @@ export const getCurrentBook = (scriptureConfig, bookId) => {
 export default function ScriptureCard({
   appRef,
   authentication,
+  bibleRelations,
   bookIndex,
   cardNum,
   classes,
@@ -247,6 +248,7 @@ export default function ScriptureCard({
     scriptureVersionHist,
   } = useScriptureSettings({
     appRef: ref,
+    bibleRelations,
     cardNum,
     disableWordPopover,
     greekRepoUrl,
@@ -1361,6 +1363,8 @@ ScriptureCard.propTypes = {
   appRef: PropTypes.string.isRequired,
   /** authentication info */
   authentication: PropTypes.object,
+  /** bible relations array */
+  bibleRelations: PropTypes.array,
   /** index for current book (e.g. '01' for 'gen')*/
   bookIndex: PropTypes.string,
   /** scripture card number (0 to 2 for example) */
