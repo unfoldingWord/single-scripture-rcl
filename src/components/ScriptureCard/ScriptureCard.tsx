@@ -241,6 +241,7 @@ export default function ScriptureCard({
   } // disable http caching
 
   const {
+    determinedBibleId,
     isNewTestament,
     scriptureConfig,
     setScripture,
@@ -438,7 +439,7 @@ export default function ScriptureCard({
       const resourceStatus = scriptureConfig?.resourceStatus
       // @ts-ignore
       const resourceLink = getResourceLink(scriptureConfig?.resource)
-      const message = getResourceMessage(resourceStatus, server, resourceLink, isNT_)
+      const message = getResourceMessage(resourceStatus, server, resourceLink, isNT_, bibleRelations)
       const isAccessError = resourceStatus[MANIFEST_NOT_LOADED_ERROR]
       onResourceError && onResourceError(message, isAccessError, resourceStatus)
     }

@@ -16,6 +16,9 @@ import {
   setLocalStorageValue,
   parseResourceManifest,
   validateDcsUrl,
+  getRelationForResource,
+  BibleRelationsType,
+  getResourceIdForResource,
 } from '..'
 import {
   getResourceLink,
@@ -81,7 +84,7 @@ function isScriptureResource(subject) {
 
 export function useScriptureSettings({
   appRef,
-  bibleRelations,
+  bibleRelations = null,
   cardNum,
   disableWordPopover,
   greekRepoUrl,
@@ -125,6 +128,7 @@ export function useScriptureSettings({
   }
   const [target, setTarget] = useUserLocalStorage(KEY_TARGET_BASE + cardNum, currentTarget)
   const [cleanUp, setCleanUp] = useState(true)
+  const [determinedBibleId, setDeterminedBibleId] = useState('')
 
   useEffect(() => {
     if (languageId && owner) { // make sure we have languageId and owner selected first
@@ -141,16 +145,55 @@ export function useScriptureSettings({
 
         setScriptureSettings(scriptureDefaultSettings)
         setTarget(currentTarget)
+        setDeterminedBibleId('')
       } else {
         scriptureVersionHist.addItemToHistory(scriptureSettings) // make sure current scripture version persisted in history
       }
     }
   }, [languageId, owner, cleanUp])
 
+  useEffect(() => {
+    if (languageId && owner) { // make sure we have languageId and owner selected first
+      if (bibleRelations?.length > 0) {
+        const firstResource = bibleRelations[0]
+
+        if (firstResource.languageId === languageId) {
+          const bibleRelations_ = scriptureSettings.bibleRelations
+
+          const scriptureSettings_ = { ...scriptureSettings }
+          scriptureSettings_.bibleRelations = bibleRelations
+
+          if ( !isEqual(bibleRelations_, bibleRelations)) {
+            console.log('useScriptureSettings changing bibleRelations from ', {
+              before: bibleRelations_,
+              after: bibleRelations,
+            })
+            setScriptureSettings(scriptureSettings_)
+          }
+
+          // // update bibleID with one used
+          // const relation = getRelationForResource(resourceId, bibleRelations_)
+          // let bibleId = relation?.resourceId || ''
+          // const defaultBibleId = getResourceIdForResource(resourceId, null, languageId);
+          //
+          // if (!bibleId) {
+          //   bibleId = defaultBibleId
+          // } else if (bibleId !== defaultBibleId) {
+          //   console.log(`useScriptureSettings: Bible ID mismatch detected, default is ${defaultBibleId}, using ${bibleId}`)
+          // }
+          //
+          // if (bibleId !== determinedBibleId) { // update if changed
+          //   setDeterminedBibleId(bibleId)
+          //   console.log(`useScriptureSettings: Bible ID changing from ${determinedBibleId}, to ${bibleId}`)
+          // }
+        }
+      }
+    }
+  }, [bibleRelations])
+
   const originalRepoUrl = isNewTestament ? greekRepoUrl : hebrewRepoUrl
   const scriptureConfig = useScriptureResources({
     appRef,
-    bibleRelations,
     currentLanguageId: languageId,
     currentOwner: owner,
     httpConfig,
@@ -230,7 +273,7 @@ export function useScriptureSettings({
       let url_ = newUrl
 
       if (!url) { // if not a new resource
-        scriptureSettings = getScriptureResourceSettings(resourceId, bookId, isNewTestament, originalRepoUrl, null, null, bibleRelations) // convert any default settings strings
+        scriptureSettings = getScriptureResourceSettings(resourceId, bookId, isNewTestament, originalRepoUrl, null, { bibleRelations }) // convert any default settings strings
         url_ = scriptureSettings.resourceLink
       }
 
@@ -306,6 +349,7 @@ export function useScriptureSettings({
   }
 
   return {
+    determinedBibleId,
     isNewTestament,
     scriptureConfig,
     scriptureSettings,

@@ -14,7 +14,7 @@ import {
   ServerConfigType,
   VerseObjectsType,
 } from '../types'
-import { getAlignments, getScriptureResourceSettings } from '../utils/ScriptureSettings'
+import {BibleRelationsType, getAlignments, getScriptureResourceSettings} from '../utils/ScriptureSettings'
 import { ORIGINAL_SOURCE } from '../utils'
 import { getVersesForRef } from './useScripture'
 
