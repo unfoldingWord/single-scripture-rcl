@@ -42,6 +42,8 @@ interface AlignerResultsDataType {
 }
 
 export interface ScriptureALignmentEditProps {
+  /** bible relations array */
+  bibleRelations: string[] | null,
   // index to use for book (e.g. `01` for `GEN`)
   bookIndex: string,
   // current verse selected from initialVerseObjects[]
@@ -169,6 +171,7 @@ export function hasTextChangedSignificantly(newVerseText:string, initialVerseTex
 
 // manage verse edit and alignment states
 export function useScriptureAlignmentEdit({
+  bibleRelations,
   currentIndex,
   enableEdit,
   enableAlignment,
@@ -258,7 +261,7 @@ export function useScriptureAlignmentEdit({
   // @ts-ignore
   httpConfig = httpConfig || {}
   const originalScriptureSettings = getScriptureResourceSettings(
-    bookId, originalScriptureSettings_, isNewTestament, originalRepoUrl,
+    bookId, originalScriptureSettings_, isNewTestament, originalRepoUrl, null, { bibleRelations },
   )
 
   if (!enableAlignment) { // if not enabled, then we don't fetch resource

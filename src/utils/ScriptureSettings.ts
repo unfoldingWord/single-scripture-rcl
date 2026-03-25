@@ -59,6 +59,7 @@ export function getScriptureObject({
   disableWordPopover,
   originalLanguageOwner,
 }) {
+  const bibleRelations = null
   const scripture = {
     title,
     server,
@@ -69,6 +70,7 @@ export function getScriptureObject({
     resourceId,
     disableWordPopover,
     resourceLink,
+    bibleRelations,
   }
 
   if (!resourceLink) {
@@ -132,6 +134,110 @@ export function splitUrl(originalRepoUrl) {
   return {}
 }
 
+const LITERAL = 0
+const SIMPLIFIED = 1
+
+export type RepoNameParts = {
+  languageId: string;
+  resourceId: string;
+}
+
+export type BibleRelationsType = RepoNameParts[] | null;
+
+/**
+ * Parses a repository name in the format "languageId/resourceId" into its components.
+ * @param {string} repoName - The repository name to parse (e.g., "en/ult")
+ * @return {{languageId: string, resourceId: string}} An object containing the languageId and resourceId
+ */
+export function parseRepoName(repoName: string): RepoNameParts {
+  const [languageId, resourceId] = repoName.trim().split('/')
+  return { languageId, resourceId }
+}
+
+/**
+ * Determines the table type based on the provided resource ID.
+ *
+ * @param {string} resourceId - The identifier for the resource.
+ * @return {number} The table type corresponding to the resource ID.
+ */
+function getTableType(resourceId: string) {
+  let bibleType = 0
+
+  if (resourceId === TARGET_LITERAL) {
+    bibleType = LITERAL
+  } else if (resourceId === TARGET_SIMPLIFIED) {
+    bibleType = SIMPLIFIED
+  }
+  return bibleType
+}
+
+/**
+ * Retrieves a resource ID for a given resource.
+ *
+ * @param {string} resourceId - The ID of the resource to evaluate (TARGET_LITERAL or TARGET_SIMPLIFIED).
+ * @param {BibleRelationsType} bibleRelations - An array of bible relations containing resource information, or null.
+ * @param {string} gatewayLanguageId - The gateway language identifier used to determine the default resource ID.
+ * @return {string} The corresponding resource ID based on the provided input.
+ */
+export function getResourceIdForResource(resourceId: string, bibleRelations: BibleRelationsType, gatewayLanguageId: string): string {
+  let bibleType = getTableType(resourceId)
+  return getResourceId(bibleType, bibleRelations, gatewayLanguageId)
+}
+
+/**
+ * Retrieves a relation from the given array of Bible relations based on the specified type.
+ *
+ * @param {RepoNameParts[] | null} bibleRelations - An array of Bible relations or null.
+ * @param {number} bibleType - The index of the desired Bible relation.
+ * @return {RepoNameParts | undefined} The relation corresponding to the specified type, or undefined if not found.
+ */
+export function getRelationByType(bibleRelations: RepoNameParts[] | null, bibleType: number): RepoNameParts | undefined {
+  let relation: RepoNameParts | undefined
+
+  if (bibleRelations && bibleRelations.length > bibleType) {
+    relation = bibleRelations[bibleType]
+  }
+  return relation
+}
+
+
+/**
+ * Retrieves the relationship associated with a given resource ID based on the provided Bible relations.
+ *
+ * @param {string} resourceId - The unique identifier of the resource for which the relationship is to be determined.
+ * @param {BibleRelationsType} bibleRelations - An object containing mappings of relations for different Bible resource types.
+ * @return {RepoNameParts} The parts of the repository name associated with the specified resource's relationship.
+ */
+export function getRelationForResource(resourceId: string, bibleRelations: BibleRelationsType): RepoNameParts {
+  const bibleType = getTableType(resourceId)
+  return getRelationByType(bibleRelations, bibleType)
+}
+
+
+/**
+ * Retrieves the resource ID based on the given bible type, bible relations, and gateway language ID.
+ *
+ * @param {number} bibleType - The type of Bible, which determines the resource ID (LITERAL or SIMPLIFIED).
+ * @param {BibleRelationsType} bibleRelations - An array of bible relations containing resource information, or null.
+ * @param {string} gatewayLanguageId - The gateway language identifier used to determine the default resource ID.
+ * @return {string} The corresponding resource ID for the specified bible type and language settings.
+ */
+export function getResourceId(bibleType: number, bibleRelations: BibleRelationsType, gatewayLanguageId: string): string {
+  let relation = getRelationByType(bibleRelations, bibleType);
+
+  if (relation) {
+    return relation.resourceId
+  }
+
+  if (bibleType === LITERAL) {
+    return gatewayLanguageId === 'en' ? 'ult' : 'glt'
+  } else if (bibleType === SIMPLIFIED) {
+    return gatewayLanguageId === 'en' ? 'ust' : 'gst'
+  }
+  return ''
+}
+
+
 /**
  * get the scripture settings needed for fetch - for OrigLang, ULT, GLT will replace owner and languageId with correct values
  * @param {string} bookId
@@ -142,7 +248,9 @@ export function splitUrl(originalRepoUrl) {
  * @param {string} currentOwner - optional over-ride for transient case where owner in scripture settings have not yet updated
  */
 export function getScriptureResourceSettings(
-  bookId, scriptureSettings_, isNewTestament,
+  bookId,
+  scriptureSettings_ :any,
+  isNewTestament,
   originalRepoUrl=null,
   currentLanguageId=null,
   currentOwner=null,
@@ -172,11 +280,11 @@ export function getScriptureResourceSettings(
     scriptureSettings.disableWordPopover = false
   } else if (resourceId === TARGET_LITERAL) {
     cleanupAccountSettings(scriptureSettings, currentOwner, currentLanguageId)
-    scriptureSettings.resourceId = scriptureSettings.languageId === 'en' ? 'ult' : 'glt'
+    scriptureSettings.resourceId = getResourceId(LITERAL, scriptureSettings_?.bibleRelations, currentLanguageId)
     scriptureSettings.resourceLink = getResourceLink(scriptureSettings)
   } else if (resourceId === TARGET_SIMPLIFIED) {
     cleanupAccountSettings(scriptureSettings, currentOwner, currentLanguageId)
-    scriptureSettings.resourceId = scriptureSettings.languageId === 'en' ? 'ust' : 'gst'
+    scriptureSettings.resourceId = getResourceId(SIMPLIFIED, scriptureSettings_?.bibleRelations, currentLanguageId)
     scriptureSettings.resourceLink = getResourceLink(scriptureSettings)
   }
   return scriptureSettings
@@ -227,7 +335,7 @@ export function getScriptureVersionSettings({
   return scriptureSelectorConfig
 }
 
-export function getRepoUrl(resourceLink: string, server: string, isNT: boolean): string {
+export function getRepoUrl(resourceLink: string, server: string, isNT: boolean, bibleRelations: BibleRelationsType): string {
   let repoUrl
 
   try {
@@ -242,11 +350,8 @@ export function getRepoUrl(resourceLink: string, server: string, isNT: boolean):
       break
 
     case TARGET_LITERAL:
-      resourceId = (languageId === 'en') ? 'ult' : 'glt'
-      break
-
     case TARGET_SIMPLIFIED:
-      resourceId = (languageId === 'en') ? 'ust' : 'gst'
+      resourceId = getResourceIdForResource(resourceId, bibleRelations, languageId)
       break
     }
     repoUrl = `${owner}/${languageId}_${resourceId}`
@@ -262,9 +367,11 @@ export function getErrorMessageForResourceLink(
   resourceLink: string,
   server: string,
   errorCode: string,
-  isNT: boolean): string
+  isNT: boolean,
+  bibleRelations: BibleRelationsType,
+): string
 {
-  const repoUrl = getRepoUrl(resourceLink, server, isNT)
+  const repoUrl = getRepoUrl(resourceLink, server, isNT, bibleRelations)
   const errorMsg = errorCode + repoUrl
   return errorMsg
 }
@@ -323,7 +430,7 @@ export function getResourceErrorMessage(resourceStatus: object) {
  * @param isNT - true if NT book
  * @return empty string if no error, else returns user error message
  */
-export function getResourceMessage(resourceStatus: object, server: string, resourceLink: string, isNT: boolean) {
+export function getResourceMessage(resourceStatus: object, server: string, resourceLink: string, isNT: boolean, bibleRelations: BibleRelationsType) {
   let message = ''
 
   if (resourceStatus[LOADING_STATE]) {
@@ -332,7 +439,7 @@ export function getResourceMessage(resourceStatus: object, server: string, resou
     message = getResourceErrorMessage(resourceStatus)
 
     if (message) {
-      message = getErrorMessageForResourceLink(resourceLink, server, message, isNT)
+      message = getErrorMessageForResourceLink(resourceLink, server, message, isNT, bibleRelations)
     }
   }
   return message
@@ -501,7 +608,7 @@ export function emptyContent(verseObjects) {
     return true
   }
 
-  return !findNonWhiteSpaceChars(verseObjects);
+  return !findNonWhiteSpaceChars(verseObjects)
 }
 
 

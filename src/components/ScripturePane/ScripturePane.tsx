@@ -144,7 +144,7 @@ function ScripturePane({
   } else if (determiningBranch) {
     resourceMessage = 'Pre-' + LOADING_RESOURCE
   } else {
-    resourceMessage = getResourceMessage(resourceStatus, server, resourceLink, isNT)
+    resourceMessage = getResourceMessage(resourceStatus, server, resourceLink, isNT, [])
   }
 
   const {
