@@ -171,21 +171,6 @@ export function useScriptureSettings({
             setScriptureSettings(scriptureSettings_)
           }
 
-          // // update bibleID with one used
-          // const relation = getRelationForResource(resourceId, bibleRelations_)
-          // let bibleId = relation?.resourceId || ''
-          // const defaultBibleId = getResourceIdForResource(resourceId, null, languageId);
-          //
-          // if (!bibleId) {
-          //   bibleId = defaultBibleId
-          // } else if (bibleId !== defaultBibleId) {
-          //   console.log(`useScriptureSettings: Bible ID mismatch detected, default is ${defaultBibleId}, using ${bibleId}`)
-          // }
-          //
-          // if (bibleId !== determinedBibleId) { // update if changed
-          //   setDeterminedBibleId(bibleId)
-          //   console.log(`useScriptureSettings: Bible ID changing from ${determinedBibleId}, to ${bibleId}`)
-          // }
         }
       }
     }

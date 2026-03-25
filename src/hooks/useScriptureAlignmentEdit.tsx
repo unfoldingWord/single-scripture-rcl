@@ -14,7 +14,7 @@ import {
   ServerConfigType,
   VerseObjectsType,
 } from '../types'
-import {BibleRelationsType, getAlignments, getScriptureResourceSettings} from '../utils/ScriptureSettings'
+import { getAlignments, getScriptureResourceSettings } from '../utils/ScriptureSettings'
 import { ORIGINAL_SOURCE } from '../utils'
 import { getVersesForRef } from './useScripture'
 
@@ -261,7 +261,7 @@ export function useScriptureAlignmentEdit({
   // @ts-ignore
   httpConfig = httpConfig || {}
   const originalScriptureSettings = getScriptureResourceSettings(
-    bookId, originalScriptureSettings_, isNewTestament, originalRepoUrl, null, null, bibleRelations,
+    bookId, originalScriptureSettings_, isNewTestament, originalRepoUrl, null, { bibleRelations },
   )
 
   if (!enableAlignment) { // if not enabled, then we don't fetch resource
