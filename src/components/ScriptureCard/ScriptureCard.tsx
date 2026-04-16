@@ -2,7 +2,7 @@ import * as React from 'react'
 import * as PropTypes from 'prop-types'
 import { core, SelectionsContextProvider } from 'scripture-resources-rcl'
 import usfmjs from 'usfm-js'
-import { useEdit } from 'gitea-react-toolkit'
+import { getPatch, useEdit } from 'gitea-react-toolkit'
 import { IconButton } from '@mui/material'
 import { RxLink2, RxLinkBreak2 } from 'react-icons/rx'
 import {
@@ -44,7 +44,6 @@ import {
   OT_ORIG_LANG,
 } from '../../utils'
 import { VerseSelectorPopup } from '../VerseSelectorPopup'
-import { getPatch } from '../../utils/files'
 import { ScriptureReferenceType, VerseObjectsType } from '../../types'
 
 const KEY_FONT_SIZE_BASE = 'scripturePaneFontSize_'
